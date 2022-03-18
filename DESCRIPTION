@@ -1,0 +1,12 @@
+Package: bubbletree
+Type: Package
+Title: Clustering and visualization of scRNA-seq data
+Version: 0.1.0
+Author: Simo Kitanovski
+Maintainer: Simo Kitanovski <simo.kitanovski@uni-due.de>
+Description: Clustering and visualization of scRNA-seq data are necessary to 
+  identify and uncover undiscovered cell types and to extract useful biological 
+  information from this complex and heterogenous data.
+License: file LICENSE
+Encoding: UTF-8
+LazyData: true
