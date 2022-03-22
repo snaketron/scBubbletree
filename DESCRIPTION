@@ -8,5 +8,14 @@ Description: Clustering and visualization of scRNA-seq data are necessary to
   identify and uncover undiscovered cell types and to extract useful biological 
   information from this complex and heterogenous data.
 License: file LICENSE
+Depends: 
+    methods,
+    R (>= 3.6.0),
+    cluster (>= 2.1.2),
+    ggplot2 (>= 3.3.5),
+    reshape2 (>= 1.4.4),
+    parallel (>= 4.1.2),
+    ggtree (>= 3.2.0),
+    ape (>= 5.5)
 Encoding: UTF-8
 LazyData: true
