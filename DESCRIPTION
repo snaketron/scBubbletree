@@ -16,6 +16,7 @@ Depends:
     reshape2 (>= 1.4.4),
     parallel (>= 4.1.2),
     ggtree (>= 3.2.0),
-    ape (>= 5.5)
+    ape (>= 5.5),
+    bluster (>= 1.4.0)
 Encoding: UTF-8
 LazyData: true

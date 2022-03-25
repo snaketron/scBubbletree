@@ -1,87 +1,3 @@
-#' For a features matrix \code{x} with cells as rows and features
-#' (such as PC embeddings) as columns and cell clusters vector \code{c},
-#' this function computes the average Euclidean distance between the pairs
-#' of clusters and highest density interval of the distribution of pairwise
-#' distances estimated between a pair of clusters.
-#'
-#' \code{eff_cells} number of cells to use from each cluster (if
-#' eff_cells=NA all cells are used). Improves efficiency.
-#'
-#' @param x matrix.
-#' @param c vector.
-#' @param hdi_level number.
-#' @param eff_cells number
-#' @return data frame (default = 0.95).
-#' @examples
-#' get_pair_dist(
-#' x = matrix(data = rnorm(n = 100), ncol = 10),
-#' c = rep(x = c("a", "b"), each = 5),
-#' hdi_level = 0.95)
-get_pair_dist <- function(x, c, eff_cells = NA, hdi_level = 0.95) {
-
-  get_euc <- function(x, y) {
-    for(i in 1:ncol(y)) {
-      y[,i] <- (x[i]-y[,i])^2
-    }
-    y <- apply(X = y, MARGIN = 1, FUN = sum)
-    y <- sqrt(y)
-    return(y)
-  }
-
-  cs <- unique(c)
-  stats <- c()
-  for(i in 1:(length(cs)-1)) {
-    x_i <- x[which(c == cs[i]), ]
-    if(is.vector(x_i)) {
-      x_i <- matrix(data = x_i, nrow = 1)
-    }
-
-    # efficiency
-    if(is.na(eff_cells) == F) {
-      if(nrow(x_i)>eff_cells) {
-        x_i <- x_i[sample(x = 1:nrow(x_i), size = eff_cells, replace = F), ]
-      }
-    }
-
-    for(j in (i+1):length(cs)) {
-      x_j <- x[which(c == cs[j]), ]
-      if(is.vector(x_j)) {
-        x_j <- matrix(data = x_j, nrow = 1)
-      }
-
-      # efficiency
-      if(is.na(eff_cells) == F) {
-        if(nrow(x_j)>eff_cells) {
-          x_j <- x_j[sample(x = 1:nrow(x_j), size = eff_cells, replace = F), ]
-        }
-      }
-
-      w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
-      for(k in 1:nrow(x_i)) {
-        w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
-      }
-      w <- as.vector(w)
-      hdi <- getHdi(vec = as.vector(w), hdi.level = hdi_level)
-
-      # symmetric distances
-      stats <- rbind(stats, data.frame(c_i = cs[i],
-                                       c_j = cs[j],
-                                       M = mean(w),
-                                       L = hdi[1],
-                                       H = hdi[2]))
-      stats <- rbind(stats, data.frame(c_i = cs[j],
-                                       c_j = cs[i],
-                                       M = mean(w),
-                                       L = hdi[1],
-                                       H = hdi[2]))
-
-    }
-  }
-
-  return(stats)
-}
-
-
 #' Wrapper for k-means. Input: features matrix \code{x} with cells
 #' as rows and features (such as PC embeddings) as columns; vector \code{ks}
 #' for the number of k-means to try; B=number of bootstrapping iterations; the
@@ -98,7 +14,8 @@ get_pair_dist <- function(x, c, eff_cells = NA, hdi_level = 0.95) {
 #' @exportMethod
 #'
 get_kmeans_boot <- function(B = 20,
-                            boot_p = 0.66,
+                            cv_clust_p = 1,
+                            cv_gap_p = 0.5 ,
                             ks,
                             x,
                             n_start = 100,
@@ -107,48 +24,61 @@ get_kmeans_boot <- function(B = 20,
 
 
   # average silhouette for k-means
-  get_avg_sil <- function(km, df, only_avg) {
-    ss <- cluster::silhouette(km$cluster, stats::dist(x = df, method = "euclidean"))
-    if(only_avg) {
+  get_avg_sil <- function(km, df, approx = T) {
+    if(approx == F) {
+      ss <- cluster::silhouette(km$cluster, stats::dist(
+        x = df, method = "euclidean"))
       if(is.na(ss)) {
         return(NA)
       }
       return(mean(ss[, 3]))
+    } else {
+      ss <- bluster::approxSilhouette(x = df, clusters = km$cluster)
+      return(mean(ss$width))
     }
-    return(ss)
   }
 
 
-
   # gat statistics
-  get_gap <- function (x, km, B = 100, d.power = 1) {
+  get_gap <- function (x, km, B = 100, d.power = 1, cv_gap_p = 1) {
+    if(cv_gap_p < 0 | cv_gap_p > 1) {
+      stop("cv_gap_p is a number between 0 (excluded) and 1.")
+    }
+    if(cv_gap_p < 1) {
+      cs <- km$cluster
+      js <- sample(x = 1:nrow(x), size = ceiling(nrow(x)*cv_gap_p), replace = F)
+      x <- x[js, ]
+      cs <- cs[js]
+    } else {
+      cs <- km$cluster
+    }
     n <- nrow(x)
     ii <- seq_len(n)
 
-    W.k <- function(X) {
-      clus <- km$cluster
-      0.5 * sum(vapply(split(ii, clus), function(I) {
+
+    Wk <- function(X, cs) {
+      0.5 * sum(vapply(split(ii, cs), function(I) {
         xs <- X[I, , drop = FALSE]
         sum(dist(xs, method = "euclidean")^d.power/nrow(xs))
       }, 0))
     }
 
     logW <- E.logW <- SE.sim <- numeric(1)
-    logW <- log(W.k(x))
+    logW <- log(Wk(x, cs=cs))
 
-    xs <- x
-    m.x <- 0
-    # xs <- scale(x, center = TRUE, scale = FALSE)
-    # m.x <- rep(attr(xs, "scaled:center"), each = n)
+    xs <- scale(x, center = TRUE, scale = FALSE)
+    m.x <- rep(attr(xs, "scaled:center"), each = n)
     rng.x1 <- apply(xs, 2L, range)
     logWks <- numeric(length = B)
     for (b in 1:B) {
       z1 <- apply(X = rng.x1,
                   MARGIN = 2,
-                  FUN = function(M, nn) {runif(nn, min = M[1], max = M[2])},
+                  FUN = function(M, nn) {
+                    runif(nn, min = M[1], max = M[2])
+                    },
                   nn = n)
       z <- z1 + m.x
-      logWks[b] <- log(W.k(z))
+      logWks[b] <- log(Wk(z, cs=cs))
     }
     E.logW <- mean(logWks)
     SE.sim <- sqrt((1 + 1/B) * var(logWks))
@@ -160,33 +90,32 @@ get_kmeans_boot <- function(B = 20,
   }
 
 
-  if(is.numeric(boot_p) == F) {
-    stop("boot_p is a number between 0 (excluding) and 1")
+  if(is.numeric(cv_clust_p) == F) {
+    stop("cv_clust_p is a number between 0 (excluding) and 1")
   }
-  if(length(boot_p) != 1) {
-    stop("boot_p is a number between 0 (excluding) and 1")
+  if(length(cv_clust_p) != 1) {
+    stop("cv_clust_p is a number between 0 (excluding) and 1")
   }
-  if(boot_p<0|boot_p>1) {
-    stop("boot_p is a number between 0 (excluding) and 1")
+  if(cv_clust_p<0|cv_clust_p>1) {
+    stop("cv_clust_p is a number between 0 (excluding) and 1")
   }
 
 
   if(is.numeric(B) == F) {
-    stop("boot_p is a number >0")
+    stop("cv_clust_p is a number >0")
   }
   if(length(B) != 1) {
-    stop("boot_p is a number >0")
+    stop("cv_clust_p is a number >0")
   }
   if(B<0) {
-    stop("boot_p is a number >0")
+    stop("cv_clust_p is a number >0")
   }
 
-  # browser()
   boot_obj <- vector(mode = "list", length = B)
   for(b in 1:B) {
     cat("boot:", b, " : ")
 
-    j <- sample(x = 1:nrow(x), size = ceiling(nrow(x)*boot_p), replace = T)
+    j <- sample(x = 1:nrow(x), size = ceiling(nrow(x)*cv_clust_p), replace = T)
 
     # clustering
     cat("1) clustering, ")
@@ -209,7 +138,6 @@ get_kmeans_boot <- function(B = 20,
     sil_kmeans <- parallel::mclapply(X = kmeans_obj,
                                      FUN = get_avg_sil,
                                      df = x[j,],
-                                     only_avg = T,
                                      mc.cores = cores,
                                      mc.cleanup = T)
 
@@ -219,11 +147,11 @@ get_kmeans_boot <- function(B = 20,
     gap_stats <- parallel::mclapply(X = kmeans_obj,
                                     FUN = get_gap,
                                     x = x[j,],
-                                    B = 10,
+                                    B = 1,
                                     d.power = 1,
+                                    cv_gap_p = cv_gap_p,
                                     mc.cores = cores,
                                     mc.cleanup = T)
-
     # within sum of squares
     cat("4) WSS. \n")
     boot_obj[[b]] <- list(obj = kmeans_obj,
@@ -330,13 +258,140 @@ get_gini_kmeans <- function(kmeans_boot_obj,
 
 
 # main method
-get_bubble_tree_data <- function(x,
-                                 k,
-                                 n_start = 10,
-                                 iter_max = 50,
-                                 hdi_level = 0.95,
-                                 eff_cells = NA,
-                                 seed = NA) {
+get_bubbletree_data <- function(x,
+                                k,
+                                n_start = 10,
+                                iter_max = 50,
+                                hdi_level = 0.95,
+                                B = 1,
+                                N_eff = 500,
+                                cores,
+                                seed = NA) {
+
+
+  #' For a features matrix \code{x} with cells as rows and features
+  #' (such as PC embeddings) as columns and cell clusters vector \code{c},
+  #' this function computes the average Euclidean distance between the pairs
+  #' of clusters and highest density interval of the distribution of pairwise
+  #' distances estimated between a pair of clusters.
+  #'
+  #' \code{N_eff} number of cells to use from each cluster (if
+  #' N_eff=NA all cells are used). Improves efficiency.
+  #'
+  #' @param B number.
+  #' @param m matrix
+  #' @param c vector.
+  #' @param N_eff number
+  #' @param cores
+  #' @return data frame
+  get_dend_dist <- function(B = 100,
+                            m,
+                            c,
+                            N_eff,
+                            cores,
+                            hdi_level) {
+
+    get_pair_dist <- function(x, m, c, N_eff) {
+
+      get_euc <- function(x, y) {
+        for(i in 1:ncol(y)) {
+          y[,i] <- (x[i]-y[,i])^2
+        }
+        y <- apply(X = y, MARGIN = 1, FUN = sum)
+        y <- sqrt(y)
+        return(y)
+      }
+
+      cs <- unique(c)
+      stats <- c()
+      for(i in 1:(length(cs)-1)) {
+        x_i <- m[which(c == cs[i]), ]
+        if(is.vector(x_i)) {
+          x_i <- matrix(data = x_i, nrow = 1)
+        }
+
+        # efficiency
+        if(is.na(N_eff) == F) {
+          if(nrow(x_i)>N_eff) {
+            x_i <- x_i[sample(x = 1:nrow(x_i), size = N_eff, replace = F), ]
+          }
+        }
+
+        for(j in (i+1):length(cs)) {
+          x_j <- m[which(c == cs[j]), ]
+          if(is.vector(x_j)) {
+            x_j <- matrix(data = x_j, nrow = 1)
+          }
+
+          # efficiency
+          if(is.na(N_eff) == F) {
+            if(nrow(x_j)>N_eff) {
+              x_j <- x_j[sample(x = 1:nrow(x_j), size = N_eff, replace = F), ]
+            }
+          }
+
+          w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
+          for(k in 1:nrow(x_i)) {
+            w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
+          }
+          w <- as.vector(w)
+
+          # symmetric distances
+          stats <- rbind(stats, data.frame(c_i = cs[i],
+                                           c_j = cs[j],
+                                           M = mean(w)))
+          stats <- rbind(stats, data.frame(c_i = cs[j],
+                                           c_j = cs[i],
+                                           M = mean(w)))
+
+        }
+      }
+
+      return(stats)
+    }
+
+    get_hdi <- function(vec, hdi_level) {
+      sortedPts <- sort(vec)
+      ciIdxInc <- floor(hdi_level * length(sortedPts))
+      nCIs = length(sortedPts) - ciIdxInc
+      ciWidth = rep(0 , nCIs)
+      for (i in 1:nCIs) {
+        ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
+      }
+      HDImin = sortedPts[which.min(ciWidth)]
+      HDImax = sortedPts[which.min(ciWidth) + ciIdxInc]
+      HDIlim = c(HDImin, HDImax)
+      return(HDIlim)
+    }
+
+    # get distances between clusters
+    ps <- parallel::mclapply(X = 1:B,
+                             FUN = get_pair_dist,
+                             m = m,
+                             c = c,
+                             N_eff = N_eff,
+                             mc.cores = cores)
+
+    ps <- do.call(rbind, ps)
+    m <- aggregate(M~c_i+c_j, data = ps, FUN = mean)
+    hdi <- aggregate(M~c_i+c_j, data = ps, FUN = get_hdi,
+                     hdi_level = hdi_level)
+    if(B==1) {
+      hdi$L <- NA
+      hdi$H <- NA
+    }
+    else {
+      hdi$L <- hdi$M[, 1]
+      hdi$H <- hdi$M[, 2]
+    }
+    hdi$M <- NULL
+
+    o <- merge(x = m, y = hdi, by = c("c_i", "c_j"))
+
+
+    return(o)
+  }
+
 
   # check input
   if(is.na(x) || is.null(x) || is.matrix(x)==F) {
@@ -353,26 +408,25 @@ get_bubble_tree_data <- function(x,
   }
 
   # perform k-means clustering
-  # km <- stats::kmeans(x = x,
-  #                     centers = k,
-  #                     nstart = n_start,
-  #                     iter.max = iter_max)
-  km <- cluster::pam(x = x,
-                     k = k,
-                     metric = "euclidean",
-                     stand = FALSE,
-                     nstart = n_start)
+  km <- stats::kmeans(x = x,
+                      centers = k,
+                      nstart = n_start,
+                      iter.max = iter_max)
 
-  # get distances between clusters
-  pp_dist <- get_pair_dist(x = x,
-                           # c = as.numeric(km$cluster),
-                           c = as.numeric(km$clustering),
-                           eff_cells = eff_cells,
-                           hdi_level = hdi_level)
+
+  # dendrogram distance
+  dend_dist <- get_dend_dist(B = B,
+                             m = x,
+                             c = as.numeric(km$cluster),
+                             N_eff = N_eff,
+                             cores = cores,
+                             hdi_level = hdi_level)
+
 
 
   # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = pp_dist, formula = c_i~c_j, value.var = "M")
+  d <- reshape2::acast(data = dend_dist,
+                       formula = c_i~c_j, value.var = "M")
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
   ph <- treeio::as.phylo(x = hc)
@@ -380,29 +434,27 @@ get_bubble_tree_data <- function(x,
   return(list(km = km,
               ph = ph,
               hc = hc,
-              pp_dist = pp_dist,
+              dend_dist = dend_dist,
               k = k,
               input_par = list(n_start = n_start,
                                iter_max = iter_max,
                                hdi_level = hdi_level,
-                               eff_cells = eff_cells)))
+                               N_eff = N_eff)))
 }
 
 
 
-get_bubble_tree <- function(btd,
-                            bubble_breaks = NA) {
+get_bubbletree <- function(btd, bubble_breaks = NA) {
 
   # get from bubble tree data
   km <- btd$km
-  km$table <- table(km$clustering)
 
   ph <- btd$ph
 
   # clustering meta data (for bubbles)
-  km_meta <- data.frame(label = names(km$table),
-                        n = sum(km$table),
-                        c = as.numeric(km$table))
+  km_meta <- data.frame(label = 1:nrow(km$centers),
+                        n = sum(km$size),
+                        c = km$size)
   km_meta$p <- km_meta$c/km_meta$n
   km_meta$pct <- round(x = km_meta$p*100, digits = 2)
 
@@ -417,7 +469,7 @@ get_bubble_tree <- function(btd,
     guides(nrow = 3,
            fill = guide_legend("cell #"),
            size = guide_legend("cell #"))+
-    theme_tree(plot.margin=margin(6,100,6,6),
+    theme_tree2(plot.margin=margin(6,100,6,6),
                legend.position = "top")
 
 
@@ -467,15 +519,17 @@ get_bubble_tree <- function(btd,
 
 
 
+
 get_annotation_tiles_char <- function(k,
                                       a,
                                       tree_meta,
-                                      integrate_over_clusters = T) {
+                                      integrate_over_clusters = T,
+                                      round_digits = 2) {
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
     f <- aggregate(a~label, data = f, FUN = mean)
-    f$value <- round(x = f$a, digits = 2)
+    f$value <- round(x = f$a, digits = round_digits)
     f$a <- NULL
     f$annotation <- annotation
     return(f)
@@ -500,13 +554,14 @@ get_annotation_tiles_char <- function(k,
     legend <- "% of annotation"
   }
   ws$p <- ws$freq/ws$n
-  ws$percent <- round(x = ws$p*100, digits = 2)
+  ws$percent <- round(x = ws$p*100, digits = round_digits)
 
   ws <- merge(x = ws, y = tree_meta, by = "label", all = T)
   ws <- ws[order(ws$tree_order, decreasing = F), ]
   ws$label <- factor(x = ws$label, levels = unique(ws$label))
 
   w <- ggplot(data = ws)+
+    theme_bw()+
     geom_tile(aes(x = annotation, y = label, fill = percent),
               col = "white")+
     geom_text(aes(x = annotation, y = label, label = percent),
@@ -526,12 +581,14 @@ get_annotation_tiles_char <- function(k,
 
 get_annotation_tiles_num <- function(k,
                                      as,
-                                     tree_meta) {
+                                     tree_meta,
+                                     plot_title = '',
+                                     round_digits = 2) {
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
     f <- aggregate(a~label, data = f, FUN = mean)
-    f$value <- round(x = f$a, digits = 2)
+    f$value <- round(x = f$a, digits = round_digits)
     f$a <- NULL
     f$annotation <- annotation
     return(f)
@@ -554,13 +611,16 @@ get_annotation_tiles_num <- function(k,
   ws$annotation <- factor(x = ws$annotation, levels = colnames(as))
 
   w <- ggplot(data = ws)+
+    theme_bw()+
     geom_tile(aes(x = annotation, y = label, fill = value), col = "white")+
     geom_text(aes(x = annotation, y = label, label = value), col = "black", size = 3)+
     scale_fill_distiller(name = "Avg.", palette = "Spectral")+
     theme(legend.position = "top")+
     xlab(label = "Annotation")+
     ylab(label = "Cluster")+
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
+    ggtitle(label = plot_title)+
+    guides(fill = guide_colourbar(barwidth = 4, barheight = 1))
 
   return(list(ws = ws, w = w))
 }
@@ -569,7 +629,9 @@ get_annotation_tiles_num <- function(k,
 
 get_annotation_violins <- function(k,
                                    as,
-                                   tree_meta) {
+                                   tree_meta,
+                                   plot_title = '',
+                                   scales = "free_x") {
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
@@ -597,11 +659,15 @@ get_annotation_violins <- function(k,
   ws$annotation <- factor(x = ws$annotation, levels = colnames(as))
 
   w <- ggplot(data = ws)+
-    facet_grid(.~annotation, scales = "free_x")+
+    theme_bw()+
+    facet_grid(.~annotation, scales = scales)+
     geom_violin(aes(x = label, y = value))+
     coord_flip()+
-    xlab(label = "Value")+
-    xlab(label = "Cluster")
+    ylab(label = "Distribution")+
+    xlab(label = "Cluster")+
+    ggtitle(label = plot_title)+
+    theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")))
+
 
   return(list(ws = ws, w = w))
 }
