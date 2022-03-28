@@ -1,3 +1,147 @@
+#' For a features matrix \code{x} with cells as rows and features
+#' (such as PC embeddings) as columns and cell clusters vector \code{c},
+#' this function computes the average Euclidean distance between the pairs
+#' of clusters and highest density interval of the distribution of pairwise
+#' distances estimated between a pair of clusters.
+#'
+#' \code{N_eff} number of cells to use from each cluster (if
+#' N_eff=NA all cells are used). Improves efficiency.
+#'
+#' @param B number.
+#' @param m matrix
+#' @param c vector.
+#' @param N_eff number
+#' @param cores
+#' @return data frame
+#'
+get_dend_dist <- function(B = 100,
+                          m,
+                          c,
+                          N_eff,
+                          cores,
+                          hdi_level,
+                          verbose = F) {
+
+  get_pair_dist <- function(x, m, c, N_eff) {
+
+    get_euc <- function(x, y) {
+      for(i in 1:ncol(y)) {
+        y[,i] <- (x[i]-y[,i])^2
+      }
+      y <- apply(X = y, MARGIN = 1, FUN = sum)
+      y <- sqrt(y)
+      return(y)
+    }
+
+    cs <- unique(c)
+    stats <- c()
+    verbose_counter <- 0
+    len_cs <- length(cs)
+
+    for(i in 1:(len_cs-1)) {
+
+      x_i <- m[which(c == cs[i]), ]
+      if(is.vector(x_i)) {
+        x_i <- matrix(data = x_i, nrow = 1)
+      }
+
+      # efficiency
+      if(is.na(N_eff) == F) {
+        if(nrow(x_i)>N_eff) {
+          x_i <- x_i[sample(x = 1:nrow(x_i), size = N_eff, replace = F), ]
+        }
+      }
+
+      for(j in (i+1):len_cs) {
+
+        x_j <- m[which(c == cs[j]), ]
+        if(is.vector(x_j)) {
+          x_j <- matrix(data = x_j, nrow = 1)
+        }
+
+        # efficiency
+        if(is.na(N_eff) == F) {
+          if(nrow(x_j)>N_eff) {
+            x_j <- x_j[sample(x = 1:nrow(x_j), size = N_eff, replace = F), ]
+          }
+        }
+
+        # speed-up this part
+        w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
+        for(k in 1:nrow(x_i)) {
+          w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
+        }
+
+        # microbenchmark(jogo  = {w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
+        #                for(k in 1:nrow(x_i)) {w[k, ] <- get_euc(x = x_i[k, ], y = x_j)}},
+        #                sqrt(apply(array(apply(x_j,1,function(x){(x-t(x_i))^2}),
+        #                                 c(ncol(x_i),nrow(x_i),nrow(x_j))),2:3,sum)))
+
+        # symmetric distances
+        stats <- rbind(stats, data.frame(c_i = cs[i],
+                                         c_j = cs[j],
+                                         M = mean(w)))
+        stats <- rbind(stats, data.frame(c_i = cs[j],
+                                         c_j = cs[i],
+                                         M = mean(w)))
+
+        if(verbose) {
+          verbose_counter <- verbose_counter + 1
+          cat(paste0("Generating dendrogram:",
+                     round(x = verbose_counter/((len_cs*(len_cs-1))/2)*100,
+                           digits = 0), "% \n"))
+        }
+      }
+    }
+
+    return(stats)
+  }
+
+  get_hdi <- function(vec, hdi_level) {
+    sortedPts <- sort(vec)
+    ciIdxInc <- floor(hdi_level * length(sortedPts))
+    nCIs = length(sortedPts) - ciIdxInc
+    ciWidth = rep(0 , nCIs)
+    for (i in 1:nCIs) {
+      ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
+    }
+    HDImin = sortedPts[which.min(ciWidth)]
+    HDImax = sortedPts[which.min(ciWidth) + ciIdxInc]
+    HDIlim = c(HDImin, HDImax)
+    return(HDIlim)
+  }
+
+  # get distances between clusters
+  ps <- parallel::mclapply(X = 1:B,
+                           FUN = get_pair_dist,
+                           m = m,
+                           c = c,
+                           N_eff = N_eff,
+                           mc.cores = cores)
+
+  ps <- do.call(rbind, ps)
+  m <- aggregate(M~c_i+c_j, data = ps, FUN = mean)
+  hdi <- aggregate(M~c_i+c_j, data = ps, FUN = get_hdi,
+                   hdi_level = hdi_level)
+  if(B==1) {
+    hdi$L <- NA
+    hdi$H <- NA
+  }
+  else {
+    hdi$L <- hdi$M[, 1]
+    hdi$H <- hdi$M[, 2]
+  }
+  hdi$M <- NULL
+
+  o <- merge(x = m, y = hdi, by = c("c_i", "c_j"))
+
+
+  return(o)
+}
+
+
+
+
 #' Wrapper for k-means. Input: features matrix \code{x} with cells
 #' as rows and features (such as PC embeddings) as columns; vector \code{ks}
 #' for the number of k-means to try; B=number of bootstrapping iterations; the
@@ -157,7 +301,8 @@ get_kmeans_boot <- function(B = 20,
     boot_obj[[b]] <- list(obj = kmeans_obj,
                           wss = wss_data,
                           sil = sil_kmeans,
-                          gap = gap_stats)
+                          gap = gap_stats,
+                          cell_i = j)
 
   }
   names(boot_obj) <- 1:B
@@ -195,68 +340,6 @@ get_kmeans_boot <- function(B = 20,
 
 
 
-
-
-# run Gini impurity calculation on kmeans outpu
-get_gini_kmeans <- function(kmeans_boot_obj,
-                            labels,
-                            verbose = F) {
-
-  get_gini <- function(classes, groups) {
-
-    ginis <- numeric(length = length(unique(groups)))
-    names(ginis) <- unique(groups)
-
-    ws <- numeric(length = length(unique(groups)))
-    names(ws) <- unique(groups)
-
-    for(g in unique(groups)) {
-      temp_classes <- classes[groups == g]
-      n <- length(temp_classes)
-      ws[g] <- n
-
-      if(length(temp_classes)==0) {
-        ginis[g] <- 0
-      } else {
-        gini <- 0
-        for(c in unique(temp_classes)) {
-          gini <- gini+sum(temp_classes==c)/n*sum(temp_classes!=c)/n
-        }
-        ginis[g] <- gini
-      }
-    }
-    return(list(ginis = ginis,
-                ws = ws,
-                gini_avg = sum(ginis*ws/sum(ws))))
-  }
-
-  gini_boot_obj <- vector(mode = "list", length = length(kmeans_boot_obj))
-
-  for(b in 1:length(kmeans_boot_obj)) {
-    if(verbose) {
-      cat("boot: ", b, " \n")
-    }
-
-    o <- kmeans_boot_obj[[b]]$obj
-
-    gini_local <- vector(mode = "list", length = length(o))
-    for(k in 1:length(o)) {
-
-      u <- o[[k]]
-      l <- data.frame(ident = names(u$cluster), cluster = as.numeric(u$cluster))
-      l <- merge(x = l, y = labels, by = "ident", all.x = T)
-
-      gini_local[[k]] <- get_gini(classes = l$label, groups = l$cluster)
-    }
-    gini_boot_obj[[b]] <- gini_local
-
-  }
-
-  return(gini_boot_obj)
-}
-
-
-
 # main method
 get_bubbletree_data <- function(x,
                                 k,
@@ -266,131 +349,8 @@ get_bubbletree_data <- function(x,
                                 B = 1,
                                 N_eff = 500,
                                 cores,
-                                seed = NA) {
-
-
-  #' For a features matrix \code{x} with cells as rows and features
-  #' (such as PC embeddings) as columns and cell clusters vector \code{c},
-  #' this function computes the average Euclidean distance between the pairs
-  #' of clusters and highest density interval of the distribution of pairwise
-  #' distances estimated between a pair of clusters.
-  #'
-  #' \code{N_eff} number of cells to use from each cluster (if
-  #' N_eff=NA all cells are used). Improves efficiency.
-  #'
-  #' @param B number.
-  #' @param m matrix
-  #' @param c vector.
-  #' @param N_eff number
-  #' @param cores
-  #' @return data frame
-  get_dend_dist <- function(B = 100,
-                            m,
-                            c,
-                            N_eff,
-                            cores,
-                            hdi_level) {
-
-    get_pair_dist <- function(x, m, c, N_eff) {
-
-      get_euc <- function(x, y) {
-        for(i in 1:ncol(y)) {
-          y[,i] <- (x[i]-y[,i])^2
-        }
-        y <- apply(X = y, MARGIN = 1, FUN = sum)
-        y <- sqrt(y)
-        return(y)
-      }
-
-      cs <- unique(c)
-      stats <- c()
-      for(i in 1:(length(cs)-1)) {
-        x_i <- m[which(c == cs[i]), ]
-        if(is.vector(x_i)) {
-          x_i <- matrix(data = x_i, nrow = 1)
-        }
-
-        # efficiency
-        if(is.na(N_eff) == F) {
-          if(nrow(x_i)>N_eff) {
-            x_i <- x_i[sample(x = 1:nrow(x_i), size = N_eff, replace = F), ]
-          }
-        }
-
-        for(j in (i+1):length(cs)) {
-          x_j <- m[which(c == cs[j]), ]
-          if(is.vector(x_j)) {
-            x_j <- matrix(data = x_j, nrow = 1)
-          }
-
-          # efficiency
-          if(is.na(N_eff) == F) {
-            if(nrow(x_j)>N_eff) {
-              x_j <- x_j[sample(x = 1:nrow(x_j), size = N_eff, replace = F), ]
-            }
-          }
-
-          w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
-          for(k in 1:nrow(x_i)) {
-            w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
-          }
-          w <- as.vector(w)
-
-          # symmetric distances
-          stats <- rbind(stats, data.frame(c_i = cs[i],
-                                           c_j = cs[j],
-                                           M = mean(w)))
-          stats <- rbind(stats, data.frame(c_i = cs[j],
-                                           c_j = cs[i],
-                                           M = mean(w)))
-
-        }
-      }
-
-      return(stats)
-    }
-
-    get_hdi <- function(vec, hdi_level) {
-      sortedPts <- sort(vec)
-      ciIdxInc <- floor(hdi_level * length(sortedPts))
-      nCIs = length(sortedPts) - ciIdxInc
-      ciWidth = rep(0 , nCIs)
-      for (i in 1:nCIs) {
-        ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
-      }
-      HDImin = sortedPts[which.min(ciWidth)]
-      HDImax = sortedPts[which.min(ciWidth) + ciIdxInc]
-      HDIlim = c(HDImin, HDImax)
-      return(HDIlim)
-    }
-
-    # get distances between clusters
-    ps <- parallel::mclapply(X = 1:B,
-                             FUN = get_pair_dist,
-                             m = m,
-                             c = c,
-                             N_eff = N_eff,
-                             mc.cores = cores)
-
-    ps <- do.call(rbind, ps)
-    m <- aggregate(M~c_i+c_j, data = ps, FUN = mean)
-    hdi <- aggregate(M~c_i+c_j, data = ps, FUN = get_hdi,
-                     hdi_level = hdi_level)
-    if(B==1) {
-      hdi$L <- NA
-      hdi$H <- NA
-    }
-    else {
-      hdi$L <- hdi$M[, 1]
-      hdi$H <- hdi$M[, 2]
-    }
-    hdi$M <- NULL
-
-    o <- merge(x = m, y = hdi, by = c("c_i", "c_j"))
-
-
-    return(o)
-  }
+                                seed = NA,
+                                verbose = F) {
 
 
   # check input
@@ -417,10 +377,11 @@ get_bubbletree_data <- function(x,
   # dendrogram distance
   dend_dist <- get_dend_dist(B = B,
                              m = x,
-                             c = as.numeric(km$cluster),
+                             c = km$cluster,
                              N_eff = N_eff,
                              cores = cores,
-                             hdi_level = hdi_level)
+                             hdi_level = hdi_level,
+                             verbose = verbose)
 
 
 
@@ -431,30 +392,123 @@ get_bubbletree_data <- function(x,
   hc <- stats::hclust(d, method = "average")
   ph <- treeio::as.phylo(x = hc)
 
-  return(list(km = km,
+  return(list(A = x,
+              km = km,
               ph = ph,
               hc = hc,
               dend_dist = dend_dist,
               k = k,
+              cluster = km$cluster,
               input_par = list(n_start = n_start,
                                iter_max = iter_max,
                                hdi_level = hdi_level,
-                               N_eff = N_eff)))
+                               N_eff = N_eff,
+                               B = B)))
+}
+
+
+#
+update_bubbletree_data <- function(btd,
+                                   updated_bubbles,
+                                   ks,
+                                   cores,
+                                   seed = NA,
+                                   verbose = F) {
+
+  update_bubble <- function(A, bubble, k,
+                            n_start, iter_max) {
+
+    # perform k-means clustering
+    km <- stats::kmeans(x = A,
+                        centers = k,
+                        nstart = n_start,
+                        iter.max = iter_max)
+
+    return(km)
+
+  }
+
+
+  # ks: vector
+  # non-zero
+
+  # updated_bubbles: vector
+  # * part of btd
+
+
+  # get input from previous bubbletree data
+  A <- btd$A
+  n_start <- btd$input_par$n_start
+  iter_max <- btd$input_par$iter_max
+  hdi_level <- btd$input_par$hdi_level
+  N_eff <- btd$input_par$N_eff
+  B <- btd$input_par$B
+
+
+  # loop around updated_bubbles
+  u_kms <- vector(mode = "list", length = length(updated_bubbles))
+  for(i in 1:length(updated_bubbles)) {
+    cat("Updating bubble:", updated_bubbles[i], "\n")
+    j <- which(btd$cluster == updated_bubbles[i])
+
+    # run update
+    u_kms[[i]] <- update_bubble(A = A[j,],
+                              bubble = updated_bubbles[i],
+                              k = ks[i],
+                              n_start = n_start,
+                              iter_max = iter_max)
+
+    # add comments for debugging
+    u_kms[[i]]$comment <- list(note = "update",
+                               bubble = updated_bubbles[i],
+                               k = ks[i])
+
+    # update cluster naming
+    btd$cluster[j] <- paste0(updated_bubbles[i], '_', u_kms[[i]]$cluster)
+  }
+
+
+  # browser()
+  cat("Updating dendrogram \n")
+  dend_dist <- get_dend_dist(B = B,
+                             m = A,
+                             c = btd$cluster,
+                             N_eff = N_eff,
+                             cores = cores,
+                             hdi_level = hdi_level,
+                             verbose = verbose)
+
+  # compute hierarchical clustering dendrogram
+  d <- reshape2::acast(data = dend_dist,
+                       formula = c_i~c_j,
+                       value.var = "M")
+
+  d <- stats::as.dist(d)
+  hc <- stats::hclust(d, method = "average")
+  ph <- treeio::as.phylo(x = hc)
+
+  btd$ph <- ph
+  btd$hc <- hc
+  btd$dend_dist <- dend_dist
+  dend_dist$km <- "updated"
+  dend_dist$k <- "updated"
+
+  return(list(btd = btd, u_kms = u_kms))
 }
 
 
 
 get_bubbletree <- function(btd, bubble_breaks = NA) {
 
-  # get from bubble tree data
-  km <- btd$km
 
+  # get dendrogram
   ph <- btd$ph
 
-  # clustering meta data (for bubbles)
-  km_meta <- data.frame(label = 1:nrow(km$centers),
-                        n = sum(km$size),
-                        c = km$size)
+  # get km data
+  km <- btd$cluster
+  km_meta <- data.frame(table(btd$cluster))
+  colnames(km_meta) <- c("label", "c")
+  km_meta$n <- sum(km_meta$c)
   km_meta$p <- km_meta$c/km_meta$n
   km_meta$pct <- round(x = km_meta$p*100, digits = 2)
 
@@ -673,5 +727,80 @@ get_annotation_violins <- function(k,
 }
 
 
+
+
+get_gini <- function(labels, clusters) {
+
+  get_gini_cluster <- function(c, l) {
+    ls <- unique(l)
+    l_len <- length(l)
+
+    s <- 0
+    for(i in 1:length(ls)) {
+      s <- s + (sum(l == ls[i])/l_len)^2
+    }
+
+    return(s)
+
+  }
+
+  cs <- unique(clusters)
+
+  # for each cluster we get gini-index
+  cluster_gini <- numeric(length = length(cs))
+  names(cluster_gini) <- cs
+
+  # cluster weights used to compute total gini
+  cluster_weight <- numeric(length = length(cs))
+  names(cluster_weight) <- cs
+
+  for(i in 1:length(cs)) {
+    j <- which(clusters == cs[i])
+
+    cluster_weight[i] <- length(j)/length(clusters)
+
+    cluster_gini[i] <- 1-get_gini_cluster(c = clusters[j],
+                                          l = labels[j])
+
+  }
+
+  total_gini = sum(cluster_gini*cluster_weight)
+
+  return(list(cluster_gini = cluster_gini,
+              total_gini = total_gini))
+}
+
+
+
+get_gini_boot <- function(labels, kmeans_boot_obj) {
+  B <- length(kmeans_boot_obj$boot_obj)
+
+  total_o <- c()
+  cluster_o <- c()
+  for(i in 1:B) {
+    # b$boot_obj[[b]]$obj$`2`$
+    ks <- names(kmeans_boot_obj$boot_obj[[i]]$obj)
+
+    for(j in 1:length(ks)) {
+      cell_id <- kmeans_boot_obj$boot_obj[[i]]$cell_i
+      gini <- get_gini(clusters = kmeans_boot_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
+                       labels = labels[cell_id])
+
+      # collect total gini and cluster specific gini scores
+
+      # total
+      total_o <- rbind(total_o, data.frame(B = i,
+                                           k = as.numeric(ks[j]),
+                                           total_gini = gini$total_gini))
+      # cluster
+      cluster_o <- rbind(cluster_o, data.frame(B = i,
+                                               k = as.numeric(ks[j]),
+                                               cluster = names(gini$cluster_gini),
+                                               gini = gini$cluster_gini))
+    }
+  }
+  return(list(total_gini = total_o,
+              cluster_gini = cluster_o))
+}
 
 
