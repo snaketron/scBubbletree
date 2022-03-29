@@ -340,7 +340,6 @@ get_kmeans_boot <- function(B = 20,
 
 
 
-# main method
 get_bubbletree_data <- function(x,
                                 k,
                                 n_start = 10,
@@ -403,11 +402,11 @@ get_bubbletree_data <- function(x,
                                iter_max = iter_max,
                                hdi_level = hdi_level,
                                N_eff = N_eff,
-                               B = B)))
+                               B = B,
+                               seed = seed)))
 }
 
 
-#
 update_bubbletree_data <- function(btd,
                                    updated_bubbles,
                                    ks,
@@ -422,7 +421,8 @@ update_bubbletree_data <- function(btd,
     km <- stats::kmeans(x = A,
                         centers = k,
                         nstart = n_start,
-                        iter.max = iter_max)
+                        iter.max = iter_max,
+                        seed = seed)
 
     return(km)
 
@@ -498,7 +498,61 @@ update_bubbletree_data <- function(btd,
 
 
 
-get_bubbletree <- function(btd, bubble_breaks = NA) {
+
+get_bubbletree_data_from_clustering <- function(x,
+                                                c,
+                                                hdi_level = 0.95,
+                                                B = 1,
+                                                N_eff = 500,
+                                                cores,
+                                                seed = NA,
+                                                verbose = F) {
+
+
+  # check input
+  if(is.na(x) || is.null(x) || is.matrix(x)==F) {
+    stop("x should be a numeric matrix")
+  }
+
+  # set seed for reproducibility
+  if(is.na(seed) == F) {
+    set.seed(seed = seed)
+  }
+
+
+  # dendrogram distance
+  dend_dist <- get_dend_dist(B = B,
+                             m = x,
+                             c = c,
+                             N_eff = N_eff,
+                             cores = cores,
+                             hdi_level = hdi_level,
+                             verbose = verbose)
+
+
+  # compute hierarchical clustering dendrogram
+  d <- reshape2::acast(data = dend_dist,
+                       formula = c_i~c_j, value.var = "M")
+  d <- stats::as.dist(d)
+  hc <- stats::hclust(d, method = "average")
+  ph <- treeio::as.phylo(x = hc)
+
+  return(list(A = x,
+              km = NA,
+              ph = ph,
+              hc = hc,
+              dend_dist = dend_dist,
+              k = k,
+              cluster = c,
+              input_par = list(hdi_level = hdi_level,
+                               N_eff = N_eff,
+                               B = B,
+                               seed = seed)))
+}
+
+
+get_bubbletree <- function(btd,
+                           bubble_breaks = NA) {
 
 
   # get dendrogram
