@@ -1,3 +1,3 @@
-# bubble_tree
+# scBubbletree
 
 Established method for software

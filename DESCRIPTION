@@ -1,4 +1,4 @@
-Package: bubbletree
+Package: scBubbletree
 Type: Package
 Title: Clustering and visualization of scRNA-seq data
 Version: 0.1.0
