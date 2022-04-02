@@ -11,7 +11,9 @@ get_annotation_tiles_char <- function(k,
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
-    f <- aggregate(a~label, data = f, FUN = mean)
+    f <- stats::aggregate(a~label,
+                          data = f,
+                          FUN = mean)
     f$value <- round(x = f$a, digits = round_digits)
     f$a <- NULL
     f$annotation <- annotation
@@ -19,27 +21,31 @@ get_annotation_tiles_char <- function(k,
   }
 
   ws <- data.frame(table(k, a))
-  colnames(ws) <- c("label", "annotation", "freq")
+  base::colnames(ws) <- c("label", "annotation", "freq")
   if(integrate_over_clusters==T) {
-    n <- aggregate(freq~label, data = ws, FUN = sum)
+    n <- stats::aggregate(freq~label,
+                          data = ws,
+                          FUN = sum)
     n$n <- n$freq
     n$freq <- NULL
-    ws <- merge(x = ws, y = n, by = "label")
+    ws <- base::merge(x = ws, y = n, by = "label")
     rm(n)
     legend <- "% of cluster"
   }
   if(integrate_over_clusters==F) {
-    n <- aggregate(freq~annotation, data = ws, FUN = sum)
+    n <- stats::aggregate(freq~annotation,
+                          data = ws,
+                          FUN = sum)
     n$n <- n$freq
     n$freq <- NULL
-    ws <- merge(x = ws, y = n, by = "annotation")
+    ws <- base::merge(x = ws, y = n, by = "annotation")
     rm(n)
     legend <- "% of annotation"
   }
   ws$p <- ws$freq/ws$n
   ws$percent <- round(x = ws$p*100, digits = round_digits)
 
-  ws <- merge(x = ws, y = tree_meta, by = "label", all = T)
+  ws <- base::merge(x = ws, y = tree_meta, by = "label", all = T)
   ws <- ws[order(ws$tree_order, decreasing = F), ]
   ws$label <- factor(x = ws$label, levels = unique(ws$label))
 
@@ -74,7 +80,9 @@ get_annotation_tiles_num <- function(k,
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
-    f <- stats::aggregate(a~label, data = f, FUN = mean,
+    f <- stats::aggregate(a~label,
+                          data = f,
+                          FUN = mean,
                           na.action = na.omit)
     f$value <- round(x = f$a, digits = round_digits)
     f$a <- NULL
@@ -84,28 +92,29 @@ get_annotation_tiles_num <- function(k,
 
   if(is.vector(as)) {
     as <- matrix(data = as, ncol = 1)
-    colnames(as) <- "a"
+    base::colnames(as) <- "a"
   }
 
-  if(is.null(colnames(as))) {
-    colnames(as) <- paste0("a_", 1:ncol(as))
+  if(is.null(base::colnames(as))) {
+    base::colnames(as) <- paste0("a_", 1:ncol(as))
   }
 
   ws <- vector(mode = "list", length = ncol(as))
   for(i in 1:ncol(as)) {
     ws[[i]] <- get_a(k = k,
                      a = as[, i],
-                     annotation = colnames(as)[i])
+                     annotation = base::colnames(as)[i])
   }
   ws <- do.call(rbind, ws)
 
-  ws <- merge(x = ws, y = tree_meta, by = "label", all = T)
+  ws <- base::merge(x = ws, y = tree_meta, by = "label", all = T)
   ws <- ws[order(ws$tree_order, decreasing = F), ]
   ws$label <- factor(x = ws$label, levels = unique(ws$label))
   if(any(is.na(ws$annotation))) {
     ws$annotation <- ws$annotation[is.na(ws$annotation)==F][1]
   }
-  ws$annotation <- factor(x = ws$annotation, levels = colnames(as))
+  ws$annotation <- factor(x = ws$annotation,
+                          levels = base::colnames(as))
 
   w <- ggplot(data = ws)+
     theme_bw()+
@@ -143,28 +152,29 @@ get_annotation_violins <- function(k,
 
   if(is.vector(as)) {
     as <- matrix(data = as, ncol = 1)
-    colnames(as) <- "a"
+    base::colnames(as) <- "a"
   }
 
-  if(is.null(colnames(as))) {
-    colnames(as) <- paste0("a_", 1:ncol(as))
+  if(is.null(base::colnames(as))) {
+    base::colnames(as) <- paste0("a_", 1:ncol(as))
   }
 
   ws <- vector(mode = "list", length = ncol(as))
   for(i in 1:ncol(as)) {
     ws[[i]] <- get_a(k = k, a = as[, i],
-                     annotation = colnames(as)[i])
+                     annotation = base::colnames(as)[i])
   }
   ws <- do.call(rbind, ws)
 
 
-  ws <- merge(x = ws, y = tree_meta, by = "label", all = T)
+  ws <- base::merge(x = ws, y = tree_meta, by = "label", all = T)
   ws <- ws[order(ws$tree_order, decreasing = F), ]
   ws$label <- factor(x = ws$label, levels = unique(ws$label))
   if(any(is.na(ws$annotation))) {
     ws$annotation <- ws$annotation[is.na(ws$annotation)==F][1]
   }
-  ws$annotation <- factor(x = ws$annotation, levels = colnames(as))
+  ws$annotation <- factor(x = ws$annotation,
+                          levels = base::colnames(as))
 
 
   w <- ggplot(data = ws)+
@@ -181,7 +191,7 @@ get_annotation_violins <- function(k,
   ws_ok <- ws[is.finite(ws$value), ]
   ws_j <- which(table(ws_ok$label) >= violin_min_cells)
   if(length(ws_j) != 0) {
-    ws_ok <- ws_ok[ws_ok$label %in% names(ws_j), ]
+    ws_ok <- ws_ok[ws_ok$label %in% base::names(ws_j), ]
     w <- w + geom_violin(data = ws_ok,
                          aes(x = label,
                              y = value),

@@ -29,7 +29,7 @@ get_dend_dist <- function(B = 20,
                                   N_eff = N_eff,
                                   mc.cores = cores,
                                   verbose = verbose)
-  pair_dist <- do.call(rbind, pair_dist)
+  pair_dist <- base::do.call(rbind, pair_dist)
 
   hc_pair_dist <- get_hc_dist(pair_dist = pair_dist)
   pca_pair_dist <- get_pca_dist(pair_dist = pair_dist)
@@ -79,7 +79,7 @@ get_bubbletree <- function(ph,
 
   # compute meta summary
   km_meta <- data.frame(table(cluster))
-  colnames(km_meta) <- c("label", "c")
+  base::colnames(km_meta) <- c("label", "c")
   km_meta$n <- sum(km_meta$c)
   km_meta$p <- km_meta$c/km_meta$n
   km_meta$pct <- round(x = km_meta$p*100,
@@ -117,7 +117,7 @@ get_bubbletree <- function(ph,
   q <- q[order(q$y, decreasing = F), ]
   tips <- q$label[q$isTip==T]
   tips <- data.frame(label = tips, tree_order = 1:length(tips))
-  km_meta <- merge(x = km_meta, y = tips, by = "label")
+  km_meta <- base::merge(x = km_meta, y = tips, by = "label")
   km_meta <- km_meta[order(km_meta$tree_order, decreasing = T), ]
   rm(q, tips)
 
@@ -135,7 +135,9 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
     for(i in 1:ncol(y)) {
       y[,i] <- (x[i]-y[,i])^2
     }
-    y <- apply(X = y, MARGIN = 1, FUN = sum)
+    y <- base::apply(X = y,
+                     MARGIN = 1,
+                     FUN = sum)
     y <- sqrt(y)
     return(y)
   }
@@ -159,7 +161,9 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
     # efficiency
     if(is.na(N_eff) == F) {
       if(nrow(x_i)>N_eff) {
-        x_i <- x_i[sample(x = 1:nrow(x_i), size = N_eff, replace = F), ]
+        x_i <- x_i[base::sample(x = 1:nrow(x_i),
+                                size = N_eff,
+                                replace = F), ]
       }
     }
 
@@ -173,7 +177,9 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
       # efficiency
       if(is.na(N_eff) == F) {
         if(nrow(x_j)>N_eff) {
-          x_j <- x_j[sample(x = 1:nrow(x_j), size = N_eff, replace = F), ]
+          x_j <- x_j[base::sample(x = 1:nrow(x_j),
+                                  size = N_eff,
+                                  replace = F), ]
         }
       }
 
@@ -196,7 +202,7 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
       if(verbose) {
         verbose_counter <- verbose_counter + 1
         cat(paste0("Generating dendrogram:",
-                   round(x = verbose_counter/((len_cs*(len_cs-1))/2)*100,
+                   base::round(x = verbose_counter/((len_cs*(len_cs-1))/2)*100,
                          digits = 0), "% \n"))
       }
     }
@@ -207,15 +213,15 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
 
 
 get_hdi <- function(vec, hdi_level) {
-  sortedPts <- sort(vec)
-  ciIdxInc <- floor(hdi_level * length(sortedPts))
-  nCIs = length(sortedPts) - ciIdxInc
+  sortedPts <- base::sort(vec)
+  ciIdxInc <- base::floor(hdi_level * base::length(sortedPts))
+  nCIs = base::length(sortedPts) - ciIdxInc
   ciWidth = rep(0 , nCIs)
   for (i in 1:nCIs) {
     ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
   }
-  HDImin = sortedPts[which.min(ciWidth)]
-  HDImax = sortedPts[which.min(ciWidth) + ciIdxInc]
+  HDImin = sortedPts[base::which.min(ciWidth)]
+  HDImax = sortedPts[base::which.min(ciWidth) + ciIdxInc]
   HDIlim = c(HDImin, HDImax)
   return(HDIlim)
 }
@@ -228,13 +234,13 @@ get_hc_dist <- function(pair_dist) {
     d <- pair_dist[pair_dist$B==i, ]
 
     # compute HClust
-    hc <- stats::hclust(d = as.dist(reshape2::acast(
+    hc <- stats::hclust(d = stats::as.dist(reshape2::acast(
       data = d, formula = c_i~c_j,
       value.var = "M")), method = "average")
 
     # get HClust distances as data.frame and name columns appropriately
     hd <- reshape2::melt(data = as.matrix(stats::cophenetic(x = hc)))
-    colnames(x = hd) <- c("c_i", "c_j", "M")
+    base::colnames(x = hd) <- c("c_i", "c_j", "M")
 
     # add B info and join data
     hd$B <- i
@@ -242,13 +248,15 @@ get_hc_dist <- function(pair_dist) {
   }
 
   # compute mean HClust distances accross Bs
-  m <- aggregate(M~c_i+c_j, data = hc_dist, FUN = mean)
+  m <- stats::aggregate(M~c_i+c_j,
+                        data = hc_dist,
+                        FUN = mean)
 
   # compute HDI accross Bs
-  hdi <- aggregate(M~c_i+c_j,
-                   data = hc_dist,
-                   FUN = get_hdi,
-                   hdi_level = 0.9)
+  hdi <- stats::aggregate(M~c_i+c_j,
+                          data = hc_dist,
+                          FUN = get_hdi,
+                          hdi_level = 0.9)
 
   # if B too low, cannot compute HDI
   if(B<50) {
@@ -261,19 +269,20 @@ get_hc_dist <- function(pair_dist) {
   }
   hdi$M <- NULL
 
-  o <- merge(x = m, y = hdi, by = c("c_i", "c_j"))
+  o <- base::merge(x = m, y = hdi,
+                   by = c("c_i", "c_j"))
   return(o)
 }
 
 
 get_pca_dist <- function(pair_dist) {
-  m <- aggregate(M~c_i+c_j,
-                 data = pair_dist,
-                 FUN = mean)
-  hdi <- aggregate(M~c_i+c_j,
-                   data = pair_dist,
-                   FUN = get_hdi,
-                   hdi_level = 0.9)
+  m <- stats::aggregate(M~c_i+c_j,
+                        data = pair_dist,
+                        FUN = mean)
+  hdi <- stats::aggregate(M~c_i+c_j,
+                          data = pair_dist,
+                          FUN = get_hdi,
+                          hdi_level = 0.9)
   if(B<50) {
     hdi$L90 <- NA
     hdi$H90 <- NA
@@ -284,6 +293,7 @@ get_pca_dist <- function(pair_dist) {
   }
   hdi$M <- NULL
 
-  o <- merge(x = m, y = hdi, by = c("c_i", "c_j"))
+  o <- base::merge(x = m, y = hdi,
+                   by = c("c_i", "c_j"))
   return(o)
 }

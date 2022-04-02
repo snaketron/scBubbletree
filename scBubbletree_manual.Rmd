@@ -31,15 +31,16 @@ analysis e.g. based on Seurat.
 To run this vignette we need several R-packages. Load them now:
 
 ```{r, echo = T, results='hide'}
-source(file = "~/Rutil/Init_Rpack.R")
-source(file = "~/Rutil/Graphics.R")
-source(file = "~/Rutil/Stats.R")
+# source(file = "~/Rutil/Init_Rpack.R")
+# source(file = "~/Rutil/Graphics.R")
+# source(file = "~/Rutil/Stats.R")
 
 # source(file = "src/ClusteringUtil.R")
-source(file = "../scBubbletree/R/util.R")
-library(farver, lib.loc = "/usr/local/lib/R/site-library")
+# source(file = "../scBubbletree/R/util.R")
+# library(farver, lib.loc = "/usr/local/lib/R/site-library")
 
 library(Seurat, lib.loc = lib.loc)
+library(scBubbletree, lib.loc = lib.loc)
 library(ggplot2, lib.loc = lib.loc)
 library(reshape2, lib.loc = lib.loc)
 library(parallel, lib.loc = lib.loc)
@@ -47,7 +48,7 @@ library(ggtree, lib.loc = lib.loc)
 library(cluster, lib.loc = lib.loc)
 library(ape, lib.loc = lib.loc)
 library(org.Hs.eg.db, lib.loc = lib.loc)
-library(bluster, lib.loc = lib.loc)
+# library(bluster, lib.loc = lib.loc)
 library(SummarizedExperiment, lib.loc = lib.loc)
 
 ```

@@ -46,7 +46,9 @@ get_k <- function(B = 20,
     }
     if(cv_gap_p < 1) {
       cs <- km$cluster
-      js <- sample(x = 1:nrow(x), size = ceiling(nrow(x)*cv_gap_p), replace = F)
+      js <- base::sample(x = 1:nrow(x),
+                         size = ceiling(nrow(x)*cv_gap_p),
+                         replace = F)
       x <- x[js, ]
       cs <- cs[js]
     } else {
@@ -115,7 +117,9 @@ get_k <- function(B = 20,
   for(b in 1:B) {
     cat("boot:", b, " : ")
 
-    j <- sample(x = 1:nrow(x), size = ceiling(nrow(x)*cv_clust_p), replace = T)
+    j <- base::sample(x = 1:nrow(x),
+                      size = ceiling(nrow(x)*cv_clust_p),
+                      replace = T)
 
     # clustering
     cat("1) clustering, ")
@@ -125,7 +129,7 @@ get_k <- function(B = 20,
                                      nstart = n_start,
                                      iter.max = iter_max,
                                      mc.cores = cores)
-    names(kmeans_obj) <- ks
+    base::names(kmeans_obj) <- ks
     boot_obj[[b]] <- kmeans_obj
 
     # extract WSS
@@ -161,7 +165,7 @@ get_k <- function(B = 20,
                           cell_i = j)
 
   }
-  names(boot_obj) <- 1:B
+  base::names(boot_obj) <- 1:B
 
 
 
@@ -226,7 +230,8 @@ get_bubbletree_data <- function(x,
     set.seed(seed = seed)
   }
   else {
-    seed <- sample(x = 1:10^6, size = 1)
+    seed <- base::sample(x = 1:10^6,
+                         size = 1)
     set.seed(seed = seed)
   }
 
@@ -346,7 +351,8 @@ update_bubbletree_data <- function(btd,
                                k = ks[i])
 
     # update cluster naming
-    btd$cluster[j] <- paste0(updated_bubbles[i], '_', u_kms[[i]]$cluster)
+    btd$cluster[j] <- paste0(updated_bubbles[i], '_',
+                             u_kms[[i]]$cluster)
   }
 
   cat("Updating dendrogram \n")
@@ -428,11 +434,11 @@ get_gini <- function(labels, clusters) {
 
   # for each cluster we get gini-index
   cluster_gini <- numeric(length = length(cs))
-  names(cluster_gini) <- cs
+  base::names(cluster_gini) <- cs
 
   # cluster weights used to compute total gini
   cluster_weight <- numeric(length = length(cs))
-  names(cluster_weight) <- cs
+  base::names(cluster_weight) <- cs
 
   for(i in 1:length(cs)) {
     j <- which(clusters == cs[i])
@@ -461,7 +467,7 @@ get_gini_boot <- function(labels, kmeans_boot_obj) {
   cluster_o <- c()
   for(i in 1:B) {
     # b$boot_obj[[b]]$obj$`2`$
-    ks <- names(kmeans_boot_obj$boot_obj[[i]]$obj)
+    ks <- base::names(kmeans_boot_obj$boot_obj[[i]]$obj)
 
     for(j in 1:length(ks)) {
       cell_id <- kmeans_boot_obj$boot_obj[[i]]$cell_i
@@ -469,16 +475,17 @@ get_gini_boot <- function(labels, kmeans_boot_obj) {
                        labels = labels[cell_id])
 
       # collect total gini and cluster specific gini scores
-
       # total
-      total_o <- rbind(total_o, data.frame(B = i,
-                                           k = as.numeric(ks[j]),
-                                           total_gini = gini$total_gini))
+      total_o <- rbind(total_o,
+                       data.frame(B = i,
+                                  k = as.numeric(ks[j]),
+                                  total_gini = gini$total_gini))
       # cluster
-      cluster_o <- rbind(cluster_o, data.frame(B = i,
-                                               k = as.numeric(ks[j]),
-                                               cluster = names(gini$cluster_gini),
-                                               gini = gini$cluster_gini))
+      cluster_o <- rbind(cluster_o,
+                         data.frame(B = i,
+                                    k = as.numeric(ks[j]),
+                                    cluster = base::names(gini$cluster_gini),
+                                    gini = gini$cluster_gini))
     }
   }
   return(list(total_gini = total_o,
