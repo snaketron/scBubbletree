@@ -14,12 +14,12 @@
 #' @param cores
 #' @return data frame
 #'
-get_dend_dist <- function(B = 20,
-                          m,
-                          c,
-                          N_eff,
-                          cores,
-                          verbose = F) {
+get_dist <- function(B = 20,
+                     m,
+                     c,
+                     N_eff,
+                     cores,
+                     verbose = F) {
 
   # get distances between clusters
   pair_dist <- parallel::mclapply(X = 1:B,
@@ -48,14 +48,21 @@ get_ph_support <- function(main_ph,
                          formula = c_i~c_j,
                          value.var = "M")
     d <- stats::as.dist(d)
+
     hc <- stats::hclust(d, method = "average")
     ph <- treeio::as.phylo(x = hc)
+    ph <- ape::unroot(phy = ph)
+
     if(i == 1) {
       boot_ph <- ph
-    } else {
+    }
+    else {
       boot_ph <- c(boot_ph, ph)
     }
   }
+
+  # compute majortiy tree
+  # majority_ph <- ape::consensus(boot_ph, p = 0.5)
 
   # compute clade proportions
   clade_b <- ape::prop.clades(phy = main_ph,
@@ -63,10 +70,12 @@ get_ph_support <- function(main_ph,
                               part = NULL,
                               rooted = ape::is.rooted(main_ph))
 
+
+  # add bootstrap
   main_ph$node.label <- clade_b
-  #paste0(clade_b, "/", max(x$B))
-  return(main_ph)
-  # clade_p <- round(x = clade_b/max(x$B)
+
+  return(list(main_ph = main_ph,
+              boot_ph = boot_ph))
 }
 
 
@@ -99,12 +108,13 @@ get_bubbletree <- function(ph,
   if(show_branch_support) {
     tree <- tree+
       geom_nodelab(geom='label', aes(label=label, subset=isTip==F),
-                   size = 3.0, hjust=-0.25)
+                   size = 3.0, hjust=-0.2)
   }
 
   tree <- tree+
-    scale_size_continuous(range = c(1, 7),
-                          limits = c(0, max(km_meta$c)))+
+    # scale_radius
+    scale_radius(range = c(1, 7),
+                 limits = c(0, max(km_meta$c)))+
     scale_fill_gradient(low = "white",
                         high = "black",
                         limits = c(0, max(km_meta$c)))+
@@ -203,7 +213,7 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
         verbose_counter <- verbose_counter + 1
         cat(paste0("Generating dendrogram:",
                    base::round(x = verbose_counter/((len_cs*(len_cs-1))/2)*100,
-                         digits = 0), "% \n"))
+                               digits = 0), "% \n"))
       }
     }
   }
@@ -228,8 +238,10 @@ get_hdi <- function(vec, hdi_level) {
 
 
 get_hc_dist <- function(pair_dist) {
+  B <- base::max(pair_dist$B)
+
   hc_dist <- c()
-  for(i in 1:max(pair_dist$B)) {
+  for(i in 1:B) {
     # get pairwise distances for B
     d <- pair_dist[pair_dist$B==i, ]
 
@@ -250,7 +262,7 @@ get_hc_dist <- function(pair_dist) {
   # compute mean HClust distances accross Bs
   m <- stats::aggregate(M~c_i+c_j,
                         data = hc_dist,
-                        FUN = mean)
+                        FUN = base::mean)
 
   # compute HDI accross Bs
   hdi <- stats::aggregate(M~c_i+c_j,
@@ -276,6 +288,8 @@ get_hc_dist <- function(pair_dist) {
 
 
 get_pca_dist <- function(pair_dist) {
+  B <- base::max(pair_dist$B)
+
   m <- stats::aggregate(M~c_i+c_j,
                         data = pair_dist,
                         FUN = mean)

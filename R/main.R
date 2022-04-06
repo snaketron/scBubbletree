@@ -20,11 +20,12 @@ get_k <- function(B = 20,
                   x,
                   n_start = 100,
                   iter_max = 50,
-                  cores) {
+                  cores =1,
+                  approx_silhouette = T) {
 
 
-  # average silhouette for k-means
-  get_avg_sil <- function(km, df, approx = T) {
+  # compute average silhouette
+  get_avg_sil <- function(km, df, approx) {
     if(approx == F) {
       ss <- cluster::silhouette(km$cluster, stats::dist(
         x = df, method = "euclidean"))
@@ -39,8 +40,8 @@ get_k <- function(B = 20,
   }
 
 
-  # gat statistics
-  get_gap <- function (x, km, B = 100, d.power = 1, cv_gap_p = 1) {
+  # compute gap statistics
+  get_gap <- function(x, km, B = 100, d.power = 1, cv_gap_p = 1) {
     if(cv_gap_p < 0 | cv_gap_p > 1) {
       stop("cv_gap_p is a number between 0 (excluded) and 1.")
     }
@@ -89,6 +90,17 @@ get_k <- function(B = 20,
                 logW = logW,
                 logWks = logWks,
                 E.logW = E.logW))
+  }
+
+  # get standard error
+  get_se <- function(x) {
+    if(length(x) == 1) {
+      se <- NA
+    }
+    else {
+      se <- stats::sd(x)/base::sqrt(base::length(x))
+    }
+    return(se)
   }
 
 
@@ -143,7 +155,8 @@ get_k <- function(B = 20,
                                      FUN = get_avg_sil,
                                      df = x[j,],
                                      mc.cores = cores,
-                                     mc.cleanup = T)
+                                     mc.cleanup = T,
+                                     approx = approx_silhouette)
 
 
     # get_gapstat <- function (x, km, k, B = 100, d.power = 1)
@@ -192,7 +205,36 @@ get_k <- function(B = 20,
 
   }
 
+  # next: compute summary from B values for each metrix
+  gap_stats_summary <- base::merge(
+    x = stats::aggregate(gap~k, data = gap_stats, FUN = stats::median),
+    y = stats::aggregate(gap~k, data = gap_stats, FUN = get_se),
+    by = "k")
+  colnames(gap_stats_summary) <- c("k", "gap_median", "gap_SE")
+  gap_stats_summary$L95 <- gap_stats_summary$gap_median-gap_stats_summary$gap_SE*1.96
+  gap_stats_summary$H95 <- gap_stats_summary$gap_median+gap_stats_summary$gap_SE*1.96
+
+
+  sil_stats_summary <- base::merge(
+    x = stats::aggregate(sil~k, data = sil_stats, FUN = stats::median),
+    y = stats::aggregate(sil~k, data = sil_stats, FUN = get_se),
+    by = "k")
+  colnames(sil_stats_summary) <- c("k", "sil_median", "sil_SE")
+  sil_stats_summary$L95 <- sil_stats_summary$sil_median-sil_stats_summary$sil_SE*1.96
+  sil_stats_summary$H95 <- sil_stats_summary$sil_median+sil_stats_summary$sil_SE*1.96
+
+  wss_stats_summary <- base::merge(
+    x = stats::aggregate(wss~k, data = wss_stats, FUN = stats::median),
+    y = stats::aggregate(wss~k, data = wss_stats, FUN = get_se),
+    by = "k")
+  colnames(wss_stats_summary) <- c("k", "wss_median", "wss_SE")
+  wss_stats_summary$L95 <- wss_stats_summary$wss_median-wss_stats_summary$wss_SE*1.96
+  wss_stats_summary$H95 <- wss_stats_summary$wss_median+wss_stats_summary$wss_SE*1.96
+
   return(list(boot_obj = boot_obj,
+              wss_stats_summary = wss_stats_summary,
+              sil_stats_summary = sil_stats_summary,
+              gap_stats_summary = gap_stats_summary,
               wss_stats = wss_stats,
               sil_stats = sil_stats,
               gap_stats = gap_stats))
@@ -242,18 +284,18 @@ get_bubbletree_data <- function(x,
                       iter.max = iter_max)
 
 
-  # dendrogram distance
-  dend_dist <- get_dend_dist(B = B,
-                             m = x,
-                             c = km$cluster,
-                             N_eff = N_eff,
-                             cores = cores,
-                             verbose = verbose)
+  # pairwise distances
+  pair_dist <- get_dist(B = B,
+                        m = x,
+                        c = km$cluster,
+                        N_eff = N_eff,
+                        cores = cores,
+                        verbose = verbose)
 
 
 
   # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = dend_dist$pca_pair_dist,
+  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
                        formula = c_i~c_j, value.var = "M")
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
@@ -262,11 +304,11 @@ get_bubbletree_data <- function(x,
 
   # get branch support
   ph <- get_ph_support(main_ph = ph,
-                       x = dend_dist$raw_pair_dist)
+                       x = pair_dist$raw_pair_dist)
 
 
   # build treetree
-  t <- get_bubbletree(ph = ph,
+  t <- get_bubbletree(ph = ph$main_ph,
                       cluster = km$cluster,
                       round_digits = round_digits,
                       show_branch_support = show_branch_support)
@@ -275,7 +317,7 @@ get_bubbletree_data <- function(x,
               km = km,
               ph = ph,
               hc = hc,
-              dend_dist = dend_dist,
+              pair_dist = pair_dist,
               k = k,
               cluster = km$cluster,
               input_par = list(n_start = n_start,
@@ -356,15 +398,15 @@ update_bubbletree_data <- function(btd,
   }
 
   cat("Updating dendrogram \n")
-  dend_dist <- get_dend_dist(B = B,
-                             m = A,
-                             c = btd$cluster,
-                             N_eff = N_eff,
-                             cores = cores,
-                             verbose = verbose)
+  pair_dist <- get_dist(B = B,
+                        m = A,
+                        c = btd$cluster,
+                        N_eff = N_eff,
+                        cores = cores,
+                        verbose = verbose)
 
   # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = dend_dist$pca_pair_dist,
+  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
                        formula = c_i~c_j,
                        value.var = "M")
 
@@ -374,16 +416,17 @@ update_bubbletree_data <- function(btd,
   ph <- ape::unroot(phy = ph)
 
   # get branch support
-  ph <- get_ph_support(main_ph = ph, x = dend_dist$raw_pair_dist)
+  ph <- get_ph_support(main_ph = ph,
+                       x = pair_dist$raw_pair_dist)
 
   btd$ph <- ph
   btd$hc <- hc
-  btd$dend_dist <- dend_dist
+  btd$pair_dist <- pair_dist
   btd$km <- "updated"
   btd$k <- "updated"
 
   # tree
-  t <- get_bubbletree(ph = ph,
+  t <- get_bubbletree(ph = ph$main_ph,
                       cluster = btd$cluster,
                       round_digits = round_digits,
                       show_branch_support = show_branch_support)
@@ -463,6 +506,17 @@ get_gini <- function(labels, clusters) {
 get_gini_boot <- function(labels, kmeans_boot_obj) {
   B <- length(kmeans_boot_obj$boot_obj)
 
+  # get standard error
+  get_se <- function(x) {
+    if(length(x) == 1) {
+      se <- NA
+    }
+    else {
+      se <- stats::sd(x)/base::sqrt(base::length(x))
+    }
+    return(se)
+  }
+
   total_o <- c()
   cluster_o <- c()
   for(i in 1:B) {
@@ -488,7 +542,34 @@ get_gini_boot <- function(labels, kmeans_boot_obj) {
                                     gini = gini$cluster_gini))
     }
   }
-  return(list(total_gini = total_o,
+
+  # next: compute summary from B values for each metric
+  # total
+  total_gini_summary <- base::merge(
+    x = stats::aggregate(total_gini~k, data = total_o, FUN = stats::median),
+    y = stats::aggregate(total_gini~k, data = total_o, FUN = get_se),
+    by = "k")
+  colnames(total_gini_summary) <- c("k", "total_gini_median", "total_gini_SE")
+  total_gini_summary$L95 <- total_gini_summary$total_gini_median-
+    total_gini_summary$total_gini_SE*1.96
+  total_gini_summary$H95 <- total_gini_summary$total_gini_median+
+    total_gini_summary$total_gini_SE*1.96
+
+  # cluster
+  cluster_gini_summary <- base::merge(
+    x = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = stats::median),
+    y = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = get_se),
+    by = c("k", "cluster"))
+  colnames(cluster_gini_summary) <- c("k", "clusters", "gini_median", "gini_SE")
+  cluster_gini_summary$L95 <- cluster_gini_summary$gini_median-
+    cluster_gini_summary$gini_SE*1.96
+  cluster_gini_summary$H95 <- cluster_gini_summary$gini_median+
+    cluster_gini_summary$gini_SE*1.96
+
+
+  return(list(total_gini_summary = total_gini_summary,
+              cluster_gini_summary = cluster_gini_summary,
+              total_gini = total_o,
               cluster_gini = cluster_o))
 }
 

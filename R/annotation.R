@@ -7,7 +7,8 @@ get_annotation_tiles_char <- function(k,
                                       a,
                                       tree_meta,
                                       integrate_over_clusters = T,
-                                      round_digits = 2) {
+                                      round_digits = 2,
+                                      rotate_x_axis = T) {
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
@@ -62,8 +63,11 @@ get_annotation_tiles_char <- function(k,
     theme(legend.position = "top")+
     xlab(label = "Annotation")+
     ylab(label = "Cluster")+
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
     guides(fill = guide_colourbar(barwidth = 4, barheight = 1))
+
+  if(rotate_x_axis) {
+    w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  }
 
   return(list(ws = ws, w = w))
 }
@@ -76,7 +80,8 @@ get_annotation_tiles_num <- function(k,
                                      as,
                                      tree_meta,
                                      plot_title = '',
-                                     round_digits = 2) {
+                                     round_digits = 2,
+                                     rotate_x_axis = T) {
 
   get_a <- function(k, a, annotation) {
     f <- data.frame(label = k, a = a)
@@ -124,9 +129,12 @@ get_annotation_tiles_num <- function(k,
     theme(legend.position = "top")+
     xlab(label = "Annotation")+
     ylab(label = "Cluster")+
-    theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))+
     ggtitle(label = plot_title)+
     guides(fill = guide_colourbar(barwidth = 4, barheight = 1))
+
+  if(rotate_x_axis) {
+    w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  }
 
   return(list(ws = ws, w = w))
 }
