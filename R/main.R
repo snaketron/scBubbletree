@@ -15,21 +15,31 @@
 #'
 get_k <- function(B = 20,
                   cv_clust_p = 1,
-                  cv_gap_p = 0.5 ,
+                  cv_index_p = 0.5 ,
                   ks,
                   x,
                   n_start = 100,
                   iter_max = 50,
-                  cores =1,
+                  cores = 1,
+                  low_size_output = F,
                   approx_silhouette = T) {
 
 
-  # compute average silhouette
-  get_avg_sil <- function(km, df, approx) {
-    if(approx == F) {
-      ss <- cluster::silhouette(km$cluster, stats::dist(
-        x = df, method = "euclidean"))
-      if(is.na(ss)) {
+  # compute approximate average silhouette
+  get_avg_sil <- function(km, df, cv_index_p, approx_silhouette) {
+    js <- base::sample(x = 1:nrow(df),
+                       size = ceiling(nrow(df)*cv_index_p),
+                       replace = F)
+    cs <- km$cluster[js]
+    if(length(unique(cs))==1) {
+      return(NA)
+    }
+
+    if(approx_silhouette == F) {
+      ss <- cluster::silhouette(x = cs,
+                                stats::dist(x = df[js,],
+                                            method = "euclidean"))
+      if(length(ss)==1 || is.na(ss)) {
         return(NA)
       }
       return(mean(ss[, 3]))
@@ -41,66 +51,67 @@ get_k <- function(B = 20,
 
 
   # compute gap statistics
-  get_gap <- function(x, km, B = 100, d.power = 1, cv_gap_p = 1) {
-    if(cv_gap_p < 0 | cv_gap_p > 1) {
-      stop("cv_gap_p is a number between 0 (excluded) and 1.")
+  get_gap <- function (km,
+                       x,
+                       d.power = 1,
+                       B = 100,
+                       cv_index_p = 1,
+                       spaceH0 = "original") {
+    if(cv_index_p < 0 | cv_index_p > 1) {
+      stop("cv_index_p is a number between 0 (excluded) and 1.")
     }
-    if(cv_gap_p < 1) {
+    if(cv_index_p < 1) {
       cs <- km$cluster
       js <- base::sample(x = 1:nrow(x),
-                         size = ceiling(nrow(x)*cv_gap_p),
+                         size = ceiling(nrow(x)*cv_index_p),
                          replace = F)
       x <- x[js, ]
       cs <- cs[js]
     } else {
       cs <- km$cluster
     }
+
     n <- nrow(x)
     ii <- seq_len(n)
+    kk <- length(unique(cs))
 
-
-    Wk <- function(X, cs) {
-      0.5 * sum(vapply(split(ii, cs), function(I) {
+    W.k <- function(X, kk) {
+      clus <- kmeans(x = X, centers = kk)$cluster
+      0.5 * sum(vapply(split(ii, clus), function(I) {
         xs <- X[I, , drop = FALSE]
-        sum(dist(xs, method = "euclidean")^d.power/nrow(xs))
+        sum(dist(xs)^d.power/nrow(xs))
       }, 0))
     }
 
-    logW <- E.logW <- SE.sim <- numeric(1)
-    logW <- log(Wk(x, cs=cs))
+    get_logW <- function(X, cs) {
+      0.5 * sum(vapply(split(ii, cs), function(I) {
+        xs <- X[I, , drop = FALSE]
+        sum(dist(xs)^d.power/nrow(xs))
+      }, 0))
+    }
 
+    logW <- numeric(1)
+    E.logW <- numeric(1)
+    SE.sim <- numeric(1)
+
+    logW <- log(get_logW(x, cs=cs))
     xs <- scale(x, center = TRUE, scale = FALSE)
     m.x <- rep(attr(xs, "scaled:center"), each = n)
-    rng.x1 <- apply(xs, 2L, range)
-    logWks <- numeric(length = B)
+    rng.x1 <- apply(xs, 2L, base::range)
+    logWks <- matrix(0, B, 1)
     for (b in 1:B) {
-      z1 <- apply(X = rng.x1,
-                  MARGIN = 2,
-                  FUN = function(M, nn) {
-                    runif(nn, min = M[1], max = M[2])
-                  },
-                  nn = n)
+      z1 <- apply(rng.x1, 2, function(M, nn) runif(nn, min = M[1],
+                                                   max = M[2]), nn = n)
       z <- z1 + m.x
-      logWks[b] <- log(Wk(z, cs=cs))
+      logWks[b, 1] <- log(W.k(z, kk = kk))
     }
-    E.logW <- mean(logWks)
-    SE.sim <- sqrt((1 + 1/B) * var(logWks))
+    E.logW <- colMeans(logWks)
+    SE.sim <- sqrt((1 + 1/B) * apply(logWks, 2, stats::var))
     return(list(gap = E.logW - logW,
                 SE.sim = SE.sim,
                 logW = logW,
                 logWks = logWks,
                 E.logW = E.logW))
-  }
-
-  # get standard error
-  get_se <- function(x) {
-    if(length(x) == 1) {
-      se <- NA
-    }
-    else {
-      se <- stats::sd(x)/base::sqrt(base::length(x))
-    }
-    return(se)
   }
 
 
@@ -129,14 +140,18 @@ get_k <- function(B = 20,
   for(b in 1:B) {
     cat("boot:", b, " : ")
 
-    j <- base::sample(x = 1:nrow(x),
-                      size = ceiling(nrow(x)*cv_clust_p),
-                      replace = T)
+    if(cv_clust_p<1) {
+      j <- base::sample(x = 1:nrow(x),
+                        size = ceiling(nrow(x)*cv_clust_p),
+                        replace = T)
+    } else {
+      j <- 1:nrow(x)
+    }
 
     # clustering
     cat("1) clustering, ")
     kmeans_obj <- parallel::mclapply(X = ks,
-                                     FUN = kmeans,
+                                     FUN = stats::kmeans,
                                      x = x[j,],
                                      nstart = n_start,
                                      iter.max = iter_max,
@@ -149,6 +164,11 @@ get_k <- function(B = 20,
       return(x$tot.withinss)
     })
 
+    # # between_SS / total_SS
+    # ratio_betweenss_totalss <- lapply(X = kmeans_obj, FUN =  function(x) {
+    #   return(x$betweenss/x$totss)
+    # })
+
     # compute silhouette
     cat("2) silhouette, ")
     sil_kmeans <- parallel::mclapply(X = kmeans_obj,
@@ -156,17 +176,17 @@ get_k <- function(B = 20,
                                      df = x[j,],
                                      mc.cores = cores,
                                      mc.cleanup = T,
-                                     approx = approx_silhouette)
+                                     cv_index_p = cv_index_p,
+                                     approx_silhouette = approx_silhouette)
 
 
-    # get_gapstat <- function (x, km, k, B = 100, d.power = 1)
     cat("3) gap-stat, ")
     gap_stats <- parallel::mclapply(X = kmeans_obj,
                                     FUN = get_gap,
                                     x = x[j,],
-                                    B = 1,
+                                    B = 5,
                                     d.power = 1,
-                                    cv_gap_p = cv_gap_p,
+                                    cv_index_p = cv_index_p,
                                     mc.cores = cores,
                                     mc.cleanup = T)
     # within sum of squares
@@ -183,53 +203,72 @@ get_k <- function(B = 20,
 
 
   # collect clustering info data
-  sil_stats <- c()
-  gap_stats <- c()
-  wss_stats <- c()
+  sil_stats <- vector(mode = "list", length = length(boot_obj))
+  gap_stats <- vector(mode = "list", length = length(boot_obj))
+  wss_stats <- vector(mode = "list", length = length(boot_obj))
 
   for(i in 1:length(boot_obj)) {
-
     sil_vec <- numeric(length = length(ks))
     gap_vec <- numeric(length = length(ks))
     wss_vec <- numeric(length = length(ks))
 
     for(j in 1:length(ks)) {
+      # browser()
       sil_vec[j] <- boot_obj[[i]]$sil[[j]]
       gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
       wss_vec[j] <- boot_obj[[i]]$wss[[j]]
     }
 
-    sil_stats <- rbind(sil_stats, data.frame(boot = i, sil = sil_vec, k = ks))
-    gap_stats <- rbind(gap_stats, data.frame(boot = i, gap = gap_vec, k = ks))
-    wss_stats <- rbind(wss_stats, data.frame(boot = i, wss = wss_vec, k = ks))
+    sil_stats[[i]] <- data.frame(boot = i, sil = sil_vec, k = ks)
+    gap_stats[[i]] <- data.frame(boot = i, gap = gap_vec, k = ks)
+    wss_stats[[i]] <- data.frame(boot = i, wss = wss_vec, k = ks)
 
   }
 
-  # next: compute summary from B values for each metrix
+  # collect DFs
+  sil_stats <- do.call(rbind, sil_stats)
+  gap_stats <- do.call(rbind, gap_stats)
+  wss_stats <- do.call(rbind, wss_stats)
+
+
+  # compute gap-stat summary from B values for each matrix
   gap_stats_summary <- base::merge(
-    x = stats::aggregate(gap~k, data = gap_stats, FUN = stats::median),
+    x = stats::aggregate(gap~k, data = gap_stats, FUN = base::mean),
     y = stats::aggregate(gap~k, data = gap_stats, FUN = get_se),
     by = "k")
-  colnames(gap_stats_summary) <- c("k", "gap_median", "gap_SE")
-  gap_stats_summary$L95 <- gap_stats_summary$gap_median-gap_stats_summary$gap_SE*1.96
-  gap_stats_summary$H95 <- gap_stats_summary$gap_median+gap_stats_summary$gap_SE*1.96
+  colnames(gap_stats_summary) <- c("k", "gap_mean", "gap_SE")
+  gap_stats_summary$L95 <- gap_stats_summary$gap_mean-gap_stats_summary$gap_SE*1.96
+  gap_stats_summary$H95 <- gap_stats_summary$gap_mean+gap_stats_summary$gap_SE*1.96
 
 
+  # compute silhouette summary from B values for each matrix
   sil_stats_summary <- base::merge(
-    x = stats::aggregate(sil~k, data = sil_stats, FUN = stats::median),
+    x = stats::aggregate(sil~k, data = sil_stats, FUN = base::mean),
     y = stats::aggregate(sil~k, data = sil_stats, FUN = get_se),
     by = "k")
-  colnames(sil_stats_summary) <- c("k", "sil_median", "sil_SE")
-  sil_stats_summary$L95 <- sil_stats_summary$sil_median-sil_stats_summary$sil_SE*1.96
-  sil_stats_summary$H95 <- sil_stats_summary$sil_median+sil_stats_summary$sil_SE*1.96
+  colnames(sil_stats_summary) <- c("k", "sil_mean", "sil_SE")
+  sil_stats_summary$L95 <- sil_stats_summary$sil_mean-sil_stats_summary$sil_SE*1.96
+  sil_stats_summary$H95 <- sil_stats_summary$sil_mean+sil_stats_summary$sil_SE*1.96
 
+  # compute wss summary from B values for each matrix
   wss_stats_summary <- base::merge(
-    x = stats::aggregate(wss~k, data = wss_stats, FUN = stats::median),
+    x = stats::aggregate(wss~k, data = wss_stats, FUN = base::mean),
     y = stats::aggregate(wss~k, data = wss_stats, FUN = get_se),
     by = "k")
-  colnames(wss_stats_summary) <- c("k", "wss_median", "wss_SE")
-  wss_stats_summary$L95 <- wss_stats_summary$wss_median-wss_stats_summary$wss_SE*1.96
-  wss_stats_summary$H95 <- wss_stats_summary$wss_median+wss_stats_summary$wss_SE*1.96
+  colnames(wss_stats_summary) <- c("k", "wss_mean", "wss_SE")
+  wss_stats_summary$L95 <- wss_stats_summary$wss_mean-wss_stats_summary$wss_SE*1.96
+  wss_stats_summary$H95 <- wss_stats_summary$wss_mean+wss_stats_summary$wss_SE*1.96
+
+  if(low_size_output) {
+    return(list(boot_obj = NA,
+                wss_stats_summary = wss_stats_summary,
+                sil_stats_summary = sil_stats_summary,
+                gap_stats_summary = gap_stats_summary,
+                wss_stats = wss_stats,
+                sil_stats = sil_stats,
+                gap_stats = gap_stats))
+
+  }
 
   return(list(boot_obj = boot_obj,
               wss_stats_summary = wss_stats_summary,
@@ -246,17 +285,17 @@ get_k <- function(B = 20,
 #'
 #' @exportMethod
 #'
-get_bubbletree_data <- function(x,
-                                k,
-                                n_start = 10,
-                                iter_max = 50,
-                                B = 1,
-                                N_eff = 500,
-                                cores,
-                                seed = NA,
-                                verbose = F,
-                                round_digits = 2,
-                                show_branch_support = T) {
+get_bubbletree <- function(x,
+                           k,
+                           n_start = 10,
+                           iter_max = 50,
+                           B = 1,
+                           N_eff = 500,
+                           cores,
+                           seed = NA,
+                           verbose = F,
+                           round_digits = 2,
+                           show_branch_support = T) {
 
   # check input
   if(is.na(x) || is.null(x) || is.matrix(x)==F) {
@@ -272,19 +311,19 @@ get_bubbletree_data <- function(x,
     set.seed(seed = seed)
   }
   else {
-    seed <- base::sample(x = 1:10^6,
-                         size = 1)
+    seed <- base::sample(x = 1:10^6, size = 1)
     set.seed(seed = seed)
   }
 
   # perform k-means clustering
+  cat("Clustering ... \n")
   km <- stats::kmeans(x = x,
                       centers = k,
                       nstart = n_start,
                       iter.max = iter_max)
 
-
   # pairwise distances
+  cat("Bubbletree construction ... \n")
   pair_dist <- get_dist(B = B,
                         m = x,
                         c = km$cluster,
@@ -299,7 +338,7 @@ get_bubbletree_data <- function(x,
                        formula = c_i~c_j, value.var = "M")
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
-  ph <- treeio::as.phylo(x = hc)
+  ph <- ape::as.phylo(x = hc)
   ph <- ape::unroot(phy = ph)
 
   # get branch support
@@ -308,37 +347,42 @@ get_bubbletree_data <- function(x,
 
 
   # build treetree
-  t <- get_bubbletree(ph = ph$main_ph,
+  t <- get_dendrogram(ph = ph$main_ph,
                       cluster = km$cluster,
                       round_digits = round_digits,
                       show_branch_support = show_branch_support)
 
-  return(list(A = x,
-              km = km,
-              ph = ph,
-              hc = hc,
-              pair_dist = pair_dist,
-              k = k,
-              cluster = km$cluster,
-              input_par = list(n_start = n_start,
-                               iter_max = iter_max,
-                               N_eff = N_eff,
-                               B = B,
-                               seed = seed,
-                               round_digits = round_digits,
-                               show_branch_support = show_branch_support),
-              tree = t$tree,
-              tree_meta = t$tree_meta))
+  # collect input parameters: can be used for automated update
+  input_par <- list(n_start = n_start,
+                    iter_max = iter_max,
+                    N_eff = N_eff,
+                    B = B,
+                    seed = seed,
+                    round_digits = round_digits,
+                    show_branch_support = show_branch_support)
+
+  return(structure(class = "bubbletree",
+                   list(A = x,
+                        km = km,
+                        ph = ph,
+                        hc = hc,
+                        pair_dist = pair_dist,
+                        k = k,
+                        cluster = km$cluster,
+                        input_par = input_par,
+                        tree = t$tree,
+                        tree_meta = t$tree_meta)))
+
 }
 
 #'
 #' @exportMethod
 #'
-update_bubbletree_data <- function(btd,
-                                   updated_bubbles,
-                                   ks,
-                                   cores,
-                                   verbose = F) {
+update_bubbletree <- function(btd,
+                              updated_bubbles,
+                              ks,
+                              cores,
+                              verbose = F) {
 
   update_bubble <- function(A,
                             bubble,
@@ -387,11 +431,6 @@ update_bubbletree_data <- function(btd,
                                 n_start = n_start,
                                 iter_max = iter_max)
 
-    # add comments for debugging
-    u_kms[[i]]$comment <- list(note = "update",
-                               bubble = updated_bubbles[i],
-                               k = ks[i])
-
     # update cluster naming
     btd$cluster[j] <- paste0(updated_bubbles[i], '_',
                              u_kms[[i]]$cluster)
@@ -412,27 +451,28 @@ update_bubbletree_data <- function(btd,
 
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
-  ph <- treeio::as.phylo(x = hc)
+  ph <- ape::as.phylo(x = hc)
   ph <- ape::unroot(phy = ph)
 
   # get branch support
   ph <- get_ph_support(main_ph = ph,
                        x = pair_dist$raw_pair_dist)
 
-  btd$ph <- ph
-  btd$hc <- hc
-  btd$pair_dist <- pair_dist
-  btd$km <- "updated"
-  btd$k <- "updated"
-
   # tree
-  t <- get_bubbletree(ph = ph$main_ph,
+  t <- get_dendrogram(ph = ph$main_ph,
                       cluster = btd$cluster,
                       round_digits = round_digits,
                       show_branch_support = show_branch_support)
 
-  return(list(btd = btd,
-              u_kms = u_kms,
+
+  return(list(A = A,
+              km = u_kms,
+              ph = ph,
+              hc = hc,
+              pair_dist = pair_dist,
+              k = length(unique(btd$cluster)),
+              cluster = btd$cluster,
+              input_par = btd$input_par,
               tree = t$tree,
               tree_meta = t$tree_meta))
 }
@@ -504,23 +544,17 @@ get_gini <- function(labels, clusters) {
 #' @exportMethod
 #'
 get_gini_boot <- function(labels, kmeans_boot_obj) {
-  B <- length(kmeans_boot_obj$boot_obj)
 
-  # get standard error
-  get_se <- function(x) {
-    if(length(x) == 1) {
-      se <- NA
-    }
-    else {
-      se <- stats::sd(x)/base::sqrt(base::length(x))
-    }
-    return(se)
+  if(length(kmeans_boot_obj$boot_obj)==1&&
+     is.na(kmeans_boot_obj$boot_obj)) {
+    stop("You have to run 'get_k' with low_size_output=FALSE. \n")
   }
+
+  B <- length(kmeans_boot_obj$boot_obj)
 
   total_o <- c()
   cluster_o <- c()
   for(i in 1:B) {
-    # b$boot_obj[[b]]$obj$`2`$
     ks <- base::names(kmeans_boot_obj$boot_obj[[i]]$obj)
 
     for(j in 1:length(ks)) {
@@ -546,24 +580,24 @@ get_gini_boot <- function(labels, kmeans_boot_obj) {
   # next: compute summary from B values for each metric
   # total
   total_gini_summary <- base::merge(
-    x = stats::aggregate(total_gini~k, data = total_o, FUN = stats::median),
+    x = stats::aggregate(total_gini~k, data = total_o, FUN = base::mean),
     y = stats::aggregate(total_gini~k, data = total_o, FUN = get_se),
     by = "k")
-  colnames(total_gini_summary) <- c("k", "total_gini_median", "total_gini_SE")
-  total_gini_summary$L95 <- total_gini_summary$total_gini_median-
+  colnames(total_gini_summary) <- c("k", "total_gini_mean", "total_gini_SE")
+  total_gini_summary$L95 <- total_gini_summary$total_gini_mean-
     total_gini_summary$total_gini_SE*1.96
-  total_gini_summary$H95 <- total_gini_summary$total_gini_median+
+  total_gini_summary$H95 <- total_gini_summary$total_gini_mean+
     total_gini_summary$total_gini_SE*1.96
 
   # cluster
   cluster_gini_summary <- base::merge(
-    x = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = stats::median),
+    x = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = base::mean),
     y = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = get_se),
     by = c("k", "cluster"))
-  colnames(cluster_gini_summary) <- c("k", "clusters", "gini_median", "gini_SE")
-  cluster_gini_summary$L95 <- cluster_gini_summary$gini_median-
+  colnames(cluster_gini_summary) <- c("k", "clusters", "gini", "gini_SE")
+  cluster_gini_summary$L95 <- cluster_gini_summary$gini-
     cluster_gini_summary$gini_SE*1.96
-  cluster_gini_summary$H95 <- cluster_gini_summary$gini_median+
+  cluster_gini_summary$H95 <- cluster_gini_summary$gini+
     cluster_gini_summary$gini_SE*1.96
 
 

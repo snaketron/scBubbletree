@@ -50,7 +50,7 @@ get_ph_support <- function(main_ph,
     d <- stats::as.dist(d)
 
     hc <- stats::hclust(d, method = "average")
-    ph <- treeio::as.phylo(x = hc)
+    ph <- ape::as.phylo(x = hc)
     ph <- ape::unroot(phy = ph)
 
     if(i == 1) {
@@ -71,6 +71,22 @@ get_ph_support <- function(main_ph,
                               rooted = ape::is.rooted(main_ph))
 
 
+  # some checks
+  # # tips
+  # tips <- main_ph$tip.label
+  # branches <- setdiff(unique(as.vector(main_ph$edge)), tips)
+  # #
+  # root <- unique(main_ph$edge[which(!main_ph$edge[, 1] %in% main_ph$edge[, 2]), 1])
+  # branch_composition <- c()
+  # for(branch in branches) {
+  #   w <- get_node_descendents_in_phylo(tree = main_ph, node = branch)
+  #   w <- sort(w[w %in% tips])
+  #   branch_composition <- rbind(branch_composition,
+  #     data.frame(branch_node = branch, descendent_tip_nodes = paste0(w, collapse = ',')))
+  # }
+  # branch_composition$is_root <- ifelse(test = branch_composition$branch == root, yes = T, no = F)
+
+
   # add bootstrap
   main_ph$node.label <- clade_b
 
@@ -80,7 +96,26 @@ get_ph_support <- function(main_ph,
 
 
 
-get_bubbletree <- function(ph,
+get_node_descendents_in_phylo <- function(tree,
+                                          node,
+                                          curr = NULL) {
+  if (is.null(curr)) {
+    curr <- vector()
+  }
+  daughters <- tree$edge[which(tree$edge[, 1] == node), 2]
+  curr <- c(curr, daughters)
+  if (length(curr) == 0 && node <= Ntip(tree))
+    curr <- node
+  w <- which(daughters > Ntip(tree))
+  if (length(w) > 0)
+    for (i in 1:length(w)) curr <- get_node_descendents_in_phylo(
+      tree, daughters[w[i]], curr)
+  return(curr)
+}
+
+
+
+get_dendrogram <- function(ph,
                            cluster,
                            round_digits,
                            show_branch_support) {
@@ -103,9 +138,14 @@ get_bubbletree <- function(ph,
     geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
                 color='black', size = 3.5, hjust=-0.25)+
     theme_tree2(plot.margin=margin(6,100,6,6),
-                legend.position = "top")
+                legend.position = "top",
+                legend.margin=margin(0,0,0,0),
+                legend.box.margin=margin(-10,-10,-10,-10),
+                legend.spacing.x = unit(0.2, 'cm'),
+                legend.spacing.y = unit(0, 'cm'))
 
   if(show_branch_support) {
+    tree_data <- tree$data
     tree <- tree+
       geom_nodelab(geom='label', aes(label=label, subset=isTip==F),
                    size = 3.0, hjust=-0.2)
@@ -113,7 +153,7 @@ get_bubbletree <- function(ph,
 
   tree <- tree+
     # scale_radius
-    scale_radius(range = c(1, 7),
+    scale_radius(range = c(1, 6),
                  limits = c(0, max(km_meta$c)))+
     scale_fill_gradient(low = "white",
                         high = "black",
@@ -222,6 +262,7 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
 }
 
 
+
 get_hdi <- function(vec, hdi_level) {
   sortedPts <- base::sort(vec)
   ciIdxInc <- base::floor(hdi_level * base::length(sortedPts))
@@ -234,6 +275,18 @@ get_hdi <- function(vec, hdi_level) {
   HDImax = sortedPts[base::which.min(ciWidth) + ciIdxInc]
   HDIlim = c(HDImin, HDImax)
   return(HDIlim)
+}
+
+
+# Computes standard error from vector x of values
+get_se <- function(x) {
+  if(length(x) == 1) {
+    se <- NA
+  }
+  else {
+    se <- stats::sd(x)/base::sqrt(base::length(x))
+  }
+  return(se)
 }
 
 
@@ -259,55 +312,96 @@ get_hc_dist <- function(pair_dist) {
     hc_dist <- rbind(hc_dist, hd)
   }
 
-  # compute mean HClust distances accross Bs
-  m <- stats::aggregate(M~c_i+c_j,
-                        data = hc_dist,
-                        FUN = base::mean)
 
-  # compute HDI accross Bs
-  hdi <- stats::aggregate(M~c_i+c_j,
-                          data = hc_dist,
-                          FUN = get_hdi,
-                          hdi_level = 0.9)
+  m <- base::merge(
+    x = stats::aggregate(M~c_i+c_j, data = hc_dist, FUN = base::mean),
+    y = stats::aggregate(M~c_i+c_j, data = hc_dist, FUN = get_se),
+    by = c("c_i", "c_j"))
+  colnames(m) <- c("c_i", "c_j", "M", "SE")
+  m$L95 <- m$M-m$SE*1.96
+  m$H95 <- m$M+m$SE*1.96
 
-  # if B too low, cannot compute HDI
-  if(B<50) {
-    hdi$L90 <- NA
-    hdi$H90 <- NA
+  if(B<20) {
+    warning("B<20: standard errors and confidence intervals might be biased.")
   }
-  else {
-    hdi$L90 <- hdi$M[, 1]
-    hdi$H90 <- hdi$M[, 2]
-  }
-  hdi$M <- NULL
-
-  o <- base::merge(x = m, y = hdi,
-                   by = c("c_i", "c_j"))
-  return(o)
+  return(m)
 }
 
 
 get_pca_dist <- function(pair_dist) {
   B <- base::max(pair_dist$B)
 
-  m <- stats::aggregate(M~c_i+c_j,
-                        data = pair_dist,
-                        FUN = mean)
-  hdi <- stats::aggregate(M~c_i+c_j,
-                          data = pair_dist,
-                          FUN = get_hdi,
-                          hdi_level = 0.9)
-  if(B<50) {
-    hdi$L90 <- NA
-    hdi$H90 <- NA
-  }
-  else {
-    hdi$L90 <- hdi$M[, 1]
-    hdi$H90 <- hdi$M[, 2]
-  }
-  hdi$M <- NULL
+  m <- base::merge(
+    x = stats::aggregate(M~c_i+c_j, data = pair_dist, FUN = base::mean),
+    y = stats::aggregate(M~c_i+c_j, data = pair_dist, FUN = get_se),
+    by = c("c_i", "c_j"))
+  colnames(m) <- c("c_i", "c_j", "M", "SE")
+  m$L95 <- m$M-m$SE*1.96
+  m$H95 <- m$M+m$SE*1.96
 
-  o <- base::merge(x = m, y = hdi,
-                   by = c("c_i", "c_j"))
-  return(o)
+  if(B<20) {
+    warning("B<20: standard errors and confidence intervals might be biased.")
+  }
+
+  return(m)
+}
+
+
+get_weighted_feature_dist <- function(main_ph, w, value_var) {
+
+
+  if(length(unique(w$feature))<=1) {
+    stop("Only one feature, cannot compute dendrogram.\n")
+  }
+
+  w_df <- reshape2::acast(data = w,
+                          formula = feature~cluster,
+                          value.var = value_var)
+
+  dist_feature <- matrix(data = 0,
+                         nrow = nrow(w_df),
+                         ncol = nrow(w_df))
+  rownames(dist_feature) <- rownames(w_df)
+  colnames(dist_feature) <- rownames(w_df)
+
+
+  for(i in 1:(nrow(w_df)-1)) {
+    for(j in (i+1):nrow(w_df)) {
+      d <- abs(w_df[i, ]-w_df[j,])
+      d <- d[order(as.numeric(names(d)), decreasing = F)]
+
+      tree_dist <- ape::cophenetic.phylo(main_ph)
+      for(k1 in 1:(length(d)-1)) {
+        for(k2 in (k1+1):length(d)) {
+          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*max(d[k1], d[k2])
+          tree_dist[names(d)[k1], names(d)[k2]] <- tmp
+          tree_dist[names(d)[k2], names(d)[k1]] <- tmp
+        }
+      }
+      dist_feature[i,j] <- sum(tree_dist)
+      dist_feature[j,i] <- dist_feature[i,j]
+    }
+  }
+
+  # build hclust
+  hc_dist <- stats::dist(x = dist_feature, method = "euclidean")
+  hc <- stats::hclust(d = hc_dist, method = "average")
+  hc <- ape::as.phylo(x = hc)
+
+  # build ggtree
+  tree <- ggtree::ggtree(hc, linetype='solid')+
+    theme_dendrogram()+
+    coord_flip()+
+    geom_tippoint()+
+    theme(legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-10,-10))
+
+  tree_data <- tree$data
+  tree_data <- tree_data[tree_data$isTip==T,]
+  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = F)]
+
+  return(list(tree = tree,
+              labels = ordered_labels))
+
+
 }

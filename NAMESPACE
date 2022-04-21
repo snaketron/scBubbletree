@@ -16,6 +16,5 @@ importFrom(treeio,as.phylo)
 importFrom(ape,prop.clades)
 importFrom(ape,unroot)
 importFrom(cluster,silhouette)
-importFrom(bluster,approxSilhouette)
 importFrom(parallel, mclapply)
-
+importFrom(bluster, approxSilhouette)

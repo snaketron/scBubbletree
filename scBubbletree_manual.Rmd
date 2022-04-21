@@ -3,22 +3,23 @@ title: "Exploring scRNA-seq data with scBubbletree"
 author: "SK"
 output: 
   rmarkdown::html_document:
-    toc: false
+    toc: true
+    toc_depth: 1
 vignette: >
   %\VignetteIndexEntry{}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
+
+
 ```{r setup, include = FALSE}
+source(file = "~/Rutil/Init_Rpack.R")
 knitr::opts_chunk$set(echo = F,
                       comment = F, 
                       warning = F, 
                       message = F)
 ```
-
-
-
 
 
 This vignette introduces `scBubbletree`, a transparent methodology for single 
@@ -31,31 +32,34 @@ analysis e.g. based on Seurat.
 To run this vignette we need several R-packages. Load them now:
 
 ```{r, echo = T, results='hide'}
-source(file = "~/Rutil/Init_Rpack.R")
-# source(file = "~/Rutil/Graphics.R")
-# source(file = "~/Rutil/Stats.R")
+source(file = "../Rutil/Graphics.R")
 
-# source(file = "src/ClusteringUtil.R")
 source(file = "../scBubbletree/R/util.R")
 source(file = "../scBubbletree/R/main.R")
 source(file = "../scBubbletree/R/annotation.R")
+```
 
-# library(farver, lib.loc = "/usr/local/lib/R/site-library")
 
+```{r, echo = T, results='hide'}
 #library(scBubbletree, lib.loc = lib.loc)
+library(cluster, lib.loc = lib.loc)
 library(Seurat, lib.loc = lib.loc)
 library(ggplot2, lib.loc = lib.loc)
 library(reshape2, lib.loc = lib.loc)
 library(parallel, lib.loc = lib.loc)
-library(ggtree, lib.loc = lib.loc)
-library(cluster, lib.loc = lib.loc)
 library(ape, lib.loc = lib.loc)
+library(ggtree, lib.loc = lib.loc)
 library(org.Hs.eg.db, lib.loc = lib.loc)
 library(bluster, lib.loc = lib.loc)
 library(SummarizedExperiment, lib.loc = lib.loc)
-
+library(ggrepel, lib.loc = lib.loc)
 ```
 
+
+```{r}
+redo_case_a <- F
+redo_case_b <- F
+```
 
 
 
@@ -89,7 +93,7 @@ rm(sc_Celseq2_5cl_p1, sc_Celseq2_5cl_p2, sc_Celseq2_5cl_p3, sce_sc_10x_5cl_qc)
 
 
 # Get the meta data for each cell
-meta <- colData(d)[, c("cell_line", "cell_line_demuxlet", "demuxlet_cls")]
+meta <- colData(d)[, c("cell_line_demuxlet", "non_mt_percent", "total_features")]
 
 
 # Create Seurat object from the raw counts and append the meta data to it
@@ -102,12 +106,17 @@ d@meta.data <- cbind(d@meta.data, meta@listData)
 
 
 # cell type predictions are provided as part of the meta data
-table(d@meta.data$cell_line_demuxlet)
+table(d@meta.data$cell_line)
+
+# select 5,000 most variable genes
+d <- Seurat::FindVariableFeatures(object = d, 
+                                  selection.method = "vst", 
+                                  nfeatures = 5000)
 
 # Preprocessing with Seurat: SCT transformation + PCA + UMAP 
 d <- SCTransform(object = d)
-d <- RunPCA(object = d, npcs = 20, features = VariableFeatures(object = d))
-d <- RunUMAP(d, dims = 1:20)
+d <- RunPCA(object = d, npcs = 50, features = VariableFeatures(object = d))
+d <- RunUMAP(d, dims = 1:50)
 ```
 
 Exploring 2D UMAPs is by now a standard first step in scRNA-seq data analysis. 
@@ -122,16 +131,43 @@ within the clusters.
 ```{r, fig.width=8, fig.height=3.25, fig.align='center'}
 # Lets show the generated 2D UMAP
 u <- UMAPPlot(object = d, 
-         reduction = "umap",
-         cols = 'black',
-         pt.size = 0.25)|
+              reduction = "umap",
+              cols = 'black',
+              pt.size = 0.25)|
   UMAPPlot(object = d, 
-         reduction = "umap",
-         group.by = 'cell_line_demuxlet',
-         pt.size = 0.25)
+           reduction = "umap",
+           group.by = 'cell_line_demuxlet',
+           pt.size = 0.25)
 
 u
 ```
+
+
+```{r, results='hide', echo=FALSE}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+umap_centers <- merge(x = aggregate(UMAP_1~cell_line_demuxlet, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~cell_line_demuxlet, data = umap_data, FUN = median),
+                      by = "cell_line_demuxlet")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = cell_line_demuxlet), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = cell_line_demuxlet), 
+            min.segment.length = 0, size = 3)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_A.pdf",
+       device = "pdf",
+       width = 4,
+       height = 4)
+```
+
+
 
 While 2D UMAPs are intuitive, by themselves these maps fail to provide the user 
 with quantitative information about the scRNA-seq data. For instance, due to the 
@@ -152,8 +188,8 @@ scRNA-seq data derived from complex (heterogeneous) tissues and also composed of
 UMAPs composed of many clusters of cells that are not clearly separated from 
 each other. We will encounter many of these challenges in Case Study B.
 
-Using 2D UMAPs in publications presents a challenge not only for the readers but 
-also for the reviewers, who have to evaluate these complex figures without 
+Using 2D UMAPs in publications presents a challenge not only for the readers 
+but also for the reviewers, who have to evaluate these complex figures without 
 having access to the raw data.
 
 
@@ -166,11 +202,35 @@ scRNA-seq we developed `scBubbletree`.
 As first input `scBubbletree` uses matrix $A^{n\times f}$ which represents a 
 low-dimensional feature space of the original scRNA-seq data, with $n$ rows as 
 cells and $f$ columns as low-dimension features. We will use the PCA data 
-generated by `Seurat` as $A$.
+generated by `Seurat` as $A$. In particular, we will use the first 15 principal
+components (PCs).
+
+```{r, fig.width = 4, fig.height=3}
+ElbowPlot(object = d, ndims = 50, reduction = "pca")
+```
+
+```{r, fig.width=4, fig.height=3}
+var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
+
+g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
+                                            PC = 1:length(var_explained)))+
+  geom_point(aes(y = var_explained, x = PC), size = 1)+
+  ylab(label = "Variance explained [%]")
+
+g_var_explained
+
+ggsave(plot = g_var_explained, 
+       filename = "manuscript_data/Var_explained_PCA_A.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+```
+
 
 ```{r, echo = T}
 # This is the main input of scBubbletree -> matrix A
-A <- d@reductions$pca@cell.embeddings
+A <- d@reductions$pca@cell.embeddings[, 1:15]
+
 
 # A has n=cells as rows, f=features as columns (e.g. from PCA)
 dim(A)
@@ -204,54 +264,75 @@ The remaining parameters of `get_k` are explained below:
   
   * `n_start` and `iter_max`: used to tune k-means (see ?kmeans)
   * `cores`: computer cores to be used
-  * `cv_gap_p` proportion of cells to be used for the computation of the 
+  * `cv_index_p` proportion of cells to be used for the computation of the 
   gap statistic. For small samples (e.g. < 20,000 cells), you can use the 
-  default parameter. For larger samples even low `cv_gap_p=0.1` produces 
-  robust results while speeding up the computation. Small `B` (e.g. `B=10`) 
+  default parameter. For larger samples even low `cv_index_p=0.1` produces 
+  robust results while speeding up the computation. Smaller `B` (e.g. `B=100`) 
   might be helpful to execute this function in several minutes less than one 
   hour for large datasets.
   
 Lets run `get_k` now.
 
 ```{r, fig.width=4, fig.height=3, echo=T, results=T}
-b <- get_k(B = 20, 
-           cv_clust_p = 1, 
-           cv_gap_p = 1, 
-           ks = 2:15,
-           x = A,
-           n_start = 10, 
-           iter_max = 50, 
-           cores = 20)
+
+if(redo_case_a) {
+  # Determine appropriate number of clusters (k)
+  b <- get_k(B = 100, 
+             cv_clust_p = 1, 
+             cv_index_p = 1, 
+             ks = 1:20,
+             x = A,
+             n_start = 10, 
+             iter_max = 50, 
+             cores = 20)
+  
+  if(dir.exists("case_study_A")==F) {
+    dir.create("case_study_A")
+  }
+  save(b, file = "case_study_A/b.RData")
+} else {
+  b <- get(load("~/scBubbletree/case_study_A/b.RData"))
+}
+
 ```
 
-Median index values and 95% confidence intervals obtained from `get_k` are 
-shown below. The raw data for each bootstrap iteration are also stored in 
-the object `b`.
+Mean index values and 95% confidence intervals obtained from `get_k` are 
+shown below. The raw data for each bootstrap iteration are also stored as 
+part of the object `b`.
 
 `k` is is easily discernible from each of the three metrics (panels). 
 
 The silhouette index peaks around `k=5` (left panel) and for larger `k`s the 
 silhouette index starts to drop and is numerically less stable. Hence, we can 
-conclude that `k` values between 5 and 8 seem reasonable for this dataset, 
-which is consistent with the 2D UMAP structure shown before. This conclusion 
-is confirmed by the gap statistic (middle panel) and the elbow method based on 
-WSS (right panel), i.e. we see a knee in the curves at `k=5`.
+conclude that `k` values between 4 and 6 seem like a reasonable choice for this 
+dataset, which is consistent with the 2D UMAP structure shown before. This 
+conclusion is confirmed by the gap statistic (middle panel) and the elbow 
+method based on WSS (right panel), i.e. we see a knee in the curves at `k=5`.
+
+
+```{r}
+g0 <- ggplot(data = b$sil_stats_summary)+
+  geom_point(aes(x = k, y = sil_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Silhouette")+
+  ylab(label = "Mean Silhouette")|
+ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Gap")+
+  ylab(label = "Mean Gap")|
+ggplot(data = b$wss_stats_summary)+
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "WSS")+
+  ylab(label = "Mean WSS")
+```
 
 
 ```{r, fig.width=9, fig.height=3, fig.align='center'}
-ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_median))+
-  geom_errorbar(aes(x = k, y = sil_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "Silhouette")|
-ggplot(data = b$gap_stats_summary)+
-  geom_point(aes(x = k, y = gap_median))+
-  geom_errorbar(aes(x = k, y = gap_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "Gap")|
-ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_median))+
-  geom_errorbar(aes(x = k, y = wss_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "WSS")
+g0
 ```
+
 
 
 Lets start with the simplest model (segmentation) `k=5` and use `scBubbletree` 
@@ -260,24 +341,24 @@ showing the clusters as bubbles (tree leaves) in the dendrogram.
 
 ```{r, echo=T}
 # Perform clustering to get data for scBubbletree
-btd_k5 <- get_bubbletree_data(x = A,
-                              k = 5,
-                              seed = 1234,
-                              cores = 1,
-                              B = 50,
-                              N_eff = 100,
-                              verbose = F,
-                              n_start = 100,
-                              iter_max = 100,
-                              round_digits = 1,
-                              show_branch_support = T)
+k5 <- get_bubbletree(x = A,
+                     k = 5,
+                     seed = 1234,
+                     cores = 1,
+                     B = 100,
+                     N_eff = 100,
+                     verbose = F,
+                     n_start = 100,
+                     iter_max = 100,
+                     round_digits = 1,
+                     show_branch_support = T)
 ```
 
 
 Lets now plot the resulting dendrogram:
 
 ```{r, fig.width=4, fig.height=4, fig.align='center', echo=T}
-btd_k5$tree
+k5$tree
 ```
 
 
@@ -296,107 +377,219 @@ Bubble 3 is the largest (and darkest) one in the dendrogram and contains
 smallest one (and brightest) and contains only 436 cells ($\approx$ 11% of 
 all cells in the dataset). 
 
-
-### Dendrogram structure
-
-The average distances between a pair of bubbles are represented by the sums of 
-branch length in the dendrogram. This information is included as part of the
-object `btd_k5`:
+We can access the bubble data shown in the bubbletree with the following code:
 
 ```{r, echo=T, results=T}
-# c_i, c_j = pair of clusters/bubbles
-# M = mean Euclidean distance (from B bootstraps)
-# L90, H90 = lower and upper bound of the 90% Highest Density Interval of M;
-knitr::kable(btd_k5$pair_dist$hc_pair_dist, digits = 1)
+knitr::kable(k5$tree_meta, digits = 1)
 ```
 
 
-We see similar distances between the pairs of bubbles, and low degree of 
-structure in the dendrogram. This makes sense as the data is composed of 
-cells derived from from 5 distinct cell lines. In case study B, 
-we will analyze scRNA-seq data from PBMCs, where cell type structure is evident, 
-i.e. we will see branches in the dendrogram formed by transcriptionally similar 
-groups of cells (e.g. CD4 and CD8 T-cells).
+### Hierarchical tree structure
 
-We can decide to show support for branches in the dendrogram by setting 
-the parameter `show_branch_support = TRUE` in the function `get_bubbletree`.
-This will produce labels showing the support for each branch in the dendrogram
-among `B` generated dendrograms during the bootstrapping operation with `B` 
-bootstrapping iterations. We call `get_bubbletree_data` with `B=50`.
+The average distances between a pair of bubbles are represented by the sums of 
+branch length in the tree. This information is included as part of the object 
+`k5`:
+
+```{r, echo=T, results=T}
+# c_i, c_j = pair of clusters/bubbles
+# M = mean inter-cluster dissimilarity
+# L95/H95 = lower/upper bounds 95% confidence 
+# interval of the mean dissimilarity
+knitr::kable(k5$pair_dist$hc_pair_dist, digits = 1)
+```
+
+In general we see similar distances between the different pairs of bubbles. 
+The only exception is the somewhat smaller distance between the bubbles 4 
+and 5. The tree is also devoit of structure, which makes sense as the input 
+data is composed of cells derived from from 5 distinct cell lines. In case 
+study B, we will analyze scRNA-seq data from PBMCs, where cell type structure 
+is evident, i.e. we will see branches in the corresponding phylogenetic tree 
+that are formed by transcriptionally related clusters of cells (e.g. CD4+ and 
+CD8+ T-cells).
+
+
+## Tree topology robustness
+
+By default the function `get_bubbletree` annotates the branches of the 
+bubbletree with their bootstrap support. This tells us the frequency with which
+a given branch in the tree is found the $B$ bootstrap trees. Above we called 
+`get_bubbletree` with `B=100`, and two of the tree branches have complete 
+support (100 out of 100) while the branch that joins bubbles (4, 5) and bubble 3 
+has lower support (38 out of 100 => 76%). This tells us that the corresponding 
+branch is not robust.
+
+One way of visualizing the branch support is by using density trees. For this 
+we can use function `ggdensitree` provided by `ggtree` and provide as input the
+$B$ phylogenetic trees generated during the boostraping procedure and stored
+in the object `k5`:
+
+
+```{r, fig.width=5, fig.height=4, fig.align='center', echo=T}
+ggtree::ggdensitree(k5$ph$boot_ph, alpha=0.1, colour='steelblue')+
+  geom_tiplab(size = 7)+
+  hexpand(ratio = 0.5)
+```
 
 Can we verify that this clustering is sensible? 
 
 
-## Categorical annotations
+## Are A549 and HCC827 transcriptionally similar?
 
-To help us with this, `scBubbletree` offers a rich set of annotation add-ons. 
-For instance, for each cell we have the predicted cell types. We can generate 
-a tile-plot showing us the proportions of each cell type in the five bubbles.
+We downloaded gene expression data for 1,019 human cancer cell lines from: 
+https://www.ebi.ac.uk/gxa/experiments/E-MTAB-2770/Downloads
+and extracted data (gene TPM values) on 69 lung adenocarcinoma cell lines. 
 
-For categorical data we use the function `get_annotation_tiles_char`:
+From this data we computed Euclidean distances between pairs of cell lines and
+generated a hierarchical clustering dendrogram with average linkage.
+
+It turns out that A549 and HCC827 share a common branch in this dendrogram => 
+similar gene expression profiles are accurately described by the bubbletree 
+topology. Other cell lines are dispersed in different branches of the dendrogram
+and hence we do not see any special structure connecting the corresponding 
+bubbles of the bubbletree.
+
+```{r, fig.width=10, fig.height=4, fig.align='center', echo=T}
+tpm <- read.csv(file = "manuscript_data/E-MTAB-2770-query-results.tpms.tsv", 
+                sep = "\t", comment.char = "#")
+
+
+tpm <- tpm[, c(1, 2, which(regexpr(pattern = "lung\\.adenocarcinoma", 
+                                   text = colnames(tpm)) != -1))]
+rownames(tpm) <- tpm$Gene.ID
+tpm$Gene.ID <- NULL
+tpm$Gene.Name <- NULL
+tpm <- t(tpm)
+rownames(tpm) <- gsub(pattern = "\\.\\.papillary\\.lung\\.adenocarcinoma|\\..lung\\.adenocarcinoma|NCI\\.", 
+                      replacement = '', x = rownames(tpm))
+rownames(tpm) <- gsub(pattern = "\\.",
+     replacement = '',
+     x = rownames(tpm))
+
+
+# require(compositions)
+# atpm <- compositions::acomp(tpm)
+# euc_atpm <- dist(x = atpm, method = "euclidean")
+# ah <- hclust(d = dist(atpm, method = "euclidean"), method = "average")
+
+h <- hclust(d = dist(tpm, method = "euclidean"), method = "average")
+
+five_cell_lines <- c("H838", "H2228", "A549", "H1975", "HCC827")
+
+cols <- rep(x = "black", times = length(h$labels))
+cols[which(h$labels %in% five_cell_lines)] <- "red"
+
+pdf(width = 8.5, height = 4.5,
+    file = "manuscript_data/Fig_S1.pdf")
+plot(as.dendrogram(h),
+     label.offset = 1, nodePar = list(lab.cex = 0.7, cex = 0.7,
+                                      pch = c(NA, 19)))
+dev.off()
+
+
+
+plot(as.dendrogram(h),
+     label.offset = 1, nodePar = list(lab.cex = 0.7, cex = 0.7,
+                                      pch = c(NA, 19)))
+```
+
+
+
+
+
+## Visualizing features
+
+Visualizing features of the cells in the different bubbles in the bubbletree 
+can help us understand the biology behind different clusters (bubbles) as well 
+as the structure of the tree. For instance, we may want to show the average 
+expression of a certain marker gene in each bubble, or maybe the percent of 
+mitochondrial gene content, both of which are *numeric* features. 
+
+Cells may also have *categorical* features. For instance: a) a cell may have 
+predicted cell type label; b) a cell may be categorized as a singlet, doublet or 
+multiplet; c) for a given cell we may have or have not found a B-cell receptor 
+sequence in a corresponding immune profiling library.
+
+In the next two paragraph we will explain how to 'attach' numeric and categorical 
+features to the bubbletree using `scBubbletree`.
+
+
+### Categorical features
+
+Categorical features can be 'attached' to the bubbletree using the function
+`get_cat_feature_tiles`. One of the categorical features in this case study
+are the predicted cell types. With `get_cat_feature_tiles` we can show
+make two types of visualization:
+
+First, we can show the relative frequency distribution of a feature across the 
+five bubbles (with parameter *feature_composition=T*). Second, we can show 
+the cell type composition of each bubble (with parameter *feature_composition=F*):
 
 ```{r, echo=T}
-w1 <- get_annotation_tiles_char(k = btd_k5$cluster,
-                                a = d@meta.data$cell_line_demuxlet,
-                                tree_meta = btd_k5$tree_meta,
-                                integrate_over_clusters = F,
-                                round_digits = 1)
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = d@meta.data$cell_line_demuxlet,
+                            feature_composition = T,
+                            round_digits = 1,
+                            rotate_x_axis = T)
 ```
 
 `scBubbletree` uses the R-package `patchwork` to combine plots. Lets merge
-the dendrogram with the newly generated annotations:
+the bubbletree and the numeric features plot:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
-(btd_k5$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+(k5$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
 ```
 
-This plot tells us that cells with each annotation are exclusively (>99%) found 
-in a common bubble, i.e. columns integrate to 100%. For instance, 99.76% of the 
+This plot tells us that each cells type is nearly exclusively (>99%) found 
+in its own bubble, i.e. columns integrate to 100%. For instance, 99.76% of the 
 A549 cells are found in bubble 3, 99.09% of the H1975 cells are found in bubble 
-5. Few cells from a given cell type are mixed in different bubbles. This mixing 
-is also present in the 2D UMAP, however, doe to the heavy overplotting they are 
-not visible. Our approach is more transparent in this sense, and show in a 
-quantitative way the clustering output.
+5. Few cells are mixed between the bubbles. This mixing is also present in the 
+2D UMAP, however, doe to the heavy overplotting they are not visible. Our 
+approach is more transparent in this sense, and show in a quantitative way the 
+clustering output.
 
-We might also be curious to check the homogeneity of individual bubbles. For
-this we will draw a similar plot but make sure that the rows integrate to 100%.
+We might also be interested in checking the 'purity' of individual bubbles. For
+this we will draw a similar plot but make sure that the rows integrate to 100%:
 
-The annotation plot below informs us that 100% of the cells in bubble 5 belong
+
+```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
+w2 <- get_cat_feature_tiles(d = k5,
+                            a = d@meta.data$cell_line_demuxlet,
+                            feature_composition = TRUE)
+
+(k5$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+```
+
+The above feature plot informs us that 100% of the cells in bubble 5 belong
 to cell type H1975. About 0.17% of the 593 cells in bubble 4 belong to cell 
 A549. This is equal to 0.17/100*593 = 1 cell, while the majority of cells 98.99 
-belong to cell HCC827. Hence, we see quite high homogeneity within the bubbles.
+belong to cell HCC827. Hence, we see quite high bubble purity.
 
-```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
-w2 <- get_annotation_tiles_char(k = btd_k5$cluster,
-                                a = d@meta.data$cell_line_demuxlet,
-                                tree_meta = btd_k5$tree_meta,
-                                integrate_over_clusters = TRUE) # <- changed
 
-(btd_k5$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
-```
-
-## Gini index
+## Gini impurity index
 
 Using the Gini impurity index we can quantify the goodness of the clustering 
-with `k=5`. This functionality is implemented by the function `get_gini`.
+with `k=5` and the impurity of the individual bubbles. This functionality is 
+implemented by the function `get_gini`.
 
 ```{r}
 # gini
 get_gini(labels = d@meta.data$cell_line_demuxlet, 
-         clusters = btd_k5$cluster)
+         clusters = k5$cluster)
 ```
 
-Both the total Gini index and the cluster-specific Gini indices are close to 0,
-indicating accurate clustering of cell types as most bubbles consist of cells 
-that belong to a single cell line. This is a quantitative way of summarizing
-the tile plot visualization shown earlier.
+All cluster-specific Gini impurity indices are close to 0 and thus also the 
+total (global) impurity has a value close to 0 as well. This indicates
+nearly perfect clustering of cell types across bubbles. With this function,
+`scBubbletree` provides a quantitative way of summarizing the tile plots 
+shown earlier.
 
-Our approach can integrate the results obtained by function `get_k` with the 
-cell type predictions (labels), and show quantitatively the change in Gini 
-index as a function of `k`. This is done with the function `get_gini_boot`. 
-In light of these cell type predictions, we can conclude that at `k=5` most
-bubbles in the bubble tree are *pure* and contain cells from distinct cell 
-types.
+scBubbletree also implement the function `get_gini_boot`, which allows us to 
+integrate clustering data obtained from `get_k` with cell type predictions 
+(labels), and to show quantitatively the Gini impurity index as a function of 
+`k`. We can conclude that at `k=5` all labels are nearly perfectly segmented 
+across the bubbles, and each bubble contains cells exclusively from one cell 
+type (1-to-1 mapping between bubbles and cell types as seen shown by the tile
+plots).
 
 ```{r, echo = T}
 gini_boot <- get_gini_boot(labels = d@meta.data$cell_line_demuxlet,
@@ -404,30 +597,36 @@ gini_boot <- get_gini_boot(labels = d@meta.data$cell_line_demuxlet,
 ```
 
 ```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
-ggplot(data = gini_boot$total_gini_summary)+
-  geom_point(aes(x = k, y = total_gini_median))+
-  geom_errorbar(aes(x = k, y = total_gini_median, ymin = L95, 
+g1 <- ggplot(data = gini_boot$total_gini_summary)+
+  geom_point(aes(x = k, y = total_gini_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = total_gini_mean, ymin = L95, 
                     ymax = H95), width = 0.1)+
-  ggtitle(label = "Total Gini")
+  ggtitle(subtitle = "Gini impurity", label = '')+
+  ylab(label = "Mean Gini impurity")
+
+g1
 ```
 
 
-## Quantitative annotations
 
-`scBubbletree` also implements add-ons for visualization of quantitative cell 
-properties, such as gene expression. Lets visualize the expression of five 
-marker genes of the five cancer cell lines. We can do this in two ways. First, 
-we can show the average marker gene expression in each bubble for each marker 
-as a tile plot with `get_annotation_tiles_num`. 
 
-Lets invoke this function now.
+## Numeric annotations
+
+`scBubbletree` also implements add-ons for visualization of numeric cell 
+features, such as gene expression, number of reads or features, mitochondrial 
+content etc. Lets visualize the expression of five marker genes, i.e. one marker 
+gene for each of the five cancer cell lines. 
 
 ```{r, echo=T}
 # First we need to select gene expressions for each cell and 
 # also for five marker genes
 as <- as.matrix(t(d@assays$SCT@data[
   rownames(d@assays$SCT@data) %in% 
-    c("ALDH1A1", "OS9", "PEG10", "S100A9", "SLPI"), ]))
+    c("ALDH1A1", 
+      "PIP4K2C", 
+      "S100A9", 
+      "PEG10",
+      "SLPI"), ]))
 
 # 'as' is a matrix with n=rows for cells and a=columns for 
 # annotations (genes). The column names will be shown in
@@ -436,89 +635,107 @@ as <- as.matrix(t(d@assays$SCT@data[
 # We will order the columns in 'as' in the same way we want
 # them to be plotted. These genes are markers for: A549, 
 # HCC827, H1975, H2228 and H838
-as <- as[, c("ALDH1A1", "OS9", "PEG10", "S100A9", "SLPI")]
+as <- as[, c("ALDH1A1", 
+             "PIP4K2C", 
+             "S100A9", 
+             "PEG10",
+             "SLPI")]
 
 ```
 
+
+We can visualize numeric features in *two* ways.
+
+First, we can show the feature averages (in this example: average gene 
+expressions) in each bubble with `get_num_feature_tiles`. Lets invoke 
+this function now:
 
 ```{r, fig.width=7, fig.height=5, fig.align='center', echo=T}
 # This function build the nummeric annotations plot
-w3 <- get_annotation_tiles_num(k = btd_k5$cluster,
-                               as = as,
-                               tree_meta = btd_k5$tree_meta,
-                               plot_title = "",
-                               round_digits = 1)
+w3 <- get_num_feature_tiles(d = k5,
+                            as = as,
+                            plot_title = "",
+                            round_digits = 1)
 
 # Plot
-(btd_k5$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
+(k5$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
 ```
 
-Second, we can visualize the distribution of each marker gene in each bubble 
-using violin plots with `get_annotation_violins`. This function uses the same
-input as `get_annotation_tiles_num`. 
 
-Lets invoke this function now.
+Second, we can visualize the distributions of the numeric features in each
+bubble as violins, while the cell-specific values are shown as jittered points.
+We can do this with `get_num_feature_violins`. This function uses the same
+input as `get_num_feature_tiles`: 
 
-```{r, fig.width=10, fig.height=5, fig.align='center', echo=T}
-w4 <- get_annotation_violins(k = btd_k5$cluster,
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k5,
                              as = as,
-                             tree_meta = btd_k5$tree_meta,
                              plot_title = "",
                              scales = 'free_x')
 
-(btd_k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1, 1, 2))
+(k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1.5, 1.1, 2.5))
 ```
 
 ## Compositional visualization
 
-`scBubbletree` uses the R-package `patchwork` to combined figures. This makes
-it convenient for users to 'attach' their own plots to the results from this
-package. Lets combine the UMAP plots shown earlier with the output of 
-`scBubbletree`.
+`scBubbletree` uses the R-package `patchwork` to combine `ggplot2` and `ggtree` 
+plots. This makes it convenient for users to 'attach' other plots that are 
+generated by any of these package. 
 
-```{r, fig.width=10, fig.height=9, fig.align='center', echo=T}
-(((btd_k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1, 1, 2)))/
-  ((w1$w|u)+patchwork::plot_layout(widths = c(1, 3))))
-```
+Lets combine the UMAP plots shown earlier with the output of `scBubbletree`:
 
-```{r, fig.width=4.5, fig.height=4}
-# w1 <- get_annotation_tiles_char(k = btd_k5$cluster,
-#                                 a = d@meta.data$cell_line_demuxlet,
-#                                 tree_meta = btd_k5$tree_meta,
-#                                 integrate_over_clusters = F,
-#                                 round_digits = 1,
-#                                 rotate_x_axis = F)
-# w1$w
-# g <- (btd_k5$tree|w1$w)+patchwork::plot_layout(widths = c(1, 4))
-# g
-# ggsave(plot = g,
-#        filename = "fig.pdf",
-#        device = "pdf",
-#        width = 4.75,
-#        height = 4)
+```{r}
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = d@meta.data$cell_line_demuxlet,
+                            feature_composition = T,
+                            round_digits = 1,
+                            rotate_x_axis = F)
 
-# btd_k5$pair_dist$
-
+w3 <- get_num_feature_tiles(d = k5,
+                            as = as,
+                            plot_title = "",
+                            round_digits = 1,
+                            rotate_x_axis = T)
 ```
 
 
 
-## Summary of the approach
 
-`scBubbletree` is intended to promote transparent analysis of scRNA-seq. The
-user of `scBubbletree` is encouraged to try different values of `k` and at 
-each stage perform bubble/cluster annotation. From this, the user has to 
-provide answer to the following questions:
+
+
+```{r, fig.width=6.75, fig.height=8}
+g <- ((g0)/
+        ((k5$tree|w1$w)+patchwork::plot_layout(widths = c(1,2)))/
+        ((w3$w|w4$w|g1)+patchwork::plot_layout(widths = c(1.2, 3, 1.2))))+
+  patchwork::plot_layout(heights = c(1, 2.5, 1))+
+  patchwork::plot_annotation(tag_levels = 'A')
+g
+
+ggsave(plot = g,
+       filename = "manuscript_data/fig_a.svg",
+       device = "svg",
+       width = 7,
+       height = 8)
+
+```
+
+
+
+## Summary
+
+`scBubbletree` is intended to promote simple and transparent analysis of 
+scRNA-seq. The user is encouraged to optimize `k` and at each stage to perform 
+feature annotation to understand the biology behind the new bubbles. At the end,
+user of `scBubbletree` must be able answer the following questions:
 
   a) is the selected `k` biologically justifiable?
-  b) is the structure of the generated dendrogram biologically 
-  meaningful? For instance:
-      * are relative sizes of bubble (cell-type) consistent with prior knowledge?
-      * are bubble distances in the dendrogram smaller between similar cell types?
-      * can we predict the cell types of the cells in each bubble based on e.g.
-      marker gene expression
-  c) if we increased `k`, could we prove that the newly created bubbles represent
-  new cell types using categorical or quantitative (e.g. ) annotations?
+  b) is the structure of the generated bubbletree biologically meaningful? 
+  For instance:
+      * are relative sizes of bubbles (cell-types) consistent with prior knowledge?
+      * are distances between pairs of bubbles in the tree smaller between similar 
+      cell types and the corresponding branches robust?
+      * does the bubble segmentation correspond with the feature annotation data 
+      (e.g. marker gene expressions)?
 
 We will provide answer to these questions in **Case study B**.
 
@@ -526,37 +743,40 @@ We will provide answer to these questions in **Case study B**.
 
 ```{r}
 # variable cleanup
-rm(b, btd_k5, d, meta, w1, w2, w3, w4, A, as, u, gini_boot)
+rm(b, k5, d, meta, w1, w2, w3, w4, A, as, u, gini_boot,
+   g, g0, g1, h, tpm, x, cell_line_pattern, cols)
 ```
 
 
 
-
-
-
-# Case study B: 53,000 PBMCs from 8 healthy donors [^2],[^3]
+# Case study B: 161,000 PBMCs from 8 healthy donors [^2],[^3]
 
 ## Data 
 
-In this case study we will analyze scRNA-seq dataset of approximately 53,000 
-PBMCs derived from 8 healthy donors. This represents a typical scRNA-seq dataset
-that is likely to be encountered by most users of `scBubbletree`. 
+In this case study we will analyze scRNA-seq dataset of approximately 161,000 
+PBMCs derived from 8 healthy donors, collected at three timepoints and sequenced
+by 10x Genomics protocol. This is a large and complex scRNA-seq dataset, perfect
+for demonstrating the advantageS of `scBubbletree` over qualitative analyses 
+e.g. based on 2D UMAPs.
 
 In addition to gene expression data, this dataset reports for each cell a cell 
 type prediction at three levels of resolution (*l1*, *l2* and *l3*). The cell 
 types have been predicted based on marker genes, and we will use them as 
-categorical cell annotations.
+categorical cell annotations. As this dataset is part of a larger CITE-seq
+experiment, the cell type predictions are made based on scRNA-seq derived
+gene expressions and also on the cell-surface protein expression levels of up
+to 228 marker proteins.
 
 In essence, we will perform the same steps as in *Case study A*:
 
   1. determine `k` $\rightarrow$ with $f:$ `get_k`
   2. perform clustering and generate dendrogram $\rightarrow$ with 
-  $f:$ `get_bubbletree_data`
+  $f:$ `get_bubbletree`
   3. inspect the dendrogram structure and annotate it with categorical and 
   quantitative cell meta data $\rightarrow$ with $fs:$ 
-  `get_annotation_tiles_char`,`get_annotation_tiles_num`,`get_annotation_violins`
+  `get_cat_feature_tiles`,`get_num_feature_tiles`,`get_num_feature_violins`
   4. assess the model: criticize the results $\rightarrow$ with $f_s:$
-  `update_bubbletree_data`, `get_gini`, `get_gini_boot`
+  `update_bubbletree`, `get_gini`, `get_gini_boot`
   5. if necessary modify `k` and go back to 2.
 
 The raw gene expressions have already been preprocessed with `Seurat`. SCT 
@@ -569,28 +789,41 @@ Lets load the data.
 ```{r, echo=T}
 # To get the data used in this case study do the following steps:
 # 1. download reference data from vignette:
-# ttps://satijalab.org/seurat/articles/multimodal_reference_mapping.html
+# https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
 # 2. load SeuratDistk
 # library(SeuratDisk, lib.loc = lib.loc)
-# 3. subset data at time=0
-# d_t0 <- subset(x = d, subset = time == 0)
 # d <- LoadH5Seurat("~/BubbleMap/raw_data/Hao_2021/pbmc_multimodal.h5seurat")
-# save(d_t0, file = "Hao_2021_t0.RData")
+# save(d, file = "raw_data/Hao_2021/Hao_2021.RData")
 ```
 
 
 ```{r, echo=T}
-d_t0 <- get(load(file = "raw_data/Hao_2021_t0.RData"))
+d <- get(load(file = "raw_data/Hao_2021/Hao_2021.RData"))
 ```
 
 
-We can show the number of cells per donor and predicted cell type at the 
-lowest resolution (*l1*)
+Lets look at the number of cells per donor at a given sampling time:
+
+```{r, echo = T}
+table(d@meta.data$time, d@meta.data$donor)
+```
+
+Also, we can show the number of cells per donor and predicted cell type at the 
+lowest resolution (*l1*):
 
 ```{r, echo=T}
-table(d_t0@meta.data$celltype.l1,
-      d_t0@meta.data$donor)
+table(d@meta.data$celltype.l1, d@meta.data$donor)
 ```
+
+How many distinct *cell types* are there at each resolution?
+
+```{r, echo=T}
+length(unique(d@meta.data$celltype.l1))
+length(unique(d@meta.data$celltype.l2))
+length(unique(d@meta.data$celltype.l3))
+```
+
+
 
 Next we will show the 2D UMAP. Cells are color coded according to their 
 cell type predictions resolution level *l1* (left UMAP) and *l2* (right 
@@ -598,20 +831,50 @@ UMAP):
 
 ```{r, fig.width=12, fig.height=4, fig.align='center', echo=T}
 # Lets show the generated 2D UMAP
-UMAPPlot(object = d_t0, 
+UMAPPlot(object = d, 
          reduction = "umap", 
          group.by = 'celltype.l1', 
          pt.size = 0.25)|
-  UMAPPlot(object = d_t0, 
+  UMAPPlot(object = d, 
          reduction = "umap", 
          group.by = 'celltype.l2', 
          pt.size = 0.25)
 ```
 
+
+
+```{r, results='hide', echo=FALSE}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+
+umap_centers <- merge(x = aggregate(UMAP_1~celltype.l2, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~celltype.l2, data = umap_data, FUN = median),
+                      by = "celltype.l2")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = celltype.l2), 
+            min.segment.length = 0, size = 3)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_umap
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_B.pdf",
+       device = "pdf",
+       width = 6,
+       height = 6)
+```
+
+
+
 ## Challenges with 2D UMAP based scRNA-seq data exploration
 
-Now that the UMAP contains more than 50,000 cells from a complex tissue, we 
-start to see the challenges associated with this approach: 
+Now that the UMAP contains more than 161,000 cells from a heterogeneous tissue, 
+we start to see the challenges associated with this approach: 
   
   1. massive overplotting
     
@@ -620,601 +883,570 @@ start to see the challenges associated with this approach:
       * even at resolution level *l1* we have difficulty to distinguish 
       between cell types and their colors. This is quite more challenging for 
       level *l2* and *l3* (not shown)
-      * it is nearly impossible to ascertain the absolute/relative cell types 
-      frequencies 
-      * increasing the number of cells in the dataset, which is likely as 
-      throughput of scRNA-seq techniques improves, will make the problem 
-      even worse
-      * comparison of 2D UMAPs between studies difficult -> UMAP rotation 
-      affects interpretation
-  2. qualitative analysis
-      * distances between cell types not quantifiable (per UMAP manual)
-      * B-cells are position 
-
+      * increasing the number of cells in the dataset, which is likely to 
+      happen as throughput of scRNA-seq techniques improves, will make the 
+      problem even worse
+      * comparison of 2D UMAPs between studies difficult -> UMAP rotation, 
+      colors, cell order (which cell is shown on the top/bottom) affects 
+      interpretation
+  
+  2. lack of compositional information
+      * it is nearly impossible to ascertain the absolute/relative cell 
+      frequencies in e.g. cell types, samples, timepoints
+      * impossible to tell whether the samples are equally mixed across the 
+      cell types or if there are some systematic biases. 
+      * we could generate 8 x 3 separate UMAPs for each pair of donor and 
+      timepoint -> difficult to interpret due to 1. + only major deviations 
+      will be noticeable.
+      
+  3. qualitative analysis
+      * distances between cell types should not be interpreted in Euclidean 
+      distance sense -> cell type structure difficult to discern from 2D UMAP
+      
 
 ## scBubbletree approach
 
 Now lets turn to `scBubbletree`. As earlier, our first goal is to determine `k` 
 for the clustering of matrix $A^{n \times f}$, which represents the low-
 dimensional feature space of the normalized gene expression matrix. We will 
-use the first $f$=20 PCA dimensions as features. We selected $f$=20 based on 
-the elbow plot below, even though lower $f$=10 or $f$=15 might also be 
-appropriate.
+use the first $f$=15 PCA dimensions as features. We selected $f$=15 based on 
+the elbow plot below.
 
 ```{r, fig.width=3.5, fig.height=3, fig.align='center', echo = T}
-ElbowPlot(object = d_t0, ndims = 50, reduction = "pca")
+ElbowPlot(object = d, ndims = 50, reduction = "pca")
+```
 
+
+```{r, echo = T}
 # This is the main input of scBubbletree 
 # -> matrix A with n=cells, f=features (from PCA)
-A <- d_t0@reductions$pca@cell.embeddings[, 1:20]
+A <- d@reductions$pca@cell.embeddings[, 1:15]
 ```
 
 
-We will once again use the function `get_k` for clustering. Notice 
-the modified function parameters which will help us achieve faster execution 
-of this large dataset:
+```{r, echo = T}
+# meta data
+meta <- d@meta.data
+```
+
+
+```{r, echo = T}
+# quantitative features (gene expressions of marker genes) to be used later on:
+# * GNLY, NKG7:	NK cells
+# * IL7R:	CD4 T cells
+# * CD8A:	CD8 T cells
+# * MS4A1:	B cells
+# * CD14, LYZ:	CD14+ Monocytes
+# * FCGR3A, MS4A7:	FCGR3A+ Monocytes
+# * FCER1A, CST3:	Dendritic Cells
+# * PPBP:	Megakaryocytes
+as <- as.matrix(t(d@assays$SCT@data[
+  rownames(d@assays$SCT@data) %in% 
+    c("IL7R", 
+      "CD14", "LYZ", 
+      "MS4A1", 
+      "CD8A", 
+      "GNLY", "NKG7",
+      "FCGR3A", "MS4A7",
+      "FCER1A", "CST3",
+      "PPBP"), ]))
+```
+
+
+```{r}
+# cleanup
+rm(d)
+gc()
+```
+
+
+We will once again use the function `get_k` for clustering. Notice the modified 
+parameter *cv_index_p=0.2*, for faster execution of this large dataset:
 
 ```{r, fig.width=4, fig.height=3, echo = T}
-# Determine appropriate number of clusters (k)
-b <- get_k(B = 50,
-           cv_clust_p = 1, # use 100% for clustering
-           cv_gap_p = 0.1, # use 10% for gap stat.
-           ks = 2:50,
-           x = A,
-           n_start = 10,
-           iter_max = 50,
-           cores = 20)
+
+if(redo_case_b) {
+  # Determine appropriate number of clusters (k)
+  b <- get_k(B = 30,
+             cv_clust_p = 1, # use 100% for clustering
+             cv_index_p = 0.2, # use 20% for gap stat.
+             ks = 1:40,
+             x = A,
+             n_start = 10,
+             iter_max = 20,
+             cores = 20)
+  
+  if(dir.exists("case_study_B")==F) {
+    dir.create("case_study_B")
+  }
+  save(b, file = "case_study_B/b.RData")
+} else {
+  b <- get(load("~/scBubbletree/case_study_B/b.RData"))
+}
+
 ```
 
-We see high silhouette values for `k=8`. For `k>8` the silhouette 
-index start to drop sharply until `k=12`, beyond which we see slow decay 
-in silhouette values. 
+We see a more complex silhouette curve. This is normal given the complexity
+in our dataset, which is composed of many cell types with high and low relative
+frequencies. We see a maximum silhouette index at `k=5`. The index then drops 
+sharply until `k=11`, followed by shallow increase until `k=14` after the 
+silhouette starts once again to decrease.
 
-The Gap and WSS curves appear to slowly flatten beyond `k=15`, which can 
-be used as the upper bound for potentially useful `k`.
+Elbows are not easy to detect from the Gap and WSS curves. It is quite evident,
+however, that both curves flatten at around `k=15` to `k=20`. 
 
-```{r, fig.width=10, fig.height=3, fig.align='center', echo=T}
-ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_median))+
-  geom_errorbar(aes(x = k, y = sil_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "Silhouette")|
+
+```{r}
+g0 <- ggplot(data = b$sil_stats_summary)+
+  geom_point(aes(x = k, y = sil_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Silhouette")+
+  ylab(label = "Mean Silhouette")|
 ggplot(data = b$gap_stats_summary)+
-  geom_point(aes(x = k, y = gap_median))+
-  geom_errorbar(aes(x = k, y = gap_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "Gap")|
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Gap")+
+  ylab(label = "Mean Gap")|
 ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_median))+
-  geom_errorbar(aes(x = k, y = wss_median, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = "WSS")
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "WSS")+
+  ylab(label = "Mean WSS")
 ```
 
-## `k=8`
-Lets start with `k=8` and use `get_bubbletree_data` to perform clustering 
-followed by hierarchical clustering:
+
+```{r, fig.width=10, fig.height=3, fig.align='center'}
+g0
+```
+
+
+
+
+
+## `k=5`
+Lets start with `k=5` and use `get_bubbletree` to perform k-means 
+clustering followed by hierarchical clustering:
 
 ```{r, echo=T}
-btd_k8 <- get_bubbletree_data(x = A,
-                              k = 8,
-                              n_start = 100,
-                              iter_max = 100,
-                              seed = 4321,
-                              cores = 1,
-                              B = 10,
-                              N_eff = 100,
-                              verbose = FALSE)
+
+if(redo_case_b) {
+  # Determine appropriate number of clusters (k)
+  k5 <- get_bubbletree(x = A,
+                            k = 5,
+                            n_start = 100,
+                            iter_max = 100,
+                            seed = 4321,
+                            cores = 5,
+                            B = 50,
+                            N_eff = 100,
+                            verbose = FALSE)
+  save(k5, file = "case_study_B/k5.RData")
+} else {
+  k5 <- get(load("~/scBubbletree/case_study_B/k5.RData"))
+}
+
 ```
 
-Next, we can plot the dendrogram:
+Next, we can plot the bubbletree:
+  
+  * bubbles 3 and 4 are dominant as they contain approximately 70% of the cells
+  * now we also see some strcuture in the bubbletree, e.g. bubbles 1 and 3 
+  form one branch with high support, which is then also joined with bubble 2.
+  * bubbles 4 and 5 are clearly separated from the branch formed by bubbles 
+  1, 2 and 3 
 
 ```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
-btd_k8$tree
+k5$tree
 ```
 
-Now we see some structure (branching) in the dendrogram, i.e. bubbles 5, 2, 7 and 4 for one branch; and 6, 3 and 1 form another; bubble 8 is an outgroup.
+Does this make biological sense? Lets visualize the cell type compositions 
+(figure B, notice parameter *feature_composition = F*) of the different 
+bubbles using the categorical feature *l1*. Furthermore, we can also show the
+composition of features across the different bubbles (figure C, notice 
+parameter *feature_composition = T*). 
 
-Does this make biological sense? Lets confirm this by visualizing the predicted
-cell type annotations:
+Summary of the bubbletree and figure B:
 
-```{r, fig.width=8, fig.height=4.5, fig.align='center', echo=T}
+  * the branch with bubbles 1 and 3 contains CD4+ and CD8+ T-cells,
+  NK-cells and other T-cells
+  * about 92% of the cells in bubble 2 are B-cells and 7% are DCs. B-cells and 
+  DCs are not related, which points at potential undersegmentation.
+  * it is evident that the branch with bubble 1,3 and 2 contains different 
+  lymphocytes
+  * nearly all cells in bubble 4 are monocytes and DCs
+  * the smallest bubble 5 is nearly exclusively composed of 'other' cells and
+  about 3% monocytes
+  * all branches have high (complete) bootstrap support, i.e. in the 50 
+  bootstrap trees we find identical branching as in the consensus bubbletree.
+  * in summary, the clustering algorithm with $k=5$ performs coarse but 
+  biologically meaningful cell type segmentation. 
+  
+```{r, echo=T}
 # cell type annotations (level 1)
-a <- d_t0@meta.data$celltype.l1 
+a <- meta$celltype.l1 
+
+# create tile plot showing cluster compositions
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = F,
+                            round_digits = 1,
+                            show_hclust = F)
+
+# create tile plot showing feature compositions
+w2 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 1,
+                            show_hclust = F)
+```
+
+
+```{r, fig.width=9, fig.height=4.5, fig.align='center', echo=T}
+(k5$tree|w1$w|w2$w)+
+  patchwork::plot_layout(widths = c(1, 1.5, 1.5))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+Earlier we stated that the data is derived from 8 donors at 3 timepoints. 
+Are the cells in each sample well mixed in each of the different bubbles?
+
+We see interesting patterns in the feature compositions between the samples 
+as shown in figure D and the corresponding dendrogram with two branches. For 
+instance bubble 3 cells (CD4+ and CD8+ T-cells) appear to be enriched in P4 
+samples. We do not see systematic biases between samples that correspond to 
+different timepoints.
+
+
+```{r, echo=T, results='hide'}
+# lets first create a variable showing pairs (donor x timepoint) 
+a <- paste0(meta$donor, '_', meta$time)
+
+# categorical donor meta data
+w3 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = T)
+```
+
+
+```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
+((k5$tree|w1$w|w2$w)+patchwork::plot_layout(widths = c(1, 1.5, 1.5)))/(w3$w)+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+Another categorical feature which we can visualized are the predicted phases 
+of the different cells: G1 (cell growth), S (DNA replication), G2 (growth and 
+preparation for mitosis), M (mitosis: ell division occurs). These prediction 
+are included as part of the meta data. 
+
+In the next plot we show the composition of each bubble with respect to these 
+three cell phases:
+
+```{r, echo=T}
+# cell type annotations (level 1)
+a <- meta$Phase 
 
 # create tile plot
-w <- get_annotation_tiles_char(k = btd_k8$cluster,
-                               a = a,
-                               tree_meta = btd_k8$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 1)
-
-(btd_k8$tree|w$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+w4 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 1)
 ```
 
 
-# ```{r}
-# g <- (bt$tree|w$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 2.5))
-# ggsave(plot = g,
-#        filename = "fig.pdf",
-#        device = "pdf",
-#        dpi = 300,
-#        width = 5.5,
-#        height = 4.25)
-# ```
+```{r, fig.width=9, fig.height=8, fig.align='center', echo=T}
+((k5$tree|w1$w|w2$w)+patchwork::plot_layout(widths = c(1, 1.5, 1.5)))/
+  ((w3$w|w4$w)+patchwork::plot_layout(widths = c(3, 1)))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
 
 
-Summary of the results:
-  
-  * branch with bubbles 5, 2, 7 and 4:
-  
-      * nearly 100% of all CD4+ T-cells and CD8+ T-cells are part of 
-      bubble 5 and 2
-      * NK cells are enriched in bubble 7 and also partly in bubble 2
-      * 'other T cells' are also enriched in bubbles 5, 2 and 7
-      * bubble 4 is enriched with B-cells. It also contains 23% of DCs 
-      $\rightarrow$ this is unusual and hence an indication that we should 
-      use higher `k`.
-      * in summary: this branch contains lymphocytes
-      
-  * branch with bubbles 6, 3 and 1:
-      * this branch is enriched with two related cell types, i.e. monocytes 
-      (Mono) and dendritic cells (DCs)
-      * it also contains about 22% of the cells predicted as 'other'
-      
-  * outgroup bubble 8 is enriched with cells predicted as 'other' 
+
+
 
 
 ## `k=15`
 
-It is apparent from the earlier results generated with `k=8` that some 
-bubbles are not `pure`, i.e. contain cell from different cell types. For instance, bubble 4 B-cells and dendritic cells, which is unexpected. Lets 
-increase `k` to 15, the upper bound of useful `k_s` determined earlier.
+It is apparent from the results generated by setting `k=5` that some 
+bubbles are `impure`, i.e. they contain cells from different cell types, e.g.
+bubble 2 contains a mixture of two unrelated cell types, i.e. B-cells and DCs. 
 
-Lets perform clustering with `k=15`. 
+Furthermore, *our goal* is to inspect the data at a finer cellular resolution.
+For instance, lets see how well `k=5` clustering segments the *l2* cell type
+predictions?
+
+As expected, many cluster contains multiple cell types $\rightarrow$ if we want
+to identify cell clusters at *l2* resolution it is evident that we need to
+increase `k`. Lets try `k=15` (this is also a reasonable value for `k` based 
+on silhouette, WSS and gap curves shown above).
+
+```{r, fig.width=10, fig.height=4.5, fig.align='center', echo=T}
+# cell type annotations (level 1)
+a <- meta$celltype.l2 
+
+# create tile plot showing cluster compositions
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F)
+
+(k5$tree|w1$w)+
+  patchwork::plot_layout(widths = c(1, 4))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
 
 ```{r, echo=T}
-# do clustering
-btd_k15 <- get_bubbletree_data(x = A,
-                              k = 15,
-                              n_start = 100,
-                              iter_max = 100,
-                              seed = 4123,
-                              cores = 1,
-                              B = 10,
-                              N_eff = 100,
-                              verbose = FALSE)
+
+
+if(redo_case_b) {
+  # do clustering with k=15
+  k15 <- get_bubbletree(x = A,
+                        k = 15,
+                        n_start = 200,
+                        iter_max = 1000,
+                        seed = 4321,
+                        cores = 5,
+                        B = 50,
+                        N_eff = 100,
+                        verbose = FALSE,
+                        round_digits = 1)
+  save(k15, file = "case_study_B/k15.RData")
+} else {
+  k15 <- get(load("~/scBubbletree/case_study_B/k15.RData"))
+}
+
 ```
 
 
-Before looking at the results lets compare the Gini impurity index between 
-the `k=6` and `k=15` clustering. For this we will use as labels the *l1* cell 
-type predictions
+Summary of the bubbletree:
 
-```{r}
-# gini
-get_gini(labels = d_t0@meta.data$celltype.l1, 
-         clusters = btd_k8$cluster)$total_gini
-
-get_gini(labels = d_t0@meta.data$celltype.l1, 
-         clusters = btd_k15$cluster)$total_gini
-```
-
-The effect of this is finer dendrogram structure and branches. For instance, 
-NK cells (bubble 8) are now separated from CD4, CD8 and other T-cells, however,
-are found in the same branch. B-cells are found in bubble 14 and this bubble no
-longer contains DCs, which not appear to be part of bubble 13 and also bubble 9.
-
-We also see finer structure in the branch of monocytes and DCs. By considering
-*l1* it is difficult to justify this structure as all bubbles in this branch
-appear to have similar annotation profiles. 
-
-```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
-# cell type annotations (level 1)
-a <- d_t0@meta.data$celltype.l1 
-
-# create tile plot
-w <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = a,
-                               tree_meta = btd_k15$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 1)
-
-(btd_k15$tree|w$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
-```
-
-
-Lets "zoom-in" by using *l2* cell type annotation to better understand the 
-structure of this branch. *l2* contains 31 cell types compared to the 8 cell 
-types in *l1*. We show the *l2* annotations below. We can see branching of the 
-monocytes in CD14+ and CD16+ and also monocytes. Nevertheless, even based on 
-the *l2* cell type annotation the bubbles 7, 5 and 12 are quite similar, which 
-indicates potential oversegmentation. At the same time, bubble 14 contains both 
-naive, memory and intermediate B-cells, suggesting potential undersegmentation. 
-Hence, depending on the cell type resolution of interest we may a) use higher 
-`k` value or b) perform clustering of cells within specific bubbles.
-
-```{r, fig.width=12, fig.height=8, fig.align='center', echo=T}
+  * the lymphocyte and monocyte branches of bubbles are well defined. Within
+  branch structures are biologically meaningful
+  * bubble 2 is the largest one in the tree and appears to be enriched with
+  naive T-cells and Tregs, but also hematopoietic stem and 
+  progenitor cells (HSPC) $\rightarrow$ additional clustering might be necessary
+  * other T-cells, such as effector, central memory and cytotoxic T-cells, are 
+  enriched in the remaining bubbles 1, 8, 14 of the same branch.
+  * NK-cells are contained in bubble 7, shown as an outgroup of lymphocytes
+  * B-cells (naive, memory, intermediate and plasmablasts) are found in a common
+  branch containing bubble 3 and 13
+  * CD14+ and CD16+ monocytes and different types of DCs are contained in a
+  separate branch of monocyte bubbles. Surprisingly, these bubbles are also 
+  enriched with doublets
+  * most branches have high (complete) bootstrap support. This is not the case
+  for the branch connecting bubble 8 and 14 (50% support).
+  * cells from smaller PBMCs subtypes, such as platelets and erythrocytes, are 
+  found as separate bubbles shown as outgroups 
+  * in summary, the clustering algorithm with $k=15$ recovers most *l2* 
+  resolution cell types and produces a biologically meaningful bubbletree 
+  topology
+  
+```{r, fig.width=10, fig.height=7, fig.align='center', echo=T}
 # cell type annotations (level 2)
-a <- d_t0@meta.data$celltype.l2
+a <- meta$celltype.l2
 
 # create tile plot
-w <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = a,
-                               tree_meta = btd_k15$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 0)
+w1 <- get_cat_feature_tiles(d = k15,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F)
 
-(btd_k15$tree|w$w)+patchwork::plot_layout(ncol = 2, widths = c(2, 9))
+(k15$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(3, 9))
 ```
 
-Deeper clustering of specific bubbles is available by using the function
-*update_bubbletree_data*. This function **should be used to explore the data** 
-in order to select an appropriate `k` and to explain the results. 
+Interestingly, the bubbles 1 and 2 contain many different cell types. Additional
+clustering of these bubbles might be necessary.
 
-Let us update cluster *bubble 14* into three subclusters now and *bubble 11* 
-into two . `scBubbletree` will update the dendrogram distances automatically. 
-Notice that the two newly created *bubbles 14_1*, *14_2* and *14_3* partition 
-the  B-cells into subclusters of naive, memory and intermediate. The newly 
-created bubble *11_1* is composed of plasmablasts and hematopoietic stem and 
-progenitor cells (HSPC), and *11_2* contains the remaining cells from the 
-original bubble *11*.
+## Bubble update
 
-Also notice that the branch of lymphocytes now has two pronounced sub-branches;
-one made up predominantly of T-cell-like cells (including NK-cells) and the 
-other of B-cell-like cells. The plasmablasts and HSPCs are shown as an outgroup,
-which is also biologically sensible.
+`scBubbletree` can perform targeted clustering of cells within specific bubbles. 
+This can be achieved with the function `update_bubbletree`. Lets update 
+bubbles 1 and 2 into two sub-bubbles.
+
+**Important remark**: the function `update_bubbletree` should be used to 
+explore the clustering in order to select an appropriate `k` and to explain the 
+segmentation. 
+
+```{r, echo=T}
+
+if(redo_case_b) {
+  # do clustering with k=15
+  u_k15 <- update_bubbletree(btd = k15,
+                             updated_bubbles = c("2", "1"),
+                             ks = c(2, 2),
+                             cores = 20)
+  save(u_k15, file = "case_study_B/u_k15.RData")
+} else {
+  u_k15 <- get(load("~/scBubbletree/case_study_B/u_k15.RData"))
+}
+
+```
+
 
 ```{r, fig.width=12, fig.height=8, fig.align='center', echo=T}
-u_btd_k15 <- update_bubbletree_data(btd = btd_k15,
-                                    updated_bubbles = c("14", "11"),
-                                    ks = c(3, 2),
-                                    cores = 20)
-
 # create tile plot
-w <- get_annotation_tiles_char(k = u_btd_k15$btd$cluster,
-                               a = a,
-                               tree_meta = u_btd_k15$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 0)
+w2 <- get_cat_feature_tiles(d = u_k15,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F)
 
-(u_btd_k15$tree|w$w)+patchwork::plot_layout(ncol = 2, widths = c(2, 9))
+(u_k15$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(4, 9))
 ```
 
 
 ## Gini index
 
-Can we show quantitatively if increasing `k` will contribute to "better" 
-clustering? Yes, we can use the Gini impurity index.
+Can we show quantitatively that by increasing `k` we get "better" clustering 
+in a semi-supervised way? Yes, we can use the Gini impurity index.
 
-For this we will integrate the results obtained by function `get_k`
-with *l1* and *l2* cell type predictions (labels), and show quantitatively the 
+For this we will integrate the results obtained by function `get_k` with *l1*, 
+*l2* and *l3* cell type predictions (labels), and show quantitatively the 
 change in Gini index as a function of `k`. This is done with the function 
-`get_gini_boot`.
+`get_gini_boot`. One potential caveat of this approach is that some of the 
+predictions might be inaccurate. 
+
+Lets invoke the function `get_gini_boot` and pass the object `b` obtained 
+earlier together with the cell type predictions:
 
 ```{r, echo = T}
-gini_boot_lv1 <- get_gini_boot(labels = d_t0@meta.data$celltype.l1,
-                               kmeans_boot_obj = b)
-
-gini_boot_lv2 <- get_gini_boot(labels = d_t0@meta.data$celltype.l2,
-                               kmeans_boot_obj = b)
+b <- get(load("~/scBubbletree/case_study_B/b.RData"))
+gini_l1 <- get_gini_boot(labels = meta$celltype.l1,
+                         kmeans_boot_obj = b)
+gini_l2 <- get_gini_boot(labels = meta$celltype.l2,
+                         kmeans_boot_obj = b)
+gini_l3 <- get_gini_boot(labels = meta$celltype.l3,
+                         kmeans_boot_obj = b)
 ```
 
 
-```{r, fig.width=8, fig.height=4, fig.align='center', echo=T}
-ggplot(data = gini_boot_lv1$total_gini_summary)+
-  geom_point(aes(x = k, y = total_gini_median))+
-  geom_errorbar(aes(x = k, y = total_gini_median, ymin = L95, 
-                    ymax = H95), width = 0.1)+
-  ggtitle(label = "Total Gini")|
-ggplot(data = gini_boot_lv2$total_gini_summary)+
-  geom_point(aes(x = k, y = total_gini_median))+
-  geom_errorbar(aes(x = k, y = total_gini_median, ymin = L95, 
-                    ymax = H95), width = 0.1)+
-  ggtitle(label = "Total Gini")
+We next plot the Gini scores for the labels at resolution *l1*, *l2* and *l3*.
+
+```{r, fig.width=3, fig.height=3, fig.align='center'}
+l1 <- gini_l1$total_gini_summary
+l1$level <- "l1"
+
+l2 <- gini_l2$total_gini_summary
+l2$level <- "l2"
+
+l3 <- gini_l3$total_gini_summary
+l3$level <- "l3"
+
+l_summary <- rbind(l1, l2, l3)
+
+g_gini <- ggplot(data = l_summary)+
+  geom_point(aes(x = k, y = total_gini_mean, col = level), size = 1)+
+  geom_errorbar(aes(x = k, y = total_gini_mean, ymin = L95, 
+                    ymax = H95, col = level), width = 0.1)+
+  scale_color_manual(name = "R",
+                     values = c("black", "#787777", "gray"))+
+  theme(legend.position = c(0.8, 0.7))+
+  ylab(label = "Mean Gini impurity")+
+  ggtitle(label = '', subtitle = "Gini impurity")
+
+g_gini
 ```
 
-We see shallow decrease in Gini index for `k>15`in the context of 
-*l1* or *l2* annotations.
+
+Summary of the above plot:
+  
+  * more abstract cell types can be segmented more accurately and the 
+  resulting segmentation has lower total Gini impurity.
+  * in each curve the total Gini impurity appears to decrease slowly for as 
+  `k` approaches 20.
+  * this indicates that our previous data-based indices provide meaningful results
+  * important: finding the right $k$ also depends on the user's objectives
 
 
 
-
-## Quantiative annotations
+## Quantiative features
 
 Gene expression annotations can also be integrated to better explain the 
-clustering structure of the dendrogram. Lets integrate some marker genes:
+bubbles and the tree structure. Lets visualize the mean gene expression of some 
+marker genes in the bubbles:
 
-  * GNLY, NKG7:	NK cells
-  * IL7R:	CD4 T cells
-  * CD8A:	CD8 T cells
-  * MS4A1:	B cells
-  * CD14, LYZ:	CD14+ Monocytes
-  * FCGR3A, MS4A7:	FCGR3A+ Monocytes
-  * FCER1A, CST3:	Dendritic Cells
-  * PPBP:	Megakaryocytes
-
-```{r, fig.width=7, fig.height=6, echo=T}
-# First we need to select gene expressions for each cell and 
-# also for five marker genes
-as <- as.matrix(t(d_t0@assays$SCT@data[
-  rownames(d_t0@assays$SCT@data) %in% 
-    c("IL7R", 
-      "CD14", "LYZ", 
-      "MS4A1", 
-      "CD8A", 
-      "GNLY", "NKG7",
-      "FCGR3A", "MS4A7",
-      "FCER1A", "CST3",
-      "PPBP"), ]))
-
-# 'as' is a matrix with n=rows for cells and a=columns for 
-# annotations (genes). The column names will be shown in
-# the plot.
-
-```
+  * GNLY, NKG7:	*NK cells*
+  * IL7R:	*CD4 T cells*
+  * CD8A:	*CD8 T cells*
+  * MS4A1:	*B cells*
+  * CD14, LYZ:	*CD14+ Monocytes*
+  * FCGR3A, MS4A7:	*FCGR3A+ Monocytes*
+  * FCER1A, CST3:	*Dendritic Cells*
+  * PPBP:	*Megakaryocytes*
 
 
 ```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
 # This function build the nummeric annotations plot
-w1 <- get_annotation_tiles_num(k = u_btd_k15$btd$cluster,
-                               as = as,
-                               tree_meta = u_btd_k15$tree_meta,
-                               plot_title = "",
-                               round_digits = 1)
+w3 <- get_num_feature_tiles(d = k15,
+                            as = as,
+                            plot_title = "",
+                            round_digits = 1)
 
 # Plot
-(u_btd_k15$tree|w1$w)+patchwork::plot_layout(widths = c(1, 3))
+(k15$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
 ```
 
 Second, we can visualize the distribution of each marker gene in each bubble 
-using violin plots with `get_annotation_violins`. This function uses the same
-input as `get_annotation_tiles_num`. 
+using violin plots with `get_num_feature_violins`. This function uses the same
+input as `get_num_feature_tiles`. 
 
 Lets invoke this function now.
 
-```{r, fig.width=12, fig.height=14, fig.align='center', echo=T}
-w2 <- get_annotation_violins(k = u_btd_k15$btd$cluster,
-                             as = as,
-                             tree_meta = u_btd_k15$tree_meta,
-                             plot_title = "",
-                             scales = 'free_x')
-
-((u_btd_k15$tree|w1$w)+patchwork::plot_layout(widths = c(1.5, 3)))/w2$w
-```
+```{r, fig.width=10, fig.height=14, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k15,
+                              as = as,
+                              plot_title = "",
+                              scales = 'free_x')
 
 
-# Case study C [^4]
-
-## Data
-
-In the final case study we will show how to use `scBubbletree` to perform
-joint visualization of scRNA-seq and scAIRR-seq (immune profiling) data. This 
-datasets consists of about human 10,000 PBMCs of healthy female donor obtained 
-from 10x Genomics. Sequencing of TCRs and BCRs was done for the different B- 
-and T-cells in the sample.
-
-For each cell we have:
-  
-  * log-normalized gene expression
-  * predicted cell type (with R package singleR)
-  * BCR IGH information (IGHV, IGHJ, IGHD and IGHC gene calls, CDR3 length)
-
-Data processing and transformation is shown below:
-
-```{r}
-# # Create Seurat object from the raw counts and append the meta data to it
-# d <- Seurat::Read10X_h5(filename = "raw_data/10x_vdj_PBMCs/10k_PBMC_5pv2_nextgem_Chromium_X_10k_PBMC_5pv2_nextgem_Chromium_X_count_sample_feature_bc_matrix.h5")
-# d <- Seurat::CreateSeuratObject(counts = d, project = '')
-# 
-# # Preprocessing with Seurat: SCT transformation + PCA + UMAP
-# d <- NormalizeData(object = d,
-#                    normalization.method = "LogNormalize",
-#                    scale.factor = 10000)
-# d <- FindVariableFeatures(d, selection.method = "vst", nfeatures = 5000)
-# d <- ScaleData(d, features = rownames(d))
-# d <- RunPCA(object = d, features = VariableFeatures(object = d), npcs = 20)
-# d <- RunUMAP(d, dims = 1:20)
-# 
-# # Predict cell types and merge with meta data
-# library(celldex, lib.loc = lib.loc)
-# library(SingleR, lib.loc = lib.loc)
-# ref <- celldex::BlueprintEncodeData(ensembl = F)
-# pred <- SingleR(test=d@assays$RNA@data,
-#                 ref=ref,
-#                 labels=ref$label.main)
-# d@meta.data$pred_cell_type <- pred$labels
-# 
-# 
-# # append IGH BCR data
-# meta <- d@meta.data
-# meta$barcode <- rownames(meta)
-# 
-# # read IGH BCR data and extract useful data
-# bcr <- read.csv(file = "raw_data/10x_vdj_PBMCs/10k_PBMC_5pv2_nextgem_Chromium_X_10k_PBMC_5pv2_nextgem_Chromium_X_vdj_b_filtered_contig_annotations.csv", sep = ",")
-# bcr <- bcr[bcr$chain == "IGH", ]
-# bcr <- bcr[bcr$barcode %in% names(which(table(bcr$barcode)==1)), ]
-# bcr$cdr3_length <- nchar(bcr$cdr3)
-# bcr <- bcr[, c("barcode", "v_gene", "j_gene",
-#                  "d_gene", "c_gene", "cdr3_length",
-#                  "umis", "reads")]
-# 
-# # merge meta and IGH BCR data
-# meta <- merge(x = meta, y = bcr, by = "barcode", all.x = T)
-# meta$has_IGH <- ifelse(test = is.na(meta$umis), yes = "-", no = "+")
-# d@meta.data <- meta
-# table(rownames(d@meta.data)==rownames(d@reductions$umap@cell.embeddings))
-# d@meta.data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
-# 
-# # save data
-# save(d, file = "raw_data/10x_vdj_PBMCs/d.RData")
-```
-
-
-```{r}
-d <- get(load(file = "raw_data/10x_vdj_PBMCs/d.RData"))
-```
-
-The 2D UMAP with cells color-coded according to their predicted cell types
-are shown below:
-
-```{r, fig.width=6, fig.height=4, fig.align='center'}
-meta <- d@meta.data
-
-u <- ggplot(data = meta)+
-  geom_point(aes(x = UMAP_1, y = UMAP_2, col = pred_cell_type), size = 0.25)+
-  guides(colour = guide_legend(override.aes = list(size=4)))
-
-u 
-```
-
-
-```{r, echo = T}
-# This is the main input of scBubbletree -> matrix A
-A <- d@reductions$pca@cell.embeddings
-
-# A has n=cells as rows, f=features as columns (e.g. from PCA)
-dim(A)
-```
-
-
-```{r, fig.width=4, fig.height=3, echo=T, results=T}
-b <- get_k(B = 20, 
-           cv_clust_p = 1, 
-           cv_gap_p = 1, 
-           ks = seq(from = 2, to = 30, by = 2),
-           x = A,
-           n_start = 10, 
-           iter_max = 50, 
-           cores = 20)
-```
-
-From these plots `k=15` seems like a reasonable choice, which is similar to the 
-`k` seen in  Case Study B (also analyzing PBMCs). 
-
-```{r, fig.width=10, fig.height=3, fig.align='center'}
-
-gini_boot <- get_gini_boot(labels = meta$pred_cell_type,
-                           kmeans_boot_obj = b)
-
-ggplot()+
-  geom_jitter(data = b$sil_stats, aes(x = k, y = sil), 
-             size = 1, shape = 21, width = 0.1, height = 0)+
-  ggtitle(label = "Silhouette")|ggplot()+
-  geom_jitter(data = b$gap_stats, aes(x = k, y = gap), 
-             size = 1, shape = 21, width = 0.1, height = 0)+
-  ggtitle(label = "Gap")|ggplot()+
-  geom_jitter(data = b$wss_stats, aes(x = k, y = wss), 
-             size = 1, shape = 21, width = 0.1, height = 0)+
-  ggtitle(label = "WSS")|ggplot()+
-  geom_jitter(data = gini_boot$total_gini,
-              aes(x = k, y = total_gini),
-              size = 1, shape = 21, width = 0.1, height = 0)+
-  ggtitle(label = "Gini")
-  
-```
-
-Lets perform clustering with `k=15` using `scBubbletree`.
-
-```{r, echo=T}
-# Perform clustering to get data for scBubbletree
-btd_k15 <- get_bubbletree_data(x = A,
-                              k = 15,
-                              seed = 1234,
-                              cores = 1,
-                              B = 20,
-                              N_eff = 100,
-                              verbose = F)
-```
-
-
-
-Lets now plot the dendrogram:
-
-```{r, fig.width=5, fig.height=6, fig.align='center', echo=T}
-btd_k15$tree
+((k15$tree|w3$w)+patchwork::plot_layout(widths = c(1.5, 3)))/w4$w
 ```
 
 
 
 
-```{r, fig.width=14, fig.height=18, fig.align='center', echo=T}
-as <- as.matrix(t(d@assays$RNA@data[
-  rownames(d@assays$RNA@data) %in% 
-    c("IL7R", 
-      "CD14", "LYZ", 
-      "MS4A1", 
-      "CD8A", 
-      "GNLY", "NKG7",
-      "FCGR3A", "MS4A7",
-      "FCER1A", "CST3",
-      "PPBP"), ]))
-
-w0 <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = meta$pred_cell_type,
-                               tree_meta = btd_k15$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 1)
-
-w1 <- get_annotation_tiles_num(k = btd_k15$cluster,
-                               as = as,
-                               tree_meta = btd_k15$tree_meta,
-                               plot_title = "",
-                               round_digits = 1)
-
-w2 <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = meta[, c("has_IGH")],
-                               tree_meta = btd_k15$tree_meta,
-                               integrate_over_clusters = F,
-                               round_digits = 1)
-
-a <- matrix(data = meta[, c("cdr3_length")],
-       ncol = 1)
-colnames(a) <- "CDR3 length [aa]"
-
-w3 <- get_annotation_violins(k = btd_k15$cluster,
-                             a = a,
-                             tree_meta = btd_k15$tree_meta,
-                             violin_min_cells = 5)
-
-w4 <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = meta[, c("v_gene")],
-                               tree_meta = btd_k15$tree_meta,
-                               round_digits = 0,
-                               integrate_over_clusters = T)
-
-w5 <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = meta[, c("j_gene")],
-                               tree_meta = btd_k15$tree_meta,
-                               round_digits = 0,
-                               integrate_over_clusters = T)
-
-w6 <- get_annotation_tiles_char(k = btd_k15$cluster,
-                               a = meta[, c("c_gene")],
-                               tree_meta = btd_k15$tree_meta,
-                               round_digits = 0,
-                               integrate_over_clusters = T)
+```{r, fig.width=9, fig.height=8.5}
+g <- (g0|g_gini)/((k15$tree|w1$w)+patchwork::plot_layout(widths = c(1,6)))+
+  patchwork::plot_layout(heights = c(1, 4.5))+
+  patchwork::plot_annotation(tag_levels = 'A')
 
 
 
-((btd_k15$tree|w0$w|w1$w)+patchwork::plot_layout(widths = c(4, 3, 3)))/
-  ((w2$w|w3$w|w4$w)+patchwork::plot_layout(widths = c(2.5, 1.5, 6)))/
-  ((w5$w|w6$w)+patchwork::plot_layout(widths = c(1, 1)))
+ggsave(plot = g,
+       filename = "manuscript_data/fig_b.svg",
+       device = "svg",
+       width = 11,
+       height = 8.5)
 
 ```
 
 
 
-```{r}
-library(scRNAseq, lib.loc = lib.loc)
-mair <- scRNAseq::MairPBMCData(mode = "rna", ensembl = F)
-kotliarov <- scRNAseq::KotliarovPBMCData(mode = "rna", ensembl = F)
-table(kotliarov$timepoint)
-table(kotliarov$sample)
-table(kotliarov$hash_maxID)
-table(kotliarov$tenx_lane)
+```{r, fig.width=9, fig.height=8.5}
+g <- (w3$w|w4$w)+
+  patchwork::plot_layout(widths = c(1,3))+
+  patchwork::plot_annotation(tag_levels = 'A')
+
+
+
+ggsave(plot = w3$w,
+       filename = "manuscript_data/fig_c.svg",
+       device = "svg",
+       width = 3,
+       height = 6)
+
+ggsave(plot = w4$w,
+       filename = "manuscript_data/fig_d.svg",
+       device = "svg",
+       width = 6,
+       height = 6)
 
 ```
-
-
-
 
 # References
 
