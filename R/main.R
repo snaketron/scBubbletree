@@ -290,7 +290,7 @@ get_bubbletree <- function(x,
                            n_start = 10,
                            iter_max = 50,
                            B = 1,
-                           N_eff = 500,
+                           N_eff = 200,
                            cores,
                            seed = NA,
                            verbose = F,
@@ -361,17 +361,17 @@ get_bubbletree <- function(x,
                     round_digits = round_digits,
                     show_branch_support = show_branch_support)
 
-  return(structure(class = "bubbletree",
-                   list(A = x,
-                        km = km,
-                        ph = ph,
-                        hc = hc,
-                        pair_dist = pair_dist,
-                        k = k,
-                        cluster = km$cluster,
-                        input_par = input_par,
-                        tree = t$tree,
-                        tree_meta = t$tree_meta)))
+  return(base::structure(class = "bubbletree",
+                         list(A = x,
+                              km = km,
+                              ph = ph,
+                              hc = hc,
+                              pair_dist = pair_dist,
+                              k = k,
+                              cluster = km$cluster,
+                              input_par = input_par,
+                              tree = t$tree,
+                              tree_meta = t$tree_meta)))
 
 }
 
@@ -465,16 +465,18 @@ update_bubbletree <- function(btd,
                       show_branch_support = show_branch_support)
 
 
-  return(list(A = A,
-              km = u_kms,
-              ph = ph,
-              hc = hc,
-              pair_dist = pair_dist,
-              k = length(unique(btd$cluster)),
-              cluster = btd$cluster,
-              input_par = btd$input_par,
-              tree = t$tree,
-              tree_meta = t$tree_meta))
+
+  return(base::structure(class = "bubbletree",
+                         list(A = A,
+                              km = u_kms,
+                              ph = ph,
+                              hc = hc,
+                              pair_dist = pair_dist,
+                              k = length(unique(btd$cluster)),
+                              cluster = btd$cluster,
+                              input_par = btd$input_par,
+                              tree = t$tree,
+                              tree_meta = t$tree_meta)))
 }
 
 
@@ -482,13 +484,79 @@ update_bubbletree <- function(btd,
 #'
 #' @exportMethod
 #'
-get_bubbletree_data_from_clustering <- function(x,
-                                                c,
-                                                B = 1,
-                                                N_eff = 500,
-                                                cores,
-                                                seed = NA,
-                                                verbose = F) {
+dummy_bubbletree <- function(x,
+                             cs,
+                             B = 1,
+                             N_eff = 200,
+                             cores,
+                             seed = NA,
+                             verbose = F,
+                             round_digits = 2,
+                             show_branch_support = T) {
+
+  # check input
+  if(is.na(x) || is.null(x) || is.matrix(x)==F) {
+    stop("x should be a numeric matrix")
+  }
+
+  # length cs => nrow(x)
+
+  # set seed for reproducibility
+  if(is.na(seed) == F) {
+    set.seed(seed = seed)
+  }
+  else {
+    seed <- base::sample(x = 1:10^6, size = 1)
+    set.seed(seed = seed)
+  }
+
+  # pairwise distances
+  cat("Bubbletree construction ... \n")
+  pair_dist <- get_dist(B = B,
+                        m = x,
+                        c = cs,
+                        N_eff = N_eff,
+                        cores = cores,
+                        verbose = verbose)
+
+  # compute hierarchical clustering dendrogram
+  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
+                       formula = c_i~c_j, value.var = "M")
+  d <- stats::as.dist(d)
+  hc <- stats::hclust(d, method = "average")
+  ph <- ape::as.phylo(x = hc)
+  ph <- ape::unroot(phy = ph)
+
+  # get branch support
+  ph <- get_ph_support(main_ph = ph,
+                       x = pair_dist$raw_pair_dist)
+
+  # build treetree
+  t <- get_dendrogram(ph = ph$main_ph,
+                      cluster = cs,
+                      round_digits = round_digits,
+                      show_branch_support = show_branch_support)
+
+  # collect input parameters: can be used for automated update
+  input_par <- list(n_start = NA,
+                    iter_max = NA,
+                    N_eff = N_eff,
+                    B = B,
+                    seed = seed,
+                    round_digits = round_digits,
+                    show_branch_support = show_branch_support)
+
+  return(base::structure(class = "bubbletree",
+                         list(A = x,
+                              km = NA,
+                              ph = ph,
+                              hc = hc,
+                              pair_dist = pair_dist,
+                              k = length(unique(cs)),
+                              cluster = cs,
+                              input_par = input_par,
+                              tree = t$tree,
+                              tree_meta = t$tree_meta)))
 
 }
 
@@ -543,7 +611,7 @@ get_gini <- function(labels, clusters) {
 #'
 #' @exportMethod
 #'
-get_gini_boot <- function(labels, kmeans_boot_obj) {
+get_gini_k <- function(labels, kmeans_boot_obj) {
 
   if(length(kmeans_boot_obj$boot_obj)==1&&
      is.na(kmeans_boot_obj$boot_obj)) {

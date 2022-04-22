@@ -9,7 +9,8 @@ get_cat_feature_tiles <- function(d,
                                   feature_composition = F,
                                   round_digits = 2,
                                   rotate_x_axis = T,
-                                  show_hclust = F) {
+                                  show_hclust = F,
+                                  tile_text_size = 3) {
 
   get_a <- function(k, a, feature) {
     f <- data.frame(label = k, a = a)
@@ -82,7 +83,7 @@ get_cat_feature_tiles <- function(d,
     theme_bw(base_size = 10)+
     geom_tile(aes(x = feature, y = cluster, fill = percent), col = "white")+
     geom_text(aes(x = feature, y = cluster, label = percent),
-              col = "black", size = 3)+
+              col = "black", size = tile_text_size)+
     scale_fill_distiller(name = legend,
                          palette = "Spectral",
                          # limits = c(0, 100),
@@ -119,9 +120,10 @@ get_num_feature_tiles <- function(d,
                                   plot_title = '',
                                   round_digits = 2,
                                   rotate_x_axis = T,
-                                  show_hclust = F) {
+                                  show_hclust = F,
+                                  tile_text_size = 3) {
 
-  get_a <- function(k, a, feature, round_digits) {
+  get_mu <- function(k, a, feature, round_digits) {
     f <- data.frame(cluster = k, a = a)
     f <- stats::aggregate(a~cluster,
                           data = f,
@@ -145,7 +147,7 @@ get_num_feature_tiles <- function(d,
 
   ws <- vector(mode = "list", length = ncol(as))
   for(i in 1:ncol(as)) {
-    ws[[i]] <- get_a(k = d$cluster,
+    ws[[i]] <- get_mu(k = d$cluster,
                      a = as[, i],
                      feature = base::colnames(as)[i],
                      round_digits = round_digits)
@@ -162,8 +164,10 @@ get_num_feature_tiles <- function(d,
   if(any(is.na(ws$feature))) {
     ws$feature <- ws$feature[is.na(ws$feature)==F][1]
   }
+  ws$feature <- as.character(ws$feature)
   ws$feature <- factor(x = ws$feature,
                        levels = base::colnames(as))
+
 
 
 
@@ -172,7 +176,8 @@ get_num_feature_tiles <- function(d,
     tree <- get_weighted_feature_dist(main_ph = d$ph$main_ph,
                                       w = ws,
                                       value_var = "value")
-    ws$feature <- as.character(ws$feature)
+
+
     ws$feature <- factor(levels = tree$labels, x = ws$feature)
   }
 
@@ -180,7 +185,8 @@ get_num_feature_tiles <- function(d,
   w <- ggplot(data = ws)+
     theme_bw(base_size = 10)+
     geom_tile(aes(x = feature, y = cluster, fill = value), col = "white")+
-    geom_text(aes(x = feature, y = cluster, label = value), col = "black", size = 3)+
+    geom_text(aes(x = feature, y = cluster, label = value), col = "black",
+              size = tile_text_size)+
     scale_fill_distiller(name = "Avg.", palette = "Spectral", na.value = 'white')+
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
@@ -209,7 +215,101 @@ get_num_feature_violins <- function(d,
                                     as,
                                     plot_title = '',
                                     scales = "free_x",
-                                    violin_min_cells = 10) {
+                                    violin_min_cells = 10,
+                                    show_cells = T) {
+
+  get_raw <- function(k, a, feature) {
+    f <- data.frame(cluster = k, a = a)
+    f$value <- f$a
+    f$a <- NULL
+    f$feature <- feature
+    return(f)
+  }
+
+  if(is.vector(as)) {
+    as <- matrix(data = as, ncol = 1)
+    base::colnames(as) <- "a"
+  }
+
+  if(is.null(base::colnames(as))) {
+    base::colnames(as) <- paste0("a_", 1:ncol(as))
+  }
+
+  ws <- vector(mode = "list", length = ncol(as))
+  for(i in 1:ncol(as)) {
+    ws[[i]] <- get_raw(k = d$cluster,
+                     a = as[, i],
+                     feature = base::colnames(as)[i])
+  }
+  ws <- do.call(rbind, ws)
+
+
+  ws <- base::merge(x = ws,
+                    y = d$tree_meta,
+                    by.x = "cluster",
+                    by.y = "label",
+                    all = T)
+  ws <- ws[order(ws$tree_order, decreasing = F), ]
+  ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
+  if(any(is.na(ws$feature))) {
+    ws$feature <- ws$feature[is.na(ws$feature)==F][1]
+  }
+  ws$feature <- as.character(ws$feature)
+  ws$feature <- factor(x = ws$feature,
+                       levels = base::colnames(as))
+
+
+  # reorder features based on hclust
+  browser()
+  if(ncol(as)>1) {
+    tree <- get_weighted_feature_dist(main_ph = d$ph$main_ph,
+                                      w = ws,
+                                      value_var = "value")
+    ws$feature <- factor(levels = tree$labels, x = ws$feature)
+  }
+
+
+  w <- ggplot(data = ws)+
+    theme_bw(base_size = 10)+
+    facet_grid(.~feature, scales = scales)+
+    coord_flip()+
+    ylab(label = "Distribution")+
+    xlab(label = "Bubble")+
+    ggtitle(label = plot_title)+
+    theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-10,-10))
+
+  ws_ok <- ws[is.finite(ws$value), ]
+  ws_j <- which(table(ws_ok$label) >= violin_min_cells)
+  if(length(ws_j) != 0) {
+    ws_ok <- ws_ok[ws_ok$label %in% base::names(ws_j), ]
+    w <- w + geom_violin(data = ws_ok,
+                         aes(x = label,
+                             y = value),
+                         fill = NA)
+  }
+
+  if(show_cells==T) {
+    w<-w+geom_jitter(aes(x = label, y = value),
+                     width = 0.1, height = 0,
+                     col = "darkgray", size = 0.25)
+  }
+
+  return(list(ws = ws, w = w))
+}
+
+
+
+get_num_feature_error <- function(d,
+                                  as,
+                                  plot_title = '',
+                                  scales = "free_x",
+                                  R = 1000,
+                                  hdi_level = 0.9,
+                                  cores = 1) {
+
+
 
   get_a <- function(k, a, feature) {
     f <- data.frame(label = k, a = a)
@@ -218,6 +318,45 @@ get_num_feature_violins <- function(d,
     f$feature <- feature
     return(f)
   }
+
+
+  get_bootstrap_mean <- function(x, w, hdi_level) {
+
+    get_mean <- function(x, i) {
+      return(mean(x[i]))
+    }
+
+    get_hdi <- function(vec, hdi_level) {
+      sortedPts <- base::sort(vec)
+      ciIdxInc <- base::floor(hdi_level * base::length(sortedPts))
+      nCIs = base::length(sortedPts) - ciIdxInc
+      ciWidth = rep(0 , nCIs)
+      for (i in 1:nCIs) {
+        ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
+      }
+      HDImin = sortedPts[base::which.min(ciWidth)]
+      HDImax = sortedPts[base::which.min(ciWidth) + ciIdxInc]
+      HDIlim = c(HDImin, HDImax)
+      return(HDIlim)
+    }
+
+
+    tmp <- w[w$key == x, ]
+    boot_stat <- boot::boot(data = tmp$value,
+                            statistic = get_mean,
+                            R = R)
+
+    stat_hdi <- get_hdi(vec = boot_stat$t, hdi_level = hdi_level)
+    stat_mean <- boot_stat$t0
+    return(data.frame(key = x,
+                      M = stat_mean,
+                      L = stat_hdi[1],
+                      H = stat_hdi[2]))
+  }
+
+
+
+
 
   if(is.vector(as)) {
     as <- matrix(data = as, ncol = 1)
@@ -247,11 +386,28 @@ get_num_feature_violins <- function(d,
                        levels = base::colnames(as))
 
 
-  w <- ggplot(data = ws)+
+  sep <- paste0('_', sample(x = 1:10^6, size = 1), "_")
+  ws$key <- paste0(ws$label, sep, ws$feature)
+  keys <- unique(ws$key)
+  stats <- parallel::mclapply(
+    X = keys,
+    FUN = get_bootstrap_mean,
+    w = ws,
+    hdi_level = hdi_level,
+    mc.cores = cores)
+
+  stats <- do.call(rbind, stats)
+  split_str <- do.call(rbind, strsplit(x = stats$key, split = sep))
+  stats$label <- split_str[, 1]
+  stats$feature <- split_str[, 2]
+
+
+  w <- ggplot(data = stats)+
     theme_bw(base_size = 10)+
+    geom_point(aes(x = label, y = M))+
+    geom_errorbar(aes(x = label, y = M, ymin = L, ymax = H),
+                  width = 0.5)+
     facet_grid(.~feature, scales = scales)+
-    geom_jitter(aes(x = label, y = value),
-                width = 0.1, height = 0, col = "darkgray", size = 0.25)+
     coord_flip()+
     ylab(label = "Distribution")+
     xlab(label = "Bubble")+
@@ -260,17 +416,10 @@ get_num_feature_violins <- function(d,
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))
 
-  ws_ok <- ws[is.finite(ws$value), ]
-  ws_j <- which(table(ws_ok$label) >= violin_min_cells)
-  if(length(ws_j) != 0) {
-    ws_ok <- ws_ok[ws_ok$label %in% base::names(ws_j), ]
-    w <- w + geom_violin(data = ws_ok,
-                         aes(x = label,
-                             y = value),
-                         fill = NA)
-  }
+
 
   return(list(ws = ws, w = w))
+
+  # lapply(X = unique(ws$key), FUN = boot::boot, statistic = get_mean, R = R)
+
 }
-
-

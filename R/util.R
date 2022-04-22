@@ -263,20 +263,6 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
 
 
 
-get_hdi <- function(vec, hdi_level) {
-  sortedPts <- base::sort(vec)
-  ciIdxInc <- base::floor(hdi_level * base::length(sortedPts))
-  nCIs = base::length(sortedPts) - ciIdxInc
-  ciWidth = rep(0 , nCIs)
-  for (i in 1:nCIs) {
-    ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
-  }
-  HDImin = sortedPts[base::which.min(ciWidth)]
-  HDImax = sortedPts[base::which.min(ciWidth) + ciIdxInc]
-  HDIlim = c(HDImin, HDImax)
-  return(HDIlim)
-}
-
 
 # Computes standard error from vector x of values
 get_se <- function(x) {
