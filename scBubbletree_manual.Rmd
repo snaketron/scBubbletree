@@ -41,7 +41,6 @@ source(file = "../scBubbletree/R/annotation.R")
 
 
 ```{r, echo = T, results='hide'}
-#library(scBubbletree, lib.loc = lib.loc)
 library(cluster, lib.loc = lib.loc)
 library(Seurat, lib.loc = lib.loc)
 library(ggplot2, lib.loc = lib.loc)
@@ -53,12 +52,14 @@ library(org.Hs.eg.db, lib.loc = lib.loc)
 library(bluster, lib.loc = lib.loc)
 library(SummarizedExperiment, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)
+library(Rtsne, lib.loc = lib.loc)
 ```
 
 
 ```{r}
 redo_case_a <- F
 redo_case_b <- F
+redo_case_c <- F
 ```
 
 
@@ -79,7 +80,7 @@ in combination with `Seurat` preprocessing.
 Load the data and perform some basic scRNA-seq data processing steps with 
 Seurat:
 
-```{r, echo=T, results=F}
+```{r, echo=T, results='hide'}
 # Lets load the benchmark data
 load(file = "raw_data/Tian_2019/sc_mixology-master/data/sincell_with_class_5cl.RData")
 
@@ -116,38 +117,32 @@ d <- Seurat::FindVariableFeatures(object = d,
 # Preprocessing with Seurat: SCT transformation + PCA + UMAP 
 d <- SCTransform(object = d)
 d <- RunPCA(object = d, npcs = 50, features = VariableFeatures(object = d))
+```
+
+
+## UMAP
+
+Using 2D UMAPs is by now a standard first step in scRNA-seq data analysis. 
+As this is a toy dataset composed of distinct cell lines, we should be able 
+to interpret the resulting 2D UMAP without much trouble. Run UMAP with:
+
+```{r}
 d <- RunUMAP(d, dims = 1:50)
 ```
 
-Exploring 2D UMAPs is by now a standard first step in scRNA-seq data analysis. 
-As this is a toy dataset composed of distinct cell lines, we should be able to 
-interpret the resulting 2D UMAP without much trouble. 
 
 The 2D UMAP (left panel) appears to contain between 5 and 8 clusters of cells. 
 After color-coding the cells according to their predicted cell types (right 
 panel) we see the 5 clusters (cell lines), with some substructure also visible 
 within the clusters.
 
-```{r, fig.width=8, fig.height=3.25, fig.align='center'}
-# Lets show the generated 2D UMAP
-u <- UMAPPlot(object = d, 
-              reduction = "umap",
-              cols = 'black',
-              pt.size = 0.25)|
-  UMAPPlot(object = d, 
-           reduction = "umap",
-           group.by = 'cell_line_demuxlet',
-           pt.size = 0.25)
-
-u
-```
-
-
-```{r, results='hide', echo=FALSE}
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
 umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
 umap_data$closest_cluster <- NA
-umap_centers <- merge(x = aggregate(UMAP_1~cell_line_demuxlet, data = umap_data, FUN = median),
-                      y = aggregate(UMAP_2~cell_line_demuxlet, data = umap_data, FUN = median),
+umap_centers <- merge(x = aggregate(UMAP_1~cell_line_demuxlet, 
+                                    data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~cell_line_demuxlet, 
+                                    data = umap_data, FUN = median),
                       by = "cell_line_demuxlet")
 
 g_umap <- ggplot()+
@@ -160,13 +155,8 @@ g_umap <- ggplot()+
   guides(colour = guide_legend(nrow = 4,
                                override.aes = list(size=2)))
 
-ggsave(plot = g_umap, 
-       filename = "manuscript_data/UMAP_A.pdf",
-       device = "pdf",
-       width = 4,
-       height = 4)
+g_umap
 ```
-
 
 
 While 2D UMAPs are intuitive, by themselves these maps fail to provide the user 
@@ -193,6 +183,81 @@ but also for the reviewers, who have to evaluate these complex figures without
 having access to the raw data.
 
 
+```{r, echo = F, results = 'hide'}
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_A.pdf",
+       device = "pdf",
+       width = 3,
+       height = 3)
+
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_A.png",
+       device = "png",
+       width = 3,
+       height = 3)
+```
+
+
+This also holds for t-SNE plots:
+
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+tsne_plot <- Rtsne::Rtsne(X = d@reductions$pca@cell.embeddings,
+                          initial_dims = 50,
+                          perplexity = 50, theta = 0.5, 
+                          check_duplicates = TRUE,
+                          pca = FALSE, 
+                          partial_pca = FALSE, 
+                          max_iter = 1000,
+                          verbose = getOption("verbose", FALSE), 
+                          is_distance = FALSE,
+                          pca_center = F, 
+                          pca_scale = F,
+                          normalize = F, 
+                          momentum = 0.5, 
+                          final_momentum = 0.8, 
+                          eta = 200,
+                          exaggeration_factor = 12, 
+                          num_threads = 1)
+
+
+tsne_data <- cbind(d@meta.data, data.frame(TSNE_1 = tsne_plot$Y[, 1],
+                                           TSNE_2 = tsne_plot$Y[, 2]))
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~cell_line_demuxlet, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~cell_line_demuxlet, 
+                                    data = tsne_data, FUN = median),
+                      by = "cell_line_demuxlet")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = cell_line_demuxlet), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = cell_line_demuxlet), 
+            min.segment.length = 0, size = 3)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_tsne
+```
+
+
+```{r, results='hide', echo=FALSE}
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_A.pdf",
+       device = "pdf",
+       width = 3,
+       height = 3)
+
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_A.png",
+       device = "png",
+       width = 3,
+       height = 3)
+```
+
+
 
 ## scBubbletree approach
    
@@ -206,7 +271,7 @@ generated by `Seurat` as $A$. In particular, we will use the first 15 principal
 components (PCs).
 
 
-```{r, fig.width=4, fig.height=3}
+```{r, fig.width=4, fig.height=3, echo=T, fig.align='center'}
 var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
 
 g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
@@ -215,12 +280,15 @@ g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
   ylab(label = "Variance explained [%]")
 
 g_var_explained
+```
 
+
+```{r, fig.width=4, fig.height=3, echo = F, results='hide'}
 ggsave(plot = g_var_explained, 
        filename = "manuscript_data/Var_explained_PCA_A.pdf",
        device = "pdf",
-       width = 4,
-       height = 3)
+       width = 3,
+       height = 2)
 ```
 
 
@@ -232,6 +300,18 @@ A <- d@reductions$pca@cell.embeddings[, 1:15]
 # A has n=cells as rows, f=features as columns (e.g. from PCA)
 dim(A)
 ```
+
+
+
+
+
+
+
+
+
+
+
+
 
 The `scBubbletree` algorithm performs these main operations:
   
@@ -246,12 +326,8 @@ clusters of transcriptionally similar cells, our first goal is to determine
 function `get_k`.
 
 `get_k` performs k-means clustering `B` times (bootstrapping iterations) for 
-a vector of `k` values specified by the parameter `ks`. For this we draw a 
-sample of rows from $A$ with replacement. The proportion of rows sampled is
-controlled by `cv_clust_p`.
-
-`get_k` then computes three metrics for each `k` and `B` which allow us to 
-find the optimal `k`:
+a vector of `k` values specified by the parameter `ks`. `get_k` then computes 
+three metrics for each `k` and `B` which allow us to find the optimal `k`:
   
   * silhouette index
   * gap statistic
@@ -261,9 +337,9 @@ The remaining parameters of `get_k` are explained below:
   
   * `n_start` and `iter_max`: used to tune k-means (see ?kmeans)
   * `cores`: computer cores to be used
-  * `cv_index_p` proportion of cells to be used for the computation of the 
+  * `cv_prop` proportion of cells to be used for the computation of the 
   gap statistic. For small samples (e.g. < 20,000 cells), you can use the 
-  default parameter. For larger samples even low `cv_index_p=0.1` produces 
+  default parameter. For larger samples even low `cv_prop=0.1` produces 
   robust results while speeding up the computation. Smaller `B` (e.g. `B=100`) 
   might be helpful to execute this function in several minutes less than one 
   hour for large datasets.
@@ -274,14 +350,16 @@ Lets run `get_k` now.
 
 if(redo_case_a) {
   # Determine appropriate number of clusters (k)
-  b <- get_k(B = 100, 
-             cv_clust_p = 1, 
-             cv_index_p = 1, 
+  b <- get_k(B = 30, 
+             cv_prop = 1,
              ks = 1:20,
              x = A,
-             n_start = 10, 
-             iter_max = 50, 
-             cores = 20)
+             n_start = 50, 
+             iter_max = 100, 
+             cores = 20,
+             approx_silhouette = F,
+             mini_output = F,
+             kmeans_algorithm = "MacQueen")
   
   if(dir.exists("case_study_A")==F) {
     dir.create("case_study_A")
@@ -337,7 +415,6 @@ to perform clustering and use the clustering data to generate a dendrogram,
 showing the clusters as bubbles (tree leaves) in the dendrogram. 
 
 ```{r, echo=T}
-# Perform clustering to get data for scBubbletree
 k5 <- get_bubbletree(x = A,
                      k = 5,
                      seed = 1234,
@@ -346,15 +423,17 @@ k5 <- get_bubbletree(x = A,
                      N_eff = 100,
                      verbose = F,
                      n_start = 100,
-                     iter_max = 100,
+                     iter_max = 200,
                      round_digits = 1,
-                     show_branch_support = T)
+                     show_branch_support = T,
+                     show_simple_count = F,
+                     kmeans_algorithm = "MacQueen")
 ```
 
 
 Lets now plot the resulting dendrogram:
 
-```{r, fig.width=4, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
 k5$tree
 ```
 
@@ -590,7 +669,7 @@ plots).
 
 ```{r, echo = T}
 gini_boot <- get_gini_k(labels = d@meta.data$cell_line_demuxlet,
-                           kmeans_boot_obj = b)
+                        get_k_obj = b)
 ```
 
 ```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
@@ -674,6 +753,52 @@ w4 <- get_num_feature_violins(d = k5,
 (k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1.5, 1.1, 2.5))
 ```
 
+
+
+
+
+
+What is the content of mitochondrial genes in each bubble? 
+
+```{r, fig.width=7, fig.height=5, fig.align='center', echo=T}
+# This function build the nummeric annotations plot
+a <- data.frame(mt_prop = 1-d@meta.data$non_mt_percent)
+
+w3 <- get_num_feature_violins(d = k5,
+                              as = a,
+                              plot_title = "",
+                              show_cells = F)
+
+# Plot
+f <- (k5$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
+```
+
+
+Second, we can visualize the distributions of the numeric features in each
+bubble as violins, while the cell-specific values are shown as jittered points.
+We can do this with `get_num_feature_violins`. This function uses the same
+input as `get_num_feature_tiles`: 
+
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k5,
+                             as = as,
+                             plot_title = "",
+                             scales = 'free_x',
+                             show_cells = F)
+
+(k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1.5, 1.1, 2.5))
+```
+
+
+
+
+
+
+
+
+
+
+
 ## Compositional visualization
 
 `scBubbletree` uses the R-package `patchwork` to combine `ggplot2` and `ggtree` 
@@ -681,10 +806,6 @@ plots. This makes it convenient for users to 'attach' other plots that are
 generated by any of these package. 
 
 Lets combine the UMAP plots shown earlier with the output of `scBubbletree`:
-
-
-
-
 
 
 
@@ -715,6 +836,118 @@ ggsave(plot = g,
        height = 8.5)
 
 ```
+
+
+
+
+
+
+## Are distances between cells preserved?
+
+local = yes; long-range = no
+
+```{r, echo = F, results='hide'}
+
+# C = vector clusters of points
+# tree_dist = matrix of cluster-to-cluster distance (e.g. from phylo)
+get_d <- function(A, U_A, T_A, C, tree_dist, B, verbose=F) {
+  
+  get_euc <- function(x, y) {
+    return(sqrt(sum((x-y)^2)))
+  }
+  
+  get_pair_euc <- function(x, A, U_A, T_A, C, tree_dist) {
+    
+    if(x %% 1000 == 0) {
+      cat(x, "\n")
+    }
+    
+    j <- sample(x = 1:nrow(A), size = 2, replace = T)
+    a_euc <- get_euc(A[j[1],], A[j[2],])
+    u_euc <- get_euc(U_A[j[1],], U_A[j[2],])
+    t_euc <- get_euc(T_A[j[1],], T_A[j[2],])
+    t_dist <- tree_dist[C[j[1]],C[j[2]]]
+    
+    return(data.frame(a_euc = a_euc, u_euc = u_euc,
+                      t_euc = t_euc, tree_dist = t_dist))
+  }
+  
+  o <- lapply(X = 1:B, 
+              FUN = get_pair_euc, 
+              A = A, 
+              U_A = U_A, 
+              T_A = T_A, 
+              C = C, 
+              tree_dist = tree_dist)
+  
+  o <- do.call(rbind, o)
+  return(o)
+}
+
+```
+
+
+```{r, echo = F, results='hide'}
+
+pair_dist <- get_d(B = 10^4,
+                   A = A,
+                   U_A = umap_data[, c("UMAP_1", "UMAP_2")],
+                   T_A = tsne_data[, c("TSNE_1", "TSNE_2")],
+                   C = k5$cluster,
+                   tree_dist = acast(data = k5$pair_dist$hc_pair_dist, 
+                                     formula = c_i~c_j,
+                                     value.var = "M"),
+                   verbose = T)
+
+```
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_umap <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = u_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = u_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D UMAP space")
+
+g_pairs_umap
+```
+
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_tsne <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = t_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = t_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D t-SNE space")
+
+g_pairs_tsne
+```
+
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_pairs_umap,
+       filename = "manuscript_data/distance_scaling_UMAP.png",
+       device = "png",
+       width = 3,
+       height = 3)
+
+ggsave(plot = g_pairs_tsne,
+       filename = "manuscript_data/distance_scaling_TSNE.png",
+       device = "png",
+       width = 3,
+       height = 3)
+```
+
+
+
+
+
+
+
 
 
 
@@ -850,23 +1083,11 @@ length(unique(d@meta.data$celltype.l3))
 
 Next we will show the 2D UMAP. Cells are color coded according to their 
 cell type predictions resolution level *l1* (left UMAP) and *l2* (right 
-UMAP):
-
-```{r, fig.width=12, fig.height=4, fig.align='center', echo=T}
-# Lets show the generated 2D UMAP
-UMAPPlot(object = d, 
-         reduction = "umap", 
-         group.by = 'celltype.l1', 
-         pt.size = 0.25)|
-  UMAPPlot(object = d, 
-         reduction = "umap", 
-         group.by = 'celltype.l2', 
-         pt.size = 0.25)
-```
+UMAP).
 
 
 
-```{r, results='hide', echo=FALSE}
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
 umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
 umap_data$closest_cluster <- NA
 
@@ -879,27 +1100,31 @@ g_umap <- ggplot()+
              aes(x = UMAP_1, y = UMAP_2, col = celltype.l1), size = 0.25)+
   geom_text_repel(data = umap_centers,
             aes(x = UMAP_1, y = UMAP_2, label = celltype.l1), 
-            min.segment.length = 0, size = 3)+
+            min.segment.length = 0, size = 2)+
   theme(legend.position = "none")+
   guides(colour = guide_legend(nrow = 4,
                                override.aes = list(size=2)))
 
 g_umap
+```
+
+
+```{r, results='hide', echo=FALSE}
 ggsave(plot = g_umap, 
        filename = "manuscript_data/UMAP_B_lv1.pdf",
        device = "pdf",
-       width = 6,
-       height = 6)
+       width = 4,
+       height = 3)
 ggsave(plot = g_umap, 
        filename = "manuscript_data/UMAP_B_lv1.png",
        device = "png",
        dpi = 600,
-       width = 6,
-       height = 6)
+       width = 4,
+       height = 3)
+```
 
 
-
-
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
 umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
 umap_data$closest_cluster <- NA
 
@@ -912,24 +1137,234 @@ g_umap <- ggplot()+
              aes(x = UMAP_1, y = UMAP_2, col = celltype.l2), size = 0.25)+
   geom_text_repel(data = umap_centers,
             aes(x = UMAP_1, y = UMAP_2, label = celltype.l2), 
-            min.segment.length = 0, size = 3)+
+            min.segment.length = 0, size = 2)+
   theme(legend.position = "none")+
   guides(colour = guide_legend(nrow = 4,
                                override.aes = list(size=2)))
 
 g_umap
+```
+
+
+```{r, results='hide', echo=FALSE}
 ggsave(plot = g_umap, 
        filename = "manuscript_data/UMAP_B_lv2.pdf",
        device = "pdf",
-       width = 6,
-       height = 6)
+       width = 4,
+       height = 3)
 ggsave(plot = g_umap, 
        filename = "manuscript_data/UMAP_B_lv2.png",
        device = "png",
        dpi = 600,
-       width = 6,
-       height = 6)
+       width = 4,
+       height = 3)
 ```
+
+
+
+```{r, echo=T}
+tsne_plot <- Rtsne::Rtsne(X = d@reductions$pca@cell.embeddings,
+                          initial_dims = 50,
+                          perplexity = 50, 
+                          theta = 0.5, 
+                          check_duplicates = TRUE,
+                          pca = FALSE, 
+                          partial_pca = FALSE, 
+                          max_iter = 1000,
+                          verbose = getOption("verbose", FALSE), 
+                          is_distance = FALSE,
+                          pca_center = F, 
+                          pca_scale = F,
+                          normalize = F, 
+                          momentum = 0.5, 
+                          final_momentum = 0.8, 
+                          eta = 200,
+                          exaggeration_factor = 12, 
+                          num_threads = 20)
+```
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+# LV=1
+tsne_data <- cbind(d@meta.data, data.frame(TSNE_1 = tsne_plot$Y[, 1],
+                                           TSNE_2 = tsne_plot$Y[, 2]))
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~celltype.l1, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~celltype.l1, 
+                                    data = tsne_data, FUN = median),
+                      by = "celltype.l1")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = celltype.l1), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = celltype.l1), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_tsne
+```
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv1.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv1.png",
+       device = "png",
+       width = 4,
+       height = 3)
+```
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+# LV=2
+tsne_data <- cbind(d@meta.data, data.frame(TSNE_1 = tsne_plot$Y[, 1],
+                                           TSNE_2 = tsne_plot$Y[, 2]))
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~celltype.l2, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~celltype.l2, 
+                                    data = tsne_data, FUN = median),
+                      by = "celltype.l2")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_tsne
+```
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv2.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv2.png",
+       device = "png",
+       width = 4,
+       height = 3)
+```
+
+
+
+
+
+
+
+## Are distances between cells preserved?
+
+local = yes; long-range = no
+
+```{r, echo = F, results='hide'}
+
+# C = vector clusters of points
+# tree_dist = matrix of cluster-to-cluster distance (e.g. from phylo)
+get_d <- function(A, U_A, T_A, B, verbose=F) {
+  
+  get_euc <- function(x, y) {
+    return(sqrt(sum((x-y)^2)))
+  }
+  
+  get_pair_euc <- function(x, A, U_A, T_A) {
+    
+    if(x %% 1000 == 0) {
+      cat(x, "\n")
+    }
+    
+    j <- sample(x = 1:nrow(A), size = 2, replace = T)
+    a_euc <- get_euc(A[j[1],], A[j[2],])
+    u_euc <- get_euc(U_A[j[1],], U_A[j[2],])
+    t_euc <- get_euc(T_A[j[1],], T_A[j[2],])
+    
+    return(data.frame(a_euc = a_euc, 
+                      u_euc = u_euc, 
+                      t_euc = t_euc))
+  }
+  
+  o <- lapply(X = 1:B, 
+              FUN = get_pair_euc, 
+              A = A, 
+              U_A = U_A, 
+              T_A = T_A)
+  
+  o <- do.call(rbind, o)
+  return(o)
+}
+
+```
+
+
+```{r, echo = F, results='hide'}
+
+pair_dist <- get_d(B = 10^5,
+                   A = d@reductions$pca@cell.embeddings[, 1:15],
+                   U_A = umap_data[, c("UMAP_1", "UMAP_2")],
+                   T_A = tsne_data[, c("TSNE_1", "TSNE_2")],
+                   verbose = T)
+
+```
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_umap <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = u_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = u_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D UMAP space")
+
+g_pairs_umap
+```
+
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_tsne <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = t_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = t_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D t-SNE space")
+
+g_pairs_tsne
+```
+
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_pairs_umap,
+       filename = "manuscript_data/distance_scaling_UMAP_B.png",
+       device = "png",
+       width = 3,
+       height = 3)
+
+ggsave(plot = g_pairs_tsne,
+       filename = "manuscript_data/distance_scaling_TSNE_B.png",
+       device = "png",
+       width = 3,
+       height = 3)
+```
+
+
+
 
 
 
@@ -988,8 +1423,8 @@ g_var_explained
 ggsave(plot = g_var_explained, 
        filename = "manuscript_data/Var_explained_PCA_B.pdf",
        device = "pdf",
-       width = 4,
-       height = 3)
+       width = 3,
+       height = 2)
 ```
 
 
@@ -1038,15 +1473,14 @@ gc()
 
 
 We will once again use the function `get_k` for clustering. Notice the modified 
-parameter *cv_index_p=0.2*, for faster execution of this large dataset:
+parameter *cv_prop=0.2*, for faster execution of this large dataset:
 
 ```{r, fig.width=4, fig.height=3, echo = T}
 
 if(redo_case_b) {
   # Determine appropriate number of clusters (k)
   b <- get_k(B = 30,
-             cv_clust_p = 1, # use 100% for clustering
-             cv_index_p = 0.2, # use 20% for gap stat.
+             cv_prop = 0.2, # use 20% for gap stat.
              ks = 1:40,
              x = A,
              n_start = 10,
@@ -1534,14 +1968,262 @@ ggsave(plot = g,
 
 
 
+# Case study C: digit recognittion
+
+```{r}
+# Note: This example is adapted from an the example in the book Python 
+# Datascience handbook by Jake VanderPlas https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html)
+
+
+# Read the digits data
+digits <- read.csv("raw_data/Digits/digits.csv")
+
+# ground truth
+digit_classes <- digits$X0.000000000000000000e.00.29
+
+```
+
+```{r}
+x <- digits
+
+qs <- c()
+for(i in 1:nrow(digits)) {
+  m <- matrix(data = as.numeric(digits[i, 1:64]), byrow = T, ncol = 8)
+  q <- melt(m)
+  colnames(q) <- c("y", "x", "v")
+  q$i <- i
+  q$class <- digit_classes[i]
+  qs <- rbind(qs, q)
+}
+rm(m, q, i, x)
+```
+
+
+```{r, fig.width=3, fig.height=3, fig.align='center', echo=T}
+tmp_qs <- c()
+for(i in 1:9) {
+  tmp <- qs[qs$i %in% qs$i[which(qs$class == i)[100]], ]
+  tmp_qs <- rbind(tmp_qs, tmp)
+}
+rm(i, tmp)
+g_digits <- ggplot(data = tmp_qs)+
+  facet_wrap(facets = ~paste0(class), nrow = 4)+
+    geom_tile(aes(x = x, y = y, fill = v))+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none",
+        strip.text.x = element_text(margin = margin(0.015,0,0.015,0, "cm")))+
+  scale_fill_gradient(low = "white", high = "black")+
+  scale_x_continuous(name = "x pixel", expand = c(0, 0))+
+  scale_y_continuous(name = "y pixel", expand = c(0, 0))
+g_digits
+```
+
+
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+# PCA 
+PCA = stats::prcomp(digits[,1:64])
+
+# get variance explained by PCs
+summary_PCA <- rbind(
+  SD = sqrt(PCA$sdev^2),
+  Proportion = PCA$sdev^2/sum(PCA$sdev^2),
+  Cumulative = cumsum(PCA$sdev^2)/sum(PCA$sdev^2))
+
+plot(summary_PCA["Proportion",]*100, ylab = "Var explained [%]")
+```
+
+
+```{r, echo=T}
+A <- PCA$x[, 1:15]
+```
+
+
+```{r}
+umap <- umap::umap(d = PCA$x)
+# umap <- umap::umap(d = digits[,1:64])
+```
 
 
 
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+umap_data <- data.frame(UMAP_1 = umap$layout[, 1],
+                        UMAP_2 = umap$layout[, 2],
+                        digit = digit_classes)
+umap_centers <- merge(x = aggregate(UMAP_1~digit, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~digit, data = umap_data, FUN = median),
+                      by = "digit")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = digit), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = digit), 
+            min.segment.length = 0, size = 3.6)+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4, override.aes = list(size=2)))+
+  scale_color_distiller(palette = "Spectral")
+
+g_umap
+```
+
+```{r}
+g_digits_plot <- (g_digits|g_umap)+patchwork::plot_layout(widths = c(1,1.6))
+ggsave(g_digits_plot, filename = "manuscript_data/digits_umap.svg",
+       device = "svg",width = 4.5, height = 2.25)
+```
 
 
 
+This also holds for t-SNE plots:
+
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+tsne_plot <- Rtsne::Rtsne(X = PCA$x,
+                          perplexity = 50, 
+                          theta = 0.5, 
+                          check_duplicates = TRUE,
+                          pca = FALSE, 
+                          partial_pca = FALSE, 
+                          max_iter = 1000,
+                          verbose = getOption("verbose", FALSE), 
+                          is_distance = FALSE,
+                          pca_center = F, 
+                          pca_scale = F,
+                          normalize = F, 
+                          momentum = 0.5, 
+                          final_momentum = 0.8, 
+                          eta = 200,
+                          exaggeration_factor = 12, 
+                          num_threads = 10)
+```
 
 
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+tsne_data <- data.frame(digit = digit_classes,
+                        TSNE_1 = tsne_plot$Y[, 1],
+                        TSNE_2 = tsne_plot$Y[, 2])
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~digit, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~digit, 
+                                    data = tsne_data, FUN = median),
+                      by = "digit")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = digit), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = digit), 
+            min.segment.length = 0, size = 3)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))+
+  scale_color_distiller(palette = "Spectral")
+
+g_tsne
+```
+
+
+
+```{r}
+b <- get_k(B = 20, 
+           cv_prop = 1, 
+           ks = 1:20,
+           x = digits[,1:64],#A,
+           n_start = 10, 
+           iter_max = 50, 
+           cores = 20)
+```
+
+
+
+```{r}
+g0 <- ggplot(data = b$sil_stats_summary)+
+  geom_point(aes(x = k, y = sil_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Silhouette")+
+  ylab(label = "Mean Silhouette")|
+ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Gap")+
+  ylab(label = "Mean Gap")|
+ggplot(data = b$wss_stats_summary)+
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "WSS")+
+  ylab(label = "Mean WSS")
+```
+
+
+```{r, fig.width=9, fig.height=3, fig.align='center'}
+g0
+```
+
+
+
+```{r}
+# Perform clustering to get data for scBubbletree
+k10 <- get_bubbletree(x = as.matrix(digits[,1:64]),
+                     k = 10,
+                     seed = 1234,
+                     cores = 20,
+                     B = 200,
+                     N_eff = 100,
+                     verbose = F,
+                     n_start = 100,
+                     iter_max = 100,
+                     round_digits = 1,
+                     show_branch_support = T)
+```
+
+
+```{r, fig.width=4, fig.height=5, fig.align='center', echo=T}
+k10$tree
+```
+
+
+
+```{r, echo=T}
+w1 <- get_cat_feature_tiles(d = k10,
+                            a = as.character(digit_classes),
+                            feature_composition = T,
+                            round_digits = 1,
+                            rotate_x_axis = F,
+                            show_hclust = F)
+```
+
+
+```{r, fig.width=8, fig.height=5, fig.align='center', echo=T}
+(k10$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+```
+
+
+
+## Gini impurity index
+
+```{r}
+# gini
+get_gini(labels = as.character(digit_classes), 
+         clusters = k10$cluster)
+```
+
+
+```{r, echo = T}
+gini_boot <- get_gini_k(labels = as.character(digit_classes),
+                           kmeans_boot_obj = b)
+```
+
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+g1 <- ggplot(data = gini_boot$total_gini_summary)+
+  geom_point(aes(x = k, y = total_gini_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = total_gini_mean, ymin = L95, 
+                    ymax = H95), width = 0.1)+
+  ggtitle(subtitle = "Gini impurity", label = '')+
+  ylab(label = "Mean impurity")
+
+g1
+```
 
 
 

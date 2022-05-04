@@ -115,10 +115,12 @@ get_node_descendents_in_phylo <- function(tree,
 
 
 
+# Used in main.R
 get_dendrogram <- function(ph,
                            cluster,
                            round_digits,
-                           show_branch_support) {
+                           show_branch_support,
+                           show_simple_count) {
 
 
   # compute meta summary
@@ -135,8 +137,7 @@ get_dendrogram <- function(ph,
     geom_point()+
     layout_rectangular()+
     geom_tippoint(aes(size = c, fill = c), shape = 21)+
-    geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
-                color='black', size = 3.5, hjust=-0.25)+
+    theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
                 legend.margin=margin(0,0,0,0),
@@ -144,16 +145,31 @@ get_dendrogram <- function(ph,
                 legend.spacing.x = unit(0.2, 'cm'),
                 legend.spacing.y = unit(0, 'cm'))
 
+  if(show_simple_count) {
+    tree <- tree+
+      geom_tiplab(aes(label=paste0(label, " (",
+                                   paste0(round(c/1000, digits = round_digits),
+                                          'K'), ', ', pct, "%)")),
+                  color='black', size = 2.8, hjust=-0.25,
+                  align = T)
+  } else {
+    tree <- tree+
+      geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
+                  color='black', size = 2.8, hjust=-0.25,
+                  align = T)
+  }
+
   if(show_branch_support) {
     tree_data <- tree$data
     tree <- tree+
-      geom_nodelab(geom='label', aes(label=label, subset=isTip==F),
-                   size = 3.0, hjust=-0.2)
+      geom_nodelab(geom='text', color = "red",
+                   aes(label=label, subset=isTip==F),
+                   size = 2.8, hjust=-0.2)
   }
 
   tree <- tree+
     # scale_radius
-    scale_radius(range = c(1, 6),
+    scale_radius(range = c(1, 5),
                  limits = c(0, max(km_meta$c)))+
     scale_fill_gradient(low = "white",
                         high = "black",
@@ -179,6 +195,7 @@ get_dendrogram <- function(ph,
 
 
 
+# Used in get_dist (util.R)
 get_pair_dist <- function(x, m, c, N_eff, verbose) {
 
   get_euc <- function(x, y) {
@@ -213,7 +230,7 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
       if(nrow(x_i)>N_eff) {
         x_i <- x_i[base::sample(x = 1:nrow(x_i),
                                 size = N_eff,
-                                replace = F), ]
+                                replace = T), ]
       }
     }
 
@@ -229,9 +246,20 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
         if(nrow(x_j)>N_eff) {
           x_j <- x_j[base::sample(x = 1:nrow(x_j),
                                   size = N_eff,
-                                  replace = F), ]
+                                  replace = T), ]
         }
       }
+
+
+      # just in check
+      if(is.vector(x_i)) {
+        x_i <- matrix(data = x_i, nrow = 1)
+      }
+      if(is.vector(x_j)) {
+        x_j <- matrix(data = x_j, nrow = 1)
+      }
+
+
 
       # speed-up this part
       w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
