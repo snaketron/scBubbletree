@@ -1,0 +1,1329 @@
+---
+title: "Case study B: Exploring scRNA-seq data with scBubbletree"
+author: "SK"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 1
+vignette: >
+  %\VignetteIndexEntry{}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r setup, include = FALSE}
+source(file = "~/Rutil/Init_Rpack.R")
+knitr::opts_chunk$set(echo = F,
+                      comment = F, 
+                      warning = F, 
+                      message = F)
+```
+
+
+This vignette introduces `scBubbletree`, a transparent methodology for single 
+cell RNA-seq data exploration based on well established methods clustering 
+and visualization. We will demonstrate the functionality of `scBubbletree` 
+by analyzing a large dataset of human PBMCs (Case studies B), while also 
+showing how to integrate `scBubbletree` with existing pipelines for scRNA-seq 
+analysis e.g. based on Seurat.
+
+To run this vignette we need several R-packages. Load them now:
+
+```{r, echo = T, results='hide'}
+source(file = "../Rutil/Graphics.R")
+
+source(file = "../scBubbletree/R/util.R")
+source(file = "../scBubbletree/R/main.R")
+source(file = "../scBubbletree/R/annotation.R")
+```
+
+
+```{r, echo = T, results='hide'}
+library(cluster, lib.loc = lib.loc)
+library(Seurat, lib.loc = lib.loc)
+library(ggplot2, lib.loc = lib.loc)
+library(reshape2, lib.loc = lib.loc)
+library(parallel, lib.loc = lib.loc)
+library(ape, lib.loc = lib.loc)
+library(ggtree, lib.loc = lib.loc)
+library(org.Hs.eg.db, lib.loc = lib.loc)
+library(bluster, lib.loc = lib.loc)
+library(SummarizedExperiment, lib.loc = lib.loc)
+library(ggrepel, lib.loc = lib.loc)
+library(Rtsne, lib.loc = lib.loc)
+```
+
+
+```{r}
+redo_case_b <- F
+```
+
+
+# Case study B: 161,000 PBMCs from 8 healthy donors [^2],[^3]
+
+## Data 
+
+In this case study we will analyze scRNA-seq dataset of approximately 161,000 
+PBMCs derived from 8 healthy donors, collected at three timepoints and sequenced
+by 10x Genomics protocol. This is a large and complex scRNA-seq dataset, perfect
+for demonstrating the advantageS of `scBubbletree` over qualitative analyses 
+e.g. based on 2D UMAPs.
+
+In addition to gene expression data, this dataset reports for each cell a cell 
+type prediction at three levels of resolution (*l1*, *l2* and *l3*). The cell 
+types have been predicted based on marker genes, and we will use them as 
+categorical cell annotations. As this dataset is part of a larger CITE-seq
+experiment, the cell type predictions are made based on scRNA-seq derived
+gene expressions and also on the cell-surface protein expression levels of up
+to 228 marker proteins.
+
+In essence, we will perform the same steps as in *Case study A*:
+
+  1. determine `k` $\rightarrow$ with $f:$ `get_k`
+  2. perform clustering and generate dendrogram $\rightarrow$ with 
+  $f:$ `get_bubbletree`
+  3. inspect the dendrogram structure and annotate it with categorical and 
+  quantitative cell meta data $\rightarrow$ with $fs:$ 
+  `get_cat_feature_tiles`,`get_num_feature_tiles`,`get_num_feature_violins`
+  4. assess the model: criticize the results $\rightarrow$ with $f_s:$
+  `update_bubbletree`, `get_gini`, `get_gini_k`
+  5. if necessary modify `k` and go back to 2.
+
+The raw gene expressions have already been preprocessed with `Seurat`. SCT 
+transformation was used for normalization, followed by principal component 
+analysis for dimensionality reduction. 50 lower-space features have been 
+extracted and used to generate a 2D UMAP.
+
+Lets load the data.
+
+```{r, echo=T}
+# To get the data used in this case study do the following steps:
+# 1. download reference data from vignette:
+# https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
+# 2. load SeuratDistk
+# library(SeuratDisk, lib.loc = lib.loc)
+# d <- LoadH5Seurat("~/BubbleMap/raw_data/Hao_2021/pbmc_multimodal.h5seurat")
+# save(d, file = "raw_data/Hao_2021/Hao_2021.RData")
+```
+
+
+```{r, echo=T}
+d <- get(load(file = "raw_data/Hao_2021/Hao_2021.RData"))
+```
+
+
+Lets look at the number of cells per donor at a given sampling time:
+
+```{r, echo = T}
+table(d@meta.data$time, d@meta.data$donor)
+```
+
+Also, we can show the number of cells per donor and predicted cell type at the 
+lowest resolution (*l1*):
+
+```{r, echo=T}
+table(d@meta.data$celltype.l1, d@meta.data$donor)
+```
+
+How many distinct *cell types* are there at each resolution?
+
+```{r, echo=T}
+length(unique(d@meta.data$celltype.l1))
+length(unique(d@meta.data$celltype.l2))
+length(unique(d@meta.data$celltype.l3))
+```
+
+
+
+Next we will show the 2D UMAP. Cells are color coded according to their 
+cell type predictions resolution level *l1* (left UMAP) and *l2* (right 
+UMAP).
+
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+
+umap_centers <- merge(x = aggregate(UMAP_1~celltype.l1, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~celltype.l1, data = umap_data, FUN = median),
+                      by = "celltype.l1")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = celltype.l1), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = celltype.l1), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_umap
+```
+
+
+```{r, results='hide', echo=FALSE}
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_B_lv1.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_B_lv1.png",
+       device = "png",
+       dpi = 600,
+       width = 4,
+       height = 3)
+```
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+
+umap_centers <- merge(x = aggregate(UMAP_1~celltype.l2, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~celltype.l2, data = umap_data, FUN = median),
+                      by = "celltype.l2")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_umap
+```
+
+
+```{r, results='hide', echo=FALSE}
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_B_lv2.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+ggsave(plot = g_umap, 
+       filename = "manuscript_data/UMAP_B_lv2.png",
+       device = "png",
+       dpi = 600,
+       width = 4,
+       height = 3)
+```
+
+
+
+```{r, echo=T}
+tsne_plot <- Rtsne::Rtsne(X = d@reductions$pca@cell.embeddings,
+                          initial_dims = 50,
+                          perplexity = 50, 
+                          theta = 0.5, 
+                          check_duplicates = TRUE,
+                          pca = FALSE, 
+                          partial_pca = FALSE, 
+                          max_iter = 1000,
+                          verbose = getOption("verbose", FALSE), 
+                          is_distance = FALSE,
+                          pca_center = F, 
+                          pca_scale = F,
+                          normalize = F, 
+                          momentum = 0.5, 
+                          final_momentum = 0.8, 
+                          eta = 200,
+                          exaggeration_factor = 12, 
+                          num_threads = 20)
+```
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+# LV=1
+tsne_data <- cbind(d@meta.data, data.frame(TSNE_1 = tsne_plot$Y[, 1],
+                                           TSNE_2 = tsne_plot$Y[, 2]))
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~celltype.l1, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~celltype.l1, 
+                                    data = tsne_data, FUN = median),
+                      by = "celltype.l1")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = celltype.l1), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = celltype.l1), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_tsne
+```
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv1.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv1.png",
+       device = "png",
+       width = 4,
+       height = 3)
+```
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+# LV=2
+tsne_data <- cbind(d@meta.data, data.frame(TSNE_1 = tsne_plot$Y[, 1],
+                                           TSNE_2 = tsne_plot$Y[, 2]))
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~celltype.l2, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~celltype.l2, 
+                                    data = tsne_data, FUN = median),
+                      by = "celltype.l2")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))
+
+g_tsne
+```
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv2.pdf",
+       device = "pdf",
+       width = 4,
+       height = 3)
+
+ggsave(plot = g_tsne, 
+       filename = "manuscript_data/TSNE_B_lv2.png",
+       device = "png",
+       width = 4,
+       height = 3)
+```
+
+
+
+
+
+
+
+## Are distances between cells preserved?
+
+local = yes; long-range = no
+
+```{r, echo = F, results='hide'}
+
+# C = vector clusters of points
+# tree_dist = matrix of cluster-to-cluster distance (e.g. from phylo)
+get_d <- function(A, U_A, T_A, B, verbose=F) {
+  
+  get_euc <- function(x, y) {
+    return(sqrt(sum((x-y)^2)))
+  }
+  
+  get_pair_euc <- function(x, A, U_A, T_A) {
+    
+    if(x %% 1000 == 0) {
+      cat(x, "\n")
+    }
+    
+    j <- sample(x = 1:nrow(A), size = 2, replace = T)
+    a_euc <- get_euc(A[j[1],], A[j[2],])
+    u_euc <- get_euc(U_A[j[1],], U_A[j[2],])
+    t_euc <- get_euc(T_A[j[1],], T_A[j[2],])
+    
+    return(data.frame(a_euc = a_euc, 
+                      u_euc = u_euc, 
+                      t_euc = t_euc))
+  }
+  
+  o <- lapply(X = 1:B, 
+              FUN = get_pair_euc, 
+              A = A, 
+              U_A = U_A, 
+              T_A = T_A)
+  
+  o <- do.call(rbind, o)
+  return(o)
+}
+
+```
+
+
+```{r, echo = F, results='hide'}
+
+pair_dist <- get_d(B = 3*(10^4),
+                   A = d@reductions$pca@cell.embeddings[, 1:15],
+                   U_A = umap_data[, c("UMAP_1", "UMAP_2")],
+                   T_A = tsne_data[, c("TSNE_1", "TSNE_2")],
+                   verbose = T)
+
+```
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_umap <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = u_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = u_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D UMAP space")
+
+g_pairs_umap
+```
+
+
+
+```{r, fig.width=4, fig.height=4, fig.align='center', echo = T}
+g_pairs_tsne <- ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = t_euc), size = 0.5)+
+  geom_density_2d(aes(y = a_euc, x = t_euc), 
+                  size = 0.5, color = "orange")+
+  ylab(label = "Euclidean distance in PCA space")+
+  xlab(label = "Euclidean distance in 2D t-SNE space")
+
+g_pairs_tsne
+```
+
+
+
+```{r, echo=F, results='hide'}
+ggsave(plot = g_pairs_umap,
+       filename = "manuscript_data/distance_scaling_UMAP_B.png",
+       device = "png",
+       width = 3,
+       height = 3)
+
+ggsave(plot = g_pairs_tsne,
+       filename = "manuscript_data/distance_scaling_TSNE_B.png",
+       device = "png",
+       width = 3,
+       height = 3)
+```
+
+
+
+
+
+
+## Challenges with 2D UMAP based scRNA-seq data exploration
+
+Now that the UMAP contains more than 161,000 cells from a heterogeneous tissue, 
+we start to see the challenges associated with this approach: 
+  
+  1. massive overplotting
+    
+      * limited visibility: the cells (points) form blobs of cells 
+      $\rightarrow$ some points are covered by others
+      * even at resolution level *l1* we have difficulty to distinguish 
+      between cell types and their colors. This is quite more challenging for 
+      level *l2* and *l3* (not shown)
+      * increasing the number of cells in the dataset, which is likely to 
+      happen as throughput of scRNA-seq techniques improves, will make the 
+      problem even worse
+      * comparison of 2D UMAPs between studies difficult -> UMAP rotation, 
+      colors, cell order (which cell is shown on the top/bottom) affects 
+      interpretation
+  
+  2. lack of compositional information
+      * it is nearly impossible to ascertain the absolute/relative cell 
+      frequencies in e.g. cell types, samples, timepoints
+      * impossible to tell whether the samples are equally mixed across the 
+      cell types or if there are some systematic biases. 
+      * we could generate 8 x 3 separate UMAPs for each pair of donor and 
+      timepoint -> difficult to interpret due to 1. + only major deviations 
+      will be noticeable.
+      
+  3. qualitative analysis
+      * distances between cell types should not be interpreted in Euclidean 
+      distance sense -> cell type structure difficult to discern from 2D UMAP
+      
+
+## scBubbletree approach
+
+Now lets turn to `scBubbletree`. As earlier, our first goal is to determine `k` 
+for the clustering of matrix $A^{n \times f}$, which represents the low-
+dimensional feature space of the normalized gene expression matrix. We will 
+use the first $f$=15 PCA dimensions as features. We selected $f$=15 based on 
+the elbow plot below.
+
+
+```{r, fig.width=4, fig.height=3}
+var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
+
+g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
+                                            PC = 1:length(var_explained)))+
+  geom_point(aes(y = var_explained, x = PC), size = 1)+
+  ylab(label = "Variance explained [%]")
+
+g_var_explained
+
+ggsave(plot = g_var_explained, 
+       filename = "manuscript_data/Var_explained_PCA_B.pdf",
+       device = "pdf",
+       width = 3,
+       height = 2)
+```
+
+
+
+```{r, echo = T}
+# This is the main input of scBubbletree 
+# -> matrix A with n=cells, f=features (from PCA)
+A <- d@reductions$pca@cell.embeddings[, 1:15]
+```
+
+
+```{r, echo = T}
+# meta data
+meta <- d@meta.data
+```
+
+
+```{r, echo = T}
+# quantitative features (gene expressions of marker genes) to be used later on:
+# * GNLY, NKG7:	NK cells
+# * IL7R:	CD4 T cells
+# * CD8A:	CD8 T cells
+# * MS4A1:	B cells
+# * CD14, LYZ:	CD14+ Monocytes
+# * FCGR3A, MS4A7:	FCGR3A+ Monocytes
+# * FCER1A, CST3:	Dendritic Cells
+# * PPBP:	Megakaryocytes
+as <- as.matrix(t(d@assays$SCT@data[
+  rownames(d@assays$SCT@data) %in% 
+    c("IL7R", 
+      "CD14", "LYZ", 
+      "MS4A1", 
+      "CD8A", 
+      "GNLY", "NKG7",
+      "FCGR3A", "MS4A7",
+      "FCER1A", "CST3",
+      "PPBP"), ]))
+```
+
+
+```{r}
+# cleanup
+rm(d)
+gc()
+```
+
+
+We will once again use the function `get_k` for clustering. Notice the modified 
+parameter *cv_prop=0.2*, for faster execution of this large dataset:
+
+```{r, fig.width=4, fig.height=3, echo = T}
+
+if(redo_case_b) {
+  # Determine appropriate number of clusters (k)
+  b <- get_k(B = 30,
+             cv_prop = 0.3, # use 30% for gap stat.
+             ks = 1:40,
+             x = A,
+             n_start = 10,
+             iter_max = 20,
+             cores = 20,
+             mini_output = F,
+             approx_silhouette = F,
+             kmeans_algorithm = "MacQueen")
+  
+  if(dir.exists("case_study_B")==F) {
+    dir.create("case_study_B")
+  }
+  save(b, file = "case_study_B/b.RData")
+} else {
+  b <- get(load("~/scBubbletree/case_study_B/b.RData"))
+}
+
+```
+
+We see a more complex silhouette curve. This is normal given the complexity
+in our dataset, which is composed of many cell types with high and low relative
+frequencies. We see a maximum silhouette index at `k=5`. The index then drops 
+sharply until `k=11`, followed by shallow increase until `k=14` after the 
+silhouette starts once again to decrease.
+
+Elbows are not easy to detect from the Gap and WSS curves. It is quite evident,
+however, that both curves flatten at around `k=15` to `k=20`. 
+
+
+```{r}
+g0 <- ggplot(data = b$sil_stats_summary)+
+  geom_point(aes(x = k, y = sil_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Silhouette")+
+  ylab(label = "Mean Silhouette")|
+ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Gap")+
+  ylab(label = "Mean Gap")|
+ggplot(data = b$wss_stats_summary)+
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "WSS")+
+  ylab(label = "Mean WSS")
+```
+
+
+```{r, fig.width=10, fig.height=3, fig.align='center'}
+g0
+```
+
+
+
+
+
+## `k=5`
+Lets start with `k=5` and use `get_bubbletree` to perform k-means 
+clustering followed by hierarchical clustering:
+
+```{r, echo=T}
+
+if(redo_case_b) {
+  # Determine appropriate number of clusters (k)
+  k5 <- get_bubbletree(x = A,
+                            k = 5,
+                            n_start = 100,
+                            iter_max = 100,
+                            seed = 4321,
+                            cores = 5,
+                            B = 50,
+                            N_eff = 100,
+                            verbose = FALSE)
+  save(k5, file = "case_study_B/k5.RData")
+} else {
+  k5 <- get(load("~/scBubbletree/case_study_B/k5.RData"))
+}
+
+```
+
+Next, we can plot the bubbletree:
+  
+  * bubbles 3 and 4 are dominant as they contain approximately 70% of the cells
+  * now we also see some strcuture in the bubbletree, e.g. bubbles 1 and 3 
+  form one branch with high support, which is then also joined with bubble 2.
+  * bubbles 4 and 5 are clearly separated from the branch formed by bubbles 
+  1, 2 and 3 
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+k5$tree
+```
+
+Does this make biological sense? Lets visualize the cell type compositions 
+(figure B, notice parameter *feature_composition = F*) of the different 
+bubbles using the categorical feature *l1*. Furthermore, we can also show the
+composition of features across the different bubbles (figure C, notice 
+parameter *feature_composition = T*). 
+
+Summary of the bubbletree and figure B:
+
+  * the branch with bubbles 1 and 3 contains CD4+ and CD8+ T-cells,
+  NK-cells and other T-cells
+  * about 92% of the cells in bubble 2 are B-cells and 7% are DCs. B-cells and 
+  DCs are not related, which points at potential undersegmentation.
+  * it is evident that the branch with bubble 1,3 and 2 contains different 
+  lymphocytes
+  * nearly all cells in bubble 4 are monocytes and DCs
+  * the smallest bubble 5 is nearly exclusively composed of 'other' cells and
+  about 3% monocytes
+  * all branches have high (complete) bootstrap support, i.e. in the 50 
+  bootstrap trees we find identical branching as in the consensus bubbletree.
+  * in summary, the clustering algorithm with $k=5$ performs coarse but 
+  biologically meaningful cell type segmentation. 
+  
+```{r, echo=T}
+# cell type annotations (level 1)
+a <- meta$celltype.l1 
+
+# create tile plot showing cluster compositions
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = F,
+                            round_digits = 1,
+                            show_hclust = F)
+
+# create tile plot showing feature compositions
+w2 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 1,
+                            show_hclust = F)
+```
+
+
+```{r, fig.width=9, fig.height=4.5, fig.align='center', echo=T}
+(k5$tree|w1$w|w2$w)+
+  patchwork::plot_layout(widths = c(1, 1.5, 1.5))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+Earlier we stated that the data is derived from 8 donors at 3 timepoints. 
+Are the cells in each sample well mixed in each of the different bubbles?
+
+We see interesting patterns in the feature compositions between the samples 
+as shown in figure D and the corresponding dendrogram with two branches. For 
+instance bubble 3 cells (CD4+ and CD8+ T-cells) appear to be enriched in P4 
+samples. We do not see systematic biases between samples that correspond to 
+different timepoints.
+
+
+```{r, echo=T, results='hide'}
+# lets first create a variable showing pairs (donor x timepoint) 
+a <- paste0(meta$donor, '_', meta$time)
+
+# categorical donor meta data
+w3 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = T)
+```
+
+
+```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
+((k5$tree|w1$w|w2$w)+patchwork::plot_layout(widths = c(1, 1.5, 1.5)))/(w3$w)+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+Another categorical feature which we can visualized are the predicted phases 
+of the different cells: G1 (cell growth), S (DNA replication), G2 (growth and 
+preparation for mitosis), M (mitosis: ell division occurs). These prediction 
+are included as part of the meta data. 
+
+In the next plot we show the composition of each bubble with respect to these 
+three cell phases:
+
+```{r, echo=T}
+# cell type annotations (level 1)
+a <- meta$Phase 
+
+# create tile plot
+w4 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 1)
+```
+
+
+```{r, fig.width=9, fig.height=8, fig.align='center', echo=T}
+((k5$tree|w1$w|w2$w)+patchwork::plot_layout(widths = c(1, 1.5, 1.5)))/
+  ((w3$w|w4$w)+patchwork::plot_layout(widths = c(3, 1)))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+
+
+
+
+## `k=15`
+
+It is apparent from the results generated by setting `k=5` that some 
+bubbles are `impure`, i.e. they contain cells from different cell types, e.g.
+bubble 2 contains a mixture of two unrelated cell types, i.e. B-cells and DCs. 
+
+Furthermore, *our goal* is to inspect the data at a finer cellular resolution.
+For instance, lets see how well `k=5` clustering segments the *l2* cell type
+predictions?
+
+As expected, many cluster contains multiple cell types $\rightarrow$ if we want
+to identify cell clusters at *l2* resolution it is evident that we need to
+increase `k`. Lets try `k=15` (this is also a reasonable value for `k` based 
+on silhouette, WSS and gap curves shown above).
+
+```{r, fig.width=10, fig.height=4.5, fig.align='center', echo=T}
+# cell type annotations (level 1)
+a <- meta$celltype.l2 
+
+# create tile plot showing cluster compositions
+w1 <- get_cat_feature_tiles(d = k5,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F)
+
+(k5$tree|w1$w)+
+  patchwork::plot_layout(widths = c(1, 4))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+```{r, echo=T}
+
+if(redo_case_b) {
+  # do clustering with k=15
+  k15 <- get_bubbletree(x = A,
+                        k = 15,
+                        n_start = 500,
+                        iter_max = 1000,
+                        seed = 4321,
+                        cores = 20,
+                        B = 100,
+                        N_eff = 100,
+                        verbose = FALSE,
+                        round_digits = 1,
+                        show_branch_support = T,
+                        show_simple_count = T)
+  save(k15, file = "case_study_B/k15.RData")
+} else {
+  k15 <- get(load("~/scBubbletree/case_study_B/k15.RData"))
+}
+
+```
+
+
+Summary of the bubbletree:
+
+  * the lymphocyte and monocyte branches of bubbles are well defined. Within
+  branch structures are biologically meaningful
+  * bubble 2 is the largest one in the tree and appears to be enriched with
+  naive T-cells and Tregs, but also hematopoietic stem and 
+  progenitor cells (HSPC) $\rightarrow$ additional clustering might be necessary
+  * other T-cells, such as effector, central memory and cytotoxic T-cells, are 
+  enriched in the remaining bubbles 1, 8, 14 of the same branch.
+  * NK-cells are contained in bubble 7, shown as an outgroup of lymphocytes
+  * B-cells (naive, memory, intermediate and plasmablasts) are found in a common
+  branch containing bubble 3 and 13
+  * CD14+ and CD16+ monocytes and different types of DCs are contained in a
+  separate branch of monocyte bubbles. Surprisingly, these bubbles are also 
+  enriched with doublets
+  * most branches have high (complete) bootstrap support. This is not the case
+  for the branch connecting bubble 8 and 14 (50% support).
+  * cells from smaller PBMCs subtypes, such as platelets and erythrocytes, are 
+  found as separate bubbles shown as outgroups 
+  * in summary, the clustering algorithm with $k=15$ recovers most *l2* 
+  resolution cell types and produces a biologically meaningful bubbletree 
+  topology
+  
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+c1 <- meta$celltype.l1
+c2 <- gsub(pattern = "Proliferating", replacement = 'prolif.', meta$celltype.l2)
+c2 <- gsub(pattern = "CD56bright", replacement = 'CD56', x = c2)
+donor <- meta$donor
+
+# create tile plots
+w0 <- get_cat_feature_tiles(d = k15,
+                            a = c1, # res = 1
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2)
+
+
+w1 <- get_cat_feature_tiles(d = k15,
+                            a = c2, # res = 2
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2)
+
+
+w2 <- get_cat_feature_tiles(d = k15,
+                            a = donor,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2)
+
+(k15$tree|w2$w|w1$w)+patchwork::plot_layout(widths = c(3, 2, 9))
+```
+
+```{r, echo=F, results='hide'}
+fig_2_bottom <- (k15$tree|w2$w|w1$w)+patchwork::plot_layout(widths = c(2, 2.25, 9))
+fig_2_bottom
+
+ggsave(plot = fig_2_bottom,
+       filename = "manuscript_data/Fig_2.svg",
+       device = "svg",
+       width = 8.25,
+       height = 5)
+```
+
+
+Interestingly, the bubbles 1 and 2 contain many different cell types. Additional
+clustering of these bubbles might be necessary.
+
+## Bubble update
+
+`scBubbletree` can perform targeted clustering of cells within specific bubbles. 
+This can be achieved with the function `update_bubbletree`. Lets update 
+bubbles 1 and 2 into two sub-bubbles.
+
+**Important remark**: the function `update_bubbletree` should be used to 
+explore the clustering in order to select an appropriate `k` and to explain the 
+segmentation. 
+
+```{r, echo=T}
+
+if(redo_case_b) {
+  # do clustering with k=15
+  u_k15 <- update_bubbletree(btd = k15,
+                             updated_bubbles = c("2", "1"),
+                             ks = c(2, 2),
+                             cores = 20)
+  save(u_k15, file = "case_study_B/u_k15.RData")
+} else {
+  u_k15 <- get(load("~/scBubbletree/case_study_B/u_k15.RData"))
+}
+
+```
+
+
+```{r, fig.width=12, fig.height=8, fig.align='center', echo=T}
+# create tile plot
+w2 <- get_cat_feature_tiles(d = u_k15,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F)
+
+(u_k15$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(4, 9))
+```
+
+
+## Gini index
+
+Can we show quantitatively that by increasing `k` we get "better" clustering 
+in a semi-supervised way? Yes, we can use the Gini impurity index.
+
+For this we will integrate the results obtained by function `get_k` with *l1*, 
+*l2* and *l3* cell type predictions (labels), and show quantitatively the 
+change in Gini index as a function of `k`. This is done with the function 
+`get_gini_k`. One potential caveat of this approach is that some of the 
+predictions might be inaccurate. 
+
+Lets invoke the function `get_gini_k` and pass the object `b` obtained 
+earlier together with the cell type predictions:
+
+```{r, echo = T}
+b <- get(load("~/scBubbletree/case_study_B/b.RData"))
+gini_l1 <- get_gini_k(labels = meta$celltype.l1,
+                         kmeans_boot_obj = b)
+gini_l2 <- get_gini_k(labels = meta$celltype.l2,
+                         kmeans_boot_obj = b)
+gini_l3 <- get_gini_k(labels = meta$celltype.l3,
+                         kmeans_boot_obj = b)
+```
+
+
+We next plot the Gini scores for the labels at resolution *l1*, *l2* and *l3*.
+
+```{r, fig.width=3, fig.height=3, fig.align='center'}
+l1 <- gini_l1$total_gini_summary
+l1$level <- "l1"
+
+l2 <- gini_l2$total_gini_summary
+l2$level <- "l2"
+
+l3 <- gini_l3$total_gini_summary
+l3$level <- "l3"
+
+l_summary <- rbind(l1, l2, l3)
+
+g_gini <- ggplot(data = l_summary)+
+  geom_point(aes(x = k, y = total_gini_mean, col = level), size = 1)+
+  geom_errorbar(aes(x = k, y = total_gini_mean, ymin = L95, 
+                    ymax = H95, col = level), width = 0.1)+
+  scale_color_manual(name = "R",
+                     values = c("black", "#787777", "gray"))+
+  theme(legend.position = c(0.8, 0.7))+
+  ylab(label = "Mean impurity")+
+  ggtitle(label = '', subtitle = "Gini impurity")
+
+g_gini
+```
+
+
+Summary of the above plot:
+  
+  * more abstract cell types can be segmented more accurately and the 
+  resulting segmentation has lower total Gini impurity.
+  * in each curve the total Gini impurity appears to decrease slowly for as 
+  `k` approaches 20.
+  * this indicates that our previous data-based indices provide meaningful results
+  * important: finding the right $k$ also depends on the user's objectives
+
+
+
+## Quantiative features
+
+Gene expression annotations can also be integrated to better explain the 
+bubbles and the tree structure. Lets visualize the mean gene expression of some 
+marker genes in the bubbles:
+
+  * GNLY, NKG7:	*NK cells*
+  * IL7R:	*CD4 T cells*
+  * CD8A:	*CD8 T cells*
+  * MS4A1:	*B cells*
+  * CD14, LYZ:	*CD14+ Monocytes*
+  * FCGR3A, MS4A7:	*FCGR3A+ Monocytes*
+  * FCER1A, CST3:	*Dendritic Cells*
+  * PPBP:	*Megakaryocytes*
+
+
+```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
+# This function build the nummeric annotations plot
+w3 <- get_num_feature_tiles(d = k15,
+                            as = as,
+                            plot_title = "",
+                            round_digits = 1,
+                            tile_text_size = 2.5)
+
+# Plot
+(k15$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
+```
+
+Second, we can visualize the distribution of each marker gene in each bubble 
+using violin plots with `get_num_feature_violins`. This function uses the same
+input as `get_num_feature_tiles`. 
+
+Lets invoke this function now.
+
+```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k15,
+                              as = as,
+                              plot_title = "",
+                              scales = 'free_x',
+                              show_cells = F)
+
+
+((k15$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1)))/w4$w
+```
+
+
+
+```{r, echo=T, results='hide'}
+# lets first create a variable showing pairs (donor x timepoint) 
+a <- paste0(meta$donor, '_', meta$time)
+
+# categorical donor meta data
+w5 <- get_cat_feature_tiles(d = k15,
+                            a = a,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = T,
+                            tile_text_size = 2.5)
+
+w5$w
+```
+
+```{r}
+g_sup <- (((k15$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1.3)))/w5$w)+
+  patchwork::plot_layout(widths = c(1.5, 1))+
+  patchwork::plot_annotation(tag_levels = 'A')
+
+ggsave(plot = g_sup,
+       filename = "manuscript_data/Fig_S2.svg",
+       device = "svg",
+       width = 7,
+       height = 9)
+```
+
+
+
+
+```{r, fig.width=9, fig.height=8.5}
+g <- (g0|g_gini)/((k15$tree|w1$w)+patchwork::plot_layout(widths = c(1.5,6)))+
+  patchwork::plot_layout(heights = c(1, 4.5))+
+  patchwork::plot_annotation(tag_levels = 'A')
+
+ggsave(plot = g,
+       filename = "manuscript_data/Fig_2.svg",
+       device = "svg",
+       width = 8,
+       height = 8)
+
+```
+
+
+
+# Case study C: digit recognittion
+
+```{r}
+# Note: This example is adapted from an the example in the book Python 
+# Datascience handbook by Jake VanderPlas https://jakevdp.github.io/PythonDataScienceHandbook/05.09-principal-component-analysis.html)
+
+
+# Read the digits data
+digits <- read.csv("raw_data/Digits/digits.csv")
+
+# ground truth
+digit_classes <- digits$X0.000000000000000000e.00.29
+
+```
+
+```{r}
+x <- digits
+
+qs <- c()
+for(i in 1:nrow(digits)) {
+  m <- matrix(data = as.numeric(digits[i, 1:64]), byrow = T, ncol = 8)
+  q <- melt(m)
+  colnames(q) <- c("y", "x", "v")
+  q$i <- i
+  q$class <- digit_classes[i]
+  qs <- rbind(qs, q)
+}
+rm(m, q, i, x)
+```
+
+
+```{r, fig.width=3, fig.height=3, fig.align='center', echo=T}
+tmp_qs <- c()
+for(i in 1:9) {
+  tmp <- qs[qs$i %in% qs$i[which(qs$class == i)[100]], ]
+  tmp_qs <- rbind(tmp_qs, tmp)
+}
+rm(i, tmp)
+g_digits <- ggplot(data = tmp_qs)+
+  facet_wrap(facets = ~paste0(class), nrow = 4)+
+    geom_tile(aes(x = x, y = y, fill = v))+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none",
+        strip.text.x = element_text(margin = margin(0.015,0,0.015,0, "cm")))+
+  scale_fill_gradient(low = "white", high = "black")+
+  scale_x_continuous(name = "x pixel", expand = c(0, 0))+
+  scale_y_continuous(name = "y pixel", expand = c(0, 0))
+g_digits
+```
+
+
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+# PCA 
+PCA = stats::prcomp(digits[,1:64])
+
+# get variance explained by PCs
+summary_PCA <- rbind(
+  SD = sqrt(PCA$sdev^2),
+  Proportion = PCA$sdev^2/sum(PCA$sdev^2),
+  Cumulative = cumsum(PCA$sdev^2)/sum(PCA$sdev^2))
+
+plot(summary_PCA["Proportion",]*100, ylab = "Var explained [%]")
+```
+
+
+```{r, echo=T}
+A <- PCA$x[, 1:15]
+```
+
+
+```{r}
+umap <- umap::umap(d = PCA$x)
+# umap <- umap::umap(d = digits[,1:64])
+```
+
+
+
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+umap_data <- data.frame(UMAP_1 = umap$layout[, 1],
+                        UMAP_2 = umap$layout[, 2],
+                        digit = digit_classes)
+umap_centers <- merge(x = aggregate(UMAP_1~digit, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~digit, data = umap_data, FUN = median),
+                      by = "digit")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = digit), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = digit), 
+            min.segment.length = 0, size = 3.6)+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4, override.aes = list(size=2)))+
+  scale_color_distiller(palette = "Spectral")
+
+g_umap
+```
+
+```{r}
+g_digits_plot <- (g_digits|g_umap)+patchwork::plot_layout(widths = c(1,1.6))
+ggsave(g_digits_plot, filename = "manuscript_data/digits_umap.svg",
+       device = "svg",width = 4.5, height = 2.25)
+```
+
+
+
+This also holds for t-SNE plots:
+
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+tsne_plot <- Rtsne::Rtsne(X = PCA$x,
+                          perplexity = 50, 
+                          theta = 0.5, 
+                          check_duplicates = TRUE,
+                          pca = FALSE, 
+                          partial_pca = FALSE, 
+                          max_iter = 1000,
+                          verbose = getOption("verbose", FALSE), 
+                          is_distance = FALSE,
+                          pca_center = F, 
+                          pca_scale = F,
+                          normalize = F, 
+                          momentum = 0.5, 
+                          final_momentum = 0.8, 
+                          eta = 200,
+                          exaggeration_factor = 12, 
+                          num_threads = 10)
+```
+
+
+```{r, fig.width=5, fig.height=3.25, fig.align='center', echo = T}
+tsne_data <- data.frame(digit = digit_classes,
+                        TSNE_1 = tsne_plot$Y[, 1],
+                        TSNE_2 = tsne_plot$Y[, 2])
+tsne_data$closest_cluster <- NA
+tsne_centers <- merge(x = aggregate(TSNE_1~digit, 
+                                    data = tsne_data, FUN = median),
+                      y = aggregate(TSNE_2~digit, 
+                                    data = tsne_data, FUN = median),
+                      by = "digit")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = TSNE_1, y = TSNE_2, col = digit), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = TSNE_1, y = TSNE_2, label = digit), 
+            min.segment.length = 0, size = 3)+
+  theme(legend.position = "none")+
+  guides(colour = guide_legend(nrow = 4,
+                               override.aes = list(size=2)))+
+  scale_color_distiller(palette = "Spectral")
+
+g_tsne
+```
+
+
+
+```{r}
+b <- get_k(B = 20, 
+           cv_prop = 1, 
+           ks = 1:20,
+           x = digits[,1:64],#A,
+           n_start = 10, 
+           iter_max = 50, 
+           cores = 20)
+```
+
+
+
+```{r}
+g0 <- ggplot(data = b$sil_stats_summary)+
+  geom_point(aes(x = k, y = sil_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Silhouette")+
+  ylab(label = "Mean Silhouette")|
+ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "Gap")+
+  ylab(label = "Mean Gap")|
+ggplot(data = b$wss_stats_summary)+
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ggtitle(label = '', subtitle = "WSS")+
+  ylab(label = "Mean WSS")
+```
+
+
+```{r, fig.width=9, fig.height=3, fig.align='center'}
+g0
+```
+
+
+
+```{r}
+# Perform clustering to get data for scBubbletree
+k10 <- get_bubbletree(x = as.matrix(digits[,1:64]),
+                     k = 10,
+                     seed = 1234,
+                     cores = 20,
+                     B = 200,
+                     N_eff = 100,
+                     verbose = F,
+                     n_start = 100,
+                     iter_max = 100,
+                     round_digits = 1,
+                     show_branch_support = T)
+```
+
+
+```{r, fig.width=4, fig.height=5, fig.align='center', echo=T}
+k10$tree
+```
+
+
+
+```{r, echo=T}
+w1 <- get_cat_feature_tiles(d = k10,
+                            a = as.character(digit_classes),
+                            feature_composition = T,
+                            round_digits = 1,
+                            rotate_x_axis = F,
+                            show_hclust = F)
+```
+
+
+```{r, fig.width=8, fig.height=5, fig.align='center', echo=T}
+(k10$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+```
+
+
+
+## Gini impurity index
+
+```{r}
+# gini
+get_gini(labels = as.character(digit_classes), 
+         clusters = k10$cluster)
+```
+
+
+```{r, echo = T}
+gini_boot <- get_gini_k(labels = as.character(digit_classes),
+                           kmeans_boot_obj = b)
+```
+
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+g1 <- ggplot(data = gini_boot$total_gini_summary)+
+  geom_point(aes(x = k, y = total_gini_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = total_gini_mean, ymin = L95, 
+                    ymax = H95), width = 0.1)+
+  ggtitle(subtitle = "Gini impurity", label = '')+
+  ylab(label = "Mean impurity")
+
+g1
+```
+
+
+
+
+# References
+
+[^1]: Tian, Luyi, et al. "Benchmarking single cell RNA-sequencing analysis 
+pipelines using mixture control experiments." Nature methods 16.6 (2019): 
+479-487.
+[^2]: Hao, Yuhan, et al. "Integrated analysis of multimodal single-cell 
+data." Cell 184.13 (2021): 3573-3587.
+[^3]: https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
+[^4]: https://www.10xgenomics.com/resources/datasets/10-k-human-pbm-cs-5-v-2-0-chromium-x-2-standard-6-1-0

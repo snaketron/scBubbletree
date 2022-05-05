@@ -25,9 +25,9 @@ knitr::opts_chunk$set(echo = F,
 This vignette introduces `scBubbletree`, a transparent methodology for single 
 cell RNA-seq data exploration based on well established methods clustering 
 and visualization. We will demonstrate the functionality of `scBubbletree` 
-by analyzing three scRNA-seq datasets (Case studies A, B and C), while also 
-showing how to integrate `scBubbletree` with existing pipelines for scRNA-seq 
-analysis e.g. based on Seurat.
+by analyzing a toy dataset (case study A), while also showing how to integrate 
+`scBubbletree` with existing pipelines for scRNA-seq analysis e.g. based on 
+Seurat.
 
 To run this vignette we need several R-packages. Load them now:
 
@@ -58,8 +58,6 @@ library(Rtsne, lib.loc = lib.loc)
 
 ```{r}
 redo_case_a <- F
-redo_case_b <- F
-redo_case_c <- F
 ```
 
 
@@ -176,7 +174,7 @@ All of these challenges will be exaggerated in more realistic scenarios, such as
 scRNA-seq data derived from complex (heterogeneous) tissues and also composed of 
 10- to 100-times higher number of cells. In such analyses we will see crowded 2D
 UMAPs composed of many clusters of cells that are not clearly separated from 
-each other. We will encounter many of these challenges in Case Study B.
+each other. To experimence these challenges see Case Study B.
 
 Using 2D UMAPs in publications presents a challenge not only for the readers 
 but also for the reviewers, who have to evaluate these complex figures without 
@@ -967,7 +965,6 @@ user of `scBubbletree` must be able answer the following questions:
       * does the bubble segmentation correspond with the feature annotation data 
       (e.g. marker gene expressions)?
 
-We will provide answer to these questions in **Case study B**.
 
 
 

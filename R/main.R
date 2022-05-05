@@ -1209,13 +1209,12 @@ get_gini_k <- function(labels, get_k_obj) {
   }
 
   B <- length(get_k_obj$boot_obj)
+  ks <- base::names(get_k_obj$boot_obj[[1]]$obj)
 
   total_o <- vector(mode = "list", length = B*length(ks))
   cluster_o <- vector(mode = "list", length = B*length(ks))
   counter <- 1
   for(i in 1:B) {
-    ks <- base::names(get_k_obj$boot_obj[[i]]$obj)
-
     for(j in 1:length(ks)) {
       gini <- get_gini(clusters = get_k_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
                        labels = labels)
