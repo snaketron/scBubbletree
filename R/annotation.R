@@ -11,7 +11,8 @@ get_cat_feature_tiles <- function(d,
                                   rotate_x_axis = T,
                                   show_hclust = F,
                                   disable_hclust = F,
-                                  tile_text_size = 3) {
+                                  tile_text_size = 3,
+                                  x_axis_label = "Feature") {
 
 
   if(disable_hclust==T & show_hclust==T) {
@@ -86,7 +87,6 @@ get_cat_feature_tiles <- function(d,
   }
 
 
-
   w <- ggplot(data = ws)+
     theme_bw(base_size = 10)+
     geom_tile(aes(x = feature, y = cluster, fill = percent), col = "white")+
@@ -98,8 +98,8 @@ get_cat_feature_tiles <- function(d,
                          na.value = 'white')+
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-10,-10,-10,-10))+
-    xlab(label = "Feature")+
+          legend.box.margin=margin(-5,-5,-5,-5))+
+    xlab(label = x_axis_label)+
     ylab(label = "Bubble")+
     guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
 
@@ -132,7 +132,8 @@ get_num_feature_tiles <- function(d,
                                   rotate_x_axis = T,
                                   show_hclust = F,
                                   disable_hclust = F,
-                                  tile_text_size = 3) {
+                                  tile_text_size = 3,
+                                  x_axis_label = "Feature") {
 
   if(disable_hclust==T & show_hclust==T) {
     warning("Hclust disabled, set disable_hclust=T to create dendrogram")
@@ -186,9 +187,9 @@ get_num_feature_tiles <- function(d,
   # reorder features based on hclust
   if(disable_hclust==F) {
     if(ncol(as)>1) {
-      tree <- get_weighted_feature_dist(main_ph = d$ph$main_ph,
-                                        w = ws,
-                                        value_var = "value")
+      tree <- get_weighted_feature_dist_num(main_ph = d$ph$main_ph,
+                                            w = ws,
+                                            value_var = "value")
       ws$feature <- factor(levels = tree$labels, x = ws$feature)
     }
   }
@@ -203,7 +204,7 @@ get_num_feature_tiles <- function(d,
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))+
-    xlab(label = "Feature")+
+    xlab(label = x_axis_label)+
     ylab(label = "Bubble")+
     ggtitle(label = plot_title)+
     guides(fill = guide_colourbar(barwidth = 5, barheight = 0.7))
@@ -232,7 +233,8 @@ get_num_feature_violins <- function(d,
                                     scales = "free_x",
                                     violin_min_cells = 10,
                                     show_cells = T,
-                                    disable_hclust = F) {
+                                    disable_hclust = F,
+                                    x_axis_label = "Feature distribution") {
 
   get_raw <- function(k, a, feature) {
     f <- data.frame(cluster = k, a = a)
@@ -315,9 +317,9 @@ get_num_feature_violins <- function(d,
   # reorder features based on hclust
   if(disable_hclust==F) {
     if(ncol(as)>1) {
-      tree <- get_weighted_feature_dist(main_ph = d$ph$main_ph,
-                                        w = mu_ws,
-                                        value_var = "value")
+      tree <- get_weighted_feature_dist_num(main_ph = d$ph$main_ph,
+                                            w = mu_ws,
+                                            value_var = "value")
       # now ws not mu_ws
       ws$feature <- as.character(ws$feature)
       ws$feature <- factor(levels = tree$labels, x = ws$feature)
@@ -329,7 +331,7 @@ get_num_feature_violins <- function(d,
     theme_bw(base_size = 10)+
     facet_grid(.~feature, scales = scales)+
     coord_flip()+
-    ylab(label = "Feature distribution")+
+    ylab(label = x_axis_label)+
     xlab(label = "Bubble")+
     ggtitle(label = plot_title)+
     theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),

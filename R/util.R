@@ -361,7 +361,7 @@ get_pca_dist <- function(pair_dist) {
 }
 
 
-get_weighted_feature_dist <- function(main_ph, w, value_var) {
+get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
 
 
   if(length(unique(w$feature))<=1) {
@@ -397,9 +397,99 @@ get_weighted_feature_dist <- function(main_ph, w, value_var) {
     }
   }
 
+
+  for(i in 1:(nrow(w_df)-1)) {
+    for(j in (i+1):nrow(w_df)) {
+      d <- abs(w_df[i, ]-w_df[j,])
+      d <- d[order(as.numeric(names(d)), decreasing = F)]
+
+      tree_dist <- ape::cophenetic.phylo(main_ph)
+      for(k1 in 1:(length(d)-1)) {
+        for(k2 in (k1+1):length(d)) {
+          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*max(d[k1], d[k2])
+          tree_dist[names(d)[k1], names(d)[k2]] <- tmp
+          tree_dist[names(d)[k2], names(d)[k1]] <- tmp
+        }
+      }
+      dist_feature[i,j] <- sum(tree_dist)
+      dist_feature[j,i] <- dist_feature[i,j]
+    }
+  }
+
   # build hclust
   hc_dist <- stats::dist(x = dist_feature, method = "euclidean")
   hc <- stats::hclust(d = hc_dist, method = "average")
+  hc <- ape::as.phylo(x = hc)
+
+  # build ggtree
+  tree <- ggtree::ggtree(hc, linetype='solid')+
+    theme_dendrogram()+
+    coord_flip()+
+    geom_tippoint()+
+    theme(legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-10,-10))
+
+  tree_data <- tree$data
+  tree_data <- tree_data[tree_data$isTip==T,]
+  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = F)]
+
+  return(list(tree = tree,
+              labels = ordered_labels))
+
+
+}
+
+
+
+
+get_weighted_feature_dist <- function(main_ph, w, value_var) {
+
+
+  if(length(unique(w$feature))<=1) {
+    stop("Only one feature, cannot compute dendrogram.\n")
+  }
+
+  w$cluster <- as.character(w$cluster)
+  features <- unique(as.character(w$feature))
+  tree_dist <- ape::cophenetic.phylo(main_ph)
+  tree_dist <- tree_dist[order(rownames(tree_dist)),
+                         order(rownames(tree_dist))]
+
+  weighted_dist <- matrix(data = 0,
+                          nrow = length(features),
+                          ncol = length(features))
+  rownames(weighted_dist) <- features
+  colnames(weighted_dist) <- features
+
+  for(i in 1:length(features)) {
+    for(j in 1:length(features)) {
+      w_i <- w[which(w$feature == features[i]), ]
+      w_j <- w[which(w$feature == features[j]), ]
+      w_i <- w_i[order(w_i$cluster), ]
+      w_j <- w_j[order(w_j$cluster), ]
+
+      w_d <- abs(w_i$prob_feature-w_j$prob_feature)
+      names(w_d) <- w_i$cluster
+
+      d <- 0
+      for(k1 in 1:(length(w_d)-1)) {
+        for(k2 in (k1+1):length(w_d)) {
+          p <- min(max(w_d[k1], w_d[k2]), w_d[k1], w_d[k2])
+          # p <- max(w_d[k1], w_d[k2])
+          d <- d+(p*tree_dist[names(w_d)[k1], names(w_d)[k2]])
+
+        }
+      }
+      weighted_dist[features[i], features[j]] <- d
+    }
+  }
+
+
+  # build hclust
+  # hc_dist <- stats::dist(x = weighted_dist, method = "euclidean")
+  hc_dist <- stats::as.dist(m = weighted_dist)
+  hc <- stats::hclust(d = hc_dist, method = "average")
+  # hc <- stats::hclust(d = hc_dist, method = "single")
   hc <- ape::as.phylo(x = hc)
 
   # build ggtree

@@ -15,10 +15,13 @@ get_k <- function(B = 20,
                   cores = 1,
                   mini_output = F,
                   approx_silhouette = T,
-                  kmeans_algorithm = "MacQueen") {
+                  kmeans_algorithm = "MacQueen",
+                  B_gap = 5) {
+
 
   # check input param
   check_input <- function(B,
+                          B_gap,
                           cv_prop,
                           ks,
                           x,
@@ -43,6 +46,20 @@ get_k <- function(B = 20,
     }
     if(length(B)!=1) {
       stop("B must be a positive integer")
+    }
+    if(B<0) {
+      stop("B must be a positive integer")
+    }
+
+    # check B_gap
+    if(is.numeric(B_gap)==F) {
+      stop("B_gap must be a positive integer")
+    }
+    if(length(B_gap)!=1) {
+      stop("B_gap must be a positive integer")
+    }
+    if(B_gap<0) {
+      stop("B_gap must be a positive integer")
     }
 
     # check ks
@@ -136,25 +153,16 @@ get_k <- function(B = 20,
   # compute approximate average silhouette
   get_avg_sil <- function(km,
                           df,
-                          cv_prop,
+                          df_dist,
                           approx_silhouette) {
 
-    if(cv_prop < 1) {
-      js <- base::sample(x = 1:nrow(df),
-                         size = base::ceiling(nrow(df)*cv_prop),
-                         replace = F) # replace = T => silhouette increases monotonically
-    } else {
-      js <- 1:nrow(df)
-    }
-
-    cs <- km$cluster[js]
+    cs <- km$cluster
     if(base::length(unique(cs))==1) {
       return(NA)
     }
 
     if(approx_silhouette == F) {
-      ss <- cluster::silhouette(
-        x = cs, stats::dist(x = df[js,], method = "euclidean"))
+      ss <- cluster::silhouette(x = cs, dist = df_dist)
       if(length(ss)==1 || is.na(ss)) {
         return(NA)
       }
@@ -170,29 +178,23 @@ get_k <- function(B = 20,
   get_gap <- function (km,
                        x,
                        d.power = 1,
-                       B = 100,
-                       cv_prop = 1,
+                       B_gap,
+                       n_start,
+                       iter_max,
                        spaceH0 = "original",
                        kmeans_algorithm) {
 
-    if(cv_prop < 1) {
-      cs <- km$cluster
-      js <- base::sample(x = 1:nrow(x),
-                         size = ceiling(nrow(x)*cv_prop),
-                         replace = F) # ) # in accordance with silhouette
-      x <- x[js, ]
-      cs <- cs[js]
-    } else {
-      cs <- km$cluster
-    }
-
+    cs <- km$cluster
     n <- nrow(x)
     ii <- seq_len(n)
     kk <- length(unique(cs))
 
     W.k <- function(X, kk) {
-      clus <- kmeans(x = X, centers = kk,
-                     algorithm = kmeans_algorithm)$cluster
+      clus <- stats::kmeans(x = X,
+                            centers = kk,
+                            algorithm = kmeans_algorithm,
+                            iter.max = iter_max,
+                            nstart = n_start)$cluster
       0.5 * sum(vapply(split(ii, clus), function(I) {
         xs <- X[I, , drop = FALSE]
         sum(dist(xs)^d.power/nrow(xs))
@@ -214,15 +216,15 @@ get_k <- function(B = 20,
     xs <- scale(x, center = TRUE, scale = FALSE)
     m.x <- rep(attr(xs, "scaled:center"), each = n)
     rng.x1 <- apply(xs, 2L, base::range)
-    logWks <- matrix(0, B, 1)
-    for (b in 1:B) {
+    logWks <- matrix(0, B_gap, 1)
+    for (b in 1:B_gap) {
       z1 <- apply(rng.x1, 2, function(M, nn) runif(nn, min = M[1],
                                                    max = M[2]), nn = n)
       z <- z1 + m.x
       logWks[b, 1] <- log(W.k(z, kk = kk))
     }
     E.logW <- colMeans(logWks)
-    SE.sim <- sqrt((1 + 1/B) * apply(logWks, 2, stats::var))
+    SE.sim <- sqrt((1 + 1/B_gap) * apply(logWks, 2, stats::var))
     return(list(gap = E.logW - logW,
                 SE.sim = SE.sim,
                 logW = logW,
@@ -235,6 +237,7 @@ get_k <- function(B = 20,
 
   # check input parameters
   check_input(B = B,
+              B_gap = B_gap,
               cv_prop = cv_prop,
               ks = ks,
               x = x,
@@ -250,17 +253,24 @@ get_k <- function(B = 20,
   for(b in 1:B) {
     cat("boot:", b, " : ")
 
+
+    # draw sample of cells
+    js <- base::sample(x = 1:nrow(x),
+                       size = base::ceiling(nrow(x)*cv_prop),
+                       replace = F)
+
     # clustering
     cat("1) clustering, ")
     kmeans_obj <- parallel::mclapply(X = ks,
                                      FUN = stats::kmeans,
-                                     x = x,
+                                     x = x[js, ],
                                      nstart = n_start,
                                      iter.max = iter_max,
                                      mc.cores = cores,
                                      algorithm = kmeans_algorithm)
     base::names(kmeans_obj) <- ks
     boot_obj[[b]] <- kmeans_obj
+
 
 
     # extract WSS
@@ -271,31 +281,40 @@ get_k <- function(B = 20,
 
     # compute silhouette
     cat("2) silhouette, ")
+
+    df_dist <- NA
+    if(approx_silhouette==F) {
+      df_dist <-stats::dist(x = x[js,], method = "euclidean")
+    }
+
     sil_kmeans <- parallel::mclapply(X = kmeans_obj,
                                      FUN = get_avg_sil,
-                                     df = x,
+                                     df = x[js, ],
+                                     df_dist = df_dist,
                                      mc.cores = cores,
                                      mc.cleanup = T,
-                                     cv_prop = cv_prop,
                                      approx_silhouette = approx_silhouette)
+    rm(df_dist);gc()
 
 
     cat("3) gap-stat, ")
     gap_stats <- parallel::mclapply(X = kmeans_obj,
                                     FUN = get_gap,
-                                    x = x,
-                                    B = 5,
+                                    x = x[js, ],
+                                    B_gap = B_gap,
                                     d.power = 1,
-                                    cv_prop = cv_prop,
                                     mc.cores = cores,
                                     mc.cleanup = T,
+                                    n_start = n_start,
+                                    iter_max = iter_max,
                                     kmeans_algorithm = kmeans_algorithm)
     # within sum of squares
     cat("4) WSS. \n")
     boot_obj[[b]] <- list(obj = kmeans_obj,
                           wss = wss_data,
                           sil = sil_kmeans,
-                          gap = gap_stats)
+                          gap = gap_stats,
+                          cell_i = js)
 
   }
   base::names(boot_obj) <- 1:B
@@ -328,7 +347,6 @@ get_k <- function(B = 20,
   sil_stats <- do.call(rbind, sil_stats)
   gap_stats <- do.call(rbind, gap_stats)
   wss_stats <- do.call(rbind, wss_stats)
-
 
   # compute gap-stat summary from B values for each matrix
   gap_stats_summary <- base::merge(
@@ -635,7 +653,8 @@ get_bubbletree <- function(x,
                     round_digits = round_digits,
                     show_branch_support = show_branch_support,
                     show_simple_count = show_simple_count,
-                    kmeans_algorithm = kmeans_algorithm)
+                    kmeans_algorithm = kmeans_algorithm,
+                    update_iteration = 0)
 
 
   return(base::structure(class = "bubbletree",
@@ -657,14 +676,14 @@ get_bubbletree <- function(x,
 #'
 update_bubbletree <- function(btd,
                               updated_bubbles,
-                              ks,
+                              k,
                               cores = 1,
                               verbose = F) {
 
   # check input param
   check_input <- function(btd,
                           updated_bubbles,
-                          ks,
+                          k,
                           cores = 1,
                           verbose = F) {
 
@@ -680,25 +699,23 @@ update_bubbletree <- function(btd,
       stop("no clustering results in bubbletree")
     }
 
-    if(is.vector(ks)==F & length(ks)==0) {
-      stop("ks should be a vector of positive integers")
+    # check k
+    if(is.numeric(k)==F) {
+      stop("k must be a positive integer")
     }
-    if(any(ks<=0)) {
-      stop("ks should be a vector of positive integers")
+    if(length(k)!=1) {
+      stop("k must be a positive integer")
     }
-    if(any(ks<=0)) {
-      stop("ks should be a vector of positive integers")
+    if(k<=0) {
+      stop("k must be a positive integer")
     }
 
 
     if(is.vector(updated_bubbles)==F & length(updated_bubbles)==0) {
       stop("updated_bubbles should be a vector of positive integers")
     }
-    if(length(updated_bubbles) != length(ks)) {
-      stop("ks and updated_bubbles should have the same length")
-    }
-    if(any(ks<=0)) {
-      stop("ks should be a vector of positive integers")
+    if(length(updated_bubbles) >= k) {
+      stop("k must be larger than the number of updated_bubbles")
     }
 
 
@@ -742,19 +759,18 @@ update_bubbletree <- function(btd,
     }
   }
 
-  update_bubble <- function(A,
-                            bubble,
-                            k,
-                            n_start,
-                            iter_max,
-                            kmeans_algorithm) {
+  update_bubbles <- function(A,
+                             k,
+                             n_start,
+                             iter_max,
+                             kmeans_algorithm) {
 
     # perform k-means clustering
     km <- stats::kmeans(x = A,
                         centers = k,
                         nstart = n_start,
                         iter.max = iter_max,
-                        kmeans_algorithm = kmeans_algorithm)
+                        algorithm = kmeans_algorithm)
 
     return(km)
 
@@ -772,6 +788,7 @@ update_bubbletree <- function(btd,
   show_simple_count <- btd$input_par$show_simple_count
   seed <- btd$input_par$seed
   kmeans_algorithm <- btd$input_par$kmeans_algorithm
+  update_iteration <- btd$input_par$update_iteration
 
 
   # set seed for reproducibility
@@ -782,29 +799,30 @@ update_bubbletree <- function(btd,
   # check input
   check_input(btd = btd,
               updated_bubbles = updated_bubbles,
-              ks = ks,
+              k = k,
               cores = cores,
               verbose = verbose)
 
 
   # loop around updated_bubbles
-  u_kms <- vector(mode = "list", length = length(updated_bubbles))
-  for(i in 1:length(updated_bubbles)) {
-    cat("Updating bubble:", updated_bubbles[i], "\n")
-    j <- which(btd$cluster == updated_bubbles[i])
+  cat("Updating bubble ... \n")
+  j <- which(btd$cluster %in% updated_bubbles)
 
-    # run update
-    u_kms[[i]] <- update_bubble(A = A[j,],
-                                bubble = updated_bubbles[i],
-                                k = ks[i],
-                                n_start = n_start,
-                                iter_max = iter_max,
-                                kmeans_algorithm = kmeans_algorithm)
+  # run update
+  u_kms <- update_bubbles(A = A[j,],
+                          k = k,
+                          n_start = n_start,
+                          iter_max = iter_max,
+                          kmeans_algorithm = kmeans_algorithm)
 
-    # update cluster naming
-    btd$cluster[j] <- paste0(updated_bubbles[i], '_',
-                             u_kms[[i]]$cluster)
-  }
+
+  # update -> increase iteration
+  update_iteration <- update_iteration + 1
+
+  # update cluster naming
+  btd$cluster[j] <- paste0(update_iteration, '_',
+                           c(base::LETTERS,
+                             base::letters)[u_kms$cluster])
 
   cat("Updating dendrogram ... \n")
   pair_dist <- get_dist(B = B,
@@ -835,6 +853,8 @@ update_bubbletree <- function(btd,
                       show_branch_support = show_branch_support,
                       show_simple_count = show_simple_count)
 
+  # update iteration
+  btd$input_par$update_iteration <- update_iteration
 
 
   return(base::structure(class = "bubbletree",
@@ -1160,6 +1180,8 @@ get_gini <- function(labels, clusters) {
 }
 
 
+
+
 #'
 #' @exportMethod
 #'
@@ -1216,8 +1238,9 @@ get_gini_k <- function(labels, get_k_obj) {
   counter <- 1
   for(i in 1:B) {
     for(j in 1:length(ks)) {
+      cell_id <- get_k_obj$boot_obj[[i]]$cell_i
       gini <- get_gini(clusters = get_k_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
-                       labels = labels)
+                       labels = labels[cell_id])
 
       # collect total gini and cluster specific gini scores
       # total
