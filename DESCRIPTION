@@ -1,6 +1,6 @@
 Package: scBubbletree
 Type: Package
-Title: Clustering and visualization of scRNA-seq data
+Title: Transparent and quantiative exploration of scRNA-seq data
 Version: 0.1.0
 Author: Simo Kitanovski
 Maintainer: Simo Kitanovski <simo.kitanovski@uni-due.de>
@@ -16,7 +16,6 @@ Depends:
     reshape2 (>= 1.4.4),
     parallel (>= 4.1.2),
     ape (>= 5.5),
-    bluster (>= 1.4.0),
     scales (>= 1.1)
 Encoding: UTF-8
 LazyData: true
