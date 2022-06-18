@@ -19,7 +19,7 @@ get_dist <- function(B = 20,
                      c,
                      N_eff,
                      cores,
-                     verbose = F) {
+                     verbose) {
 
   # get distances between clusters
   pair_dist <- parallel::mclapply(X = 1:B,

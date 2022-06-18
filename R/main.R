@@ -14,7 +14,6 @@ get_k <- function(B = 20,
                   iter_max = 50,
                   cores = 1,
                   mini_output = F,
-                  approx_silhouette = T,
                   kmeans_algorithm = "MacQueen",
                   B_gap = 5) {
 
@@ -29,7 +28,6 @@ get_k <- function(B = 20,
                           iter_max,
                           cores,
                           mini_output,
-                          approx_silhouette,
                           kmeans_algorithm) {
 
     # check x
@@ -106,13 +104,6 @@ get_k <- function(B = 20,
       stop("mini_output is a logical parameter (TRUE or FALSE)")
     }
 
-    # approx_silhouette
-    if(is.logical(approx_silhouette)==F) {
-      stop("approx_silhouette is a logical parameter (TRUE or FALSE)")
-    }
-    if(length(approx_silhouette)!=1) {
-      stop("approx_silhouette is a logical parameter (TRUE or FALSE)")
-    }
 
     # n_start
     if(is.numeric(n_start)==F) {
@@ -149,29 +140,6 @@ get_k <- function(B = 20,
   }
 
 
-
-  # compute approximate average silhouette
-  get_avg_sil <- function(km,
-                          df,
-                          df_dist,
-                          approx_silhouette) {
-
-    cs <- km$cluster
-    if(base::length(unique(cs))==1) {
-      return(NA)
-    }
-
-    if(approx_silhouette == F) {
-      ss <- cluster::silhouette(x = cs, dist = df_dist)
-      if(length(ss)==1 || is.na(ss)) {
-        return(NA)
-      }
-      return(mean(ss[, 3]))
-    } else {
-      ss <- bluster::approxSilhouette(x = df, clusters = km$cluster)
-      return(mean(ss$width))
-    }
-  }
 
 
   # compute gap statistics
@@ -245,7 +213,6 @@ get_k <- function(B = 20,
               iter_max = iter_max,
               cores = cores,
               mini_output = mini_output,
-              approx_silhouette = approx_silhouette,
               kmeans_algorithm = kmeans_algorithm)
 
 
@@ -279,25 +246,7 @@ get_k <- function(B = 20,
     })
 
 
-    # compute silhouette
-    cat("2) silhouette, ")
-
-    df_dist <- NA
-    if(approx_silhouette==F) {
-      df_dist <-stats::dist(x = x[js,], method = "euclidean")
-    }
-
-    sil_kmeans <- parallel::mclapply(X = kmeans_obj,
-                                     FUN = get_avg_sil,
-                                     df = x[js, ],
-                                     df_dist = df_dist,
-                                     mc.cores = cores,
-                                     mc.cleanup = T,
-                                     approx_silhouette = approx_silhouette)
-    rm(df_dist);gc()
-
-
-    cat("3) gap-stat, ")
+    cat("2) gap-stat, ")
     gap_stats <- parallel::mclapply(X = kmeans_obj,
                                     FUN = get_gap,
                                     x = x[js, ],
@@ -309,10 +258,9 @@ get_k <- function(B = 20,
                                     iter_max = iter_max,
                                     kmeans_algorithm = kmeans_algorithm)
     # within sum of squares
-    cat("4) WSS. \n")
+    cat("3) WSS. \n")
     boot_obj[[b]] <- list(obj = kmeans_obj,
                           wss = wss_data,
-                          sil = sil_kmeans,
                           gap = gap_stats,
                           cell_i = js)
 
@@ -322,29 +270,24 @@ get_k <- function(B = 20,
 
 
   # collect clustering info data
-  sil_stats <- vector(mode = "list", length = length(boot_obj))
   gap_stats <- vector(mode = "list", length = length(boot_obj))
   wss_stats <- vector(mode = "list", length = length(boot_obj))
 
   for(i in 1:length(boot_obj)) {
-    sil_vec <- numeric(length = length(ks))
     gap_vec <- numeric(length = length(ks))
     wss_vec <- numeric(length = length(ks))
 
     for(j in 1:length(ks)) {
-      sil_vec[j] <- boot_obj[[i]]$sil[[j]]
       gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
       wss_vec[j] <- boot_obj[[i]]$wss[[j]]
     }
 
-    sil_stats[[i]] <- data.frame(boot = i, sil = sil_vec, k = ks)
     gap_stats[[i]] <- data.frame(boot = i, gap = gap_vec, k = ks)
     wss_stats[[i]] <- data.frame(boot = i, wss = wss_vec, k = ks)
 
   }
 
   # collect DFs
-  sil_stats <- do.call(rbind, sil_stats)
   gap_stats <- do.call(rbind, gap_stats)
   wss_stats <- do.call(rbind, wss_stats)
 
@@ -357,15 +300,6 @@ get_k <- function(B = 20,
   gap_stats_summary$L95 <- gap_stats_summary$gap_mean-gap_stats_summary$gap_SE*1.96
   gap_stats_summary$H95 <- gap_stats_summary$gap_mean+gap_stats_summary$gap_SE*1.96
 
-
-  # compute silhouette summary from B values for each matrix
-  sil_stats_summary <- base::merge(
-    x = stats::aggregate(sil~k, data = sil_stats, FUN = base::mean),
-    y = stats::aggregate(sil~k, data = sil_stats, FUN = get_se),
-    by = "k")
-  colnames(sil_stats_summary) <- c("k", "sil_mean", "sil_SE")
-  sil_stats_summary$L95 <- sil_stats_summary$sil_mean-sil_stats_summary$sil_SE*1.96
-  sil_stats_summary$H95 <- sil_stats_summary$sil_mean+sil_stats_summary$sil_SE*1.96
 
   # compute wss summary from B values for each matrix
   wss_stats_summary <- base::merge(
@@ -380,10 +314,8 @@ get_k <- function(B = 20,
     return(base::structure(class = "boot_k",
                            list(boot_obj = NA,
                                 wss_stats_summary = wss_stats_summary,
-                                sil_stats_summary = sil_stats_summary,
                                 gap_stats_summary = gap_stats_summary,
                                 wss_stats = wss_stats,
-                                sil_stats = sil_stats,
                                 gap_stats = gap_stats)))
 
   }
@@ -391,10 +323,8 @@ get_k <- function(B = 20,
   return(base::structure(class = "boot_k",
                          list(boot_obj = boot_obj,
                               wss_stats_summary = wss_stats_summary,
-                              sil_stats_summary = sil_stats_summary,
                               gap_stats_summary = gap_stats_summary,
                               wss_stats = wss_stats,
-                              sil_stats = sil_stats,
                               gap_stats = gap_stats)))
 }
 
@@ -412,7 +342,6 @@ get_bubbletree <- function(x,
                            N_eff = 100,
                            cores = 1,
                            seed = NA,
-                           verbose = F,
                            round_digits = 2,
                            show_branch_support = T,
                            show_simple_count = F,
@@ -427,7 +356,6 @@ get_bubbletree <- function(x,
                           N_eff,
                           cores,
                           seed,
-                          verbose,
                           round_digits,
                           show_branch_support,
                           show_simple_count,
@@ -526,15 +454,6 @@ get_bubbletree <- function(x,
     }
 
 
-    # check verbose
-    if(is.logical(verbose)==F) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
-    }
-    if(length(verbose)!=1) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
-    }
-
-
     # check round_digits
     if(is.numeric(round_digits)==F) {
       stop("round_digits must be a positive integer")
@@ -596,7 +515,6 @@ get_bubbletree <- function(x,
               N_eff = N_eff,
               cores = cores,
               seed = seed,
-              verbose = verbose,
               round_digits = round_digits,
               show_branch_support = show_branch_support,
               show_simple_count = show_simple_count,
@@ -618,8 +536,7 @@ get_bubbletree <- function(x,
                         m = x,
                         c = km$cluster,
                         N_eff = N_eff,
-                        cores = cores,
-                        verbose = verbose)
+                        cores = cores)
 
 
 
