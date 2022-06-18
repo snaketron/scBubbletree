@@ -11,7 +11,7 @@ License: file LICENSE
 Depends: 
     methods,
     R (>= 3.6.0),
-    ggplot2 (>= 3.3.5),
+    ggplot2 (>= 3.3.3),
     ggtree (>= 3.2.0),
     reshape2 (>= 1.4.4),
     parallel (>= 4.1.2),
