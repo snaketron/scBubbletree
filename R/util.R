@@ -18,8 +18,7 @@ get_dist <- function(B = 20,
                      m,
                      c,
                      N_eff,
-                     cores,
-                     verbose) {
+                     cores) {
 
   # get distances between clusters
   pair_dist <- parallel::mclapply(X = 1:B,
@@ -27,8 +26,7 @@ get_dist <- function(B = 20,
                                   m = m,
                                   c = c,
                                   N_eff = N_eff,
-                                  mc.cores = cores,
-                                  verbose = verbose)
+                                  mc.cores = cores)
   pair_dist <- base::do.call(rbind, pair_dist)
 
   hc_pair_dist <- get_hc_dist(pair_dist = pair_dist)
@@ -196,7 +194,7 @@ get_dendrogram <- function(ph,
 
 
 # Used in get_dist (util.R)
-get_pair_dist <- function(x, m, c, N_eff, verbose) {
+get_pair_dist <- function(x, m, c, N_eff) {
 
   get_euc <- function(x, y) {
     for(i in 1:ncol(y)) {
@@ -209,13 +207,8 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
     return(y)
   }
 
-  if(verbose) {
-    cat("B:", x, "\n")
-  }
-
   cs <- unique(c)
   stats <- c()
-  verbose_counter <- 0
   len_cs <- length(cs)
 
   for(i in 1:(len_cs-1)) {
@@ -276,13 +269,6 @@ get_pair_dist <- function(x, m, c, N_eff, verbose) {
                                        c_j = cs[i],
                                        B = x,
                                        M = mean(w)))
-
-      if(verbose) {
-        verbose_counter <- verbose_counter + 1
-        cat(paste0("Generating dendrogram:",
-                   base::round(x = verbose_counter/((len_cs*(len_cs-1))/2)*100,
-                               digits = 0), "% \n"))
-      }
     }
   }
 
