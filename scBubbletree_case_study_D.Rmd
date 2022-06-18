@@ -1,0 +1,451 @@
+---
+title: "Case study B: Exploring scRNA-seq data with scBubbletree"
+author: "SK"
+output: 
+  rmarkdown::html_document:
+    toc: true
+    toc_depth: 1
+vignette: >
+  %\VignetteIndexEntry{}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+
+```{r, include = FALSE}
+source(file = "~/Rutil/Init_Rpack.R")
+```
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = F,
+                      comment = F, 
+                      warning = F, 
+                      message = F)
+```
+
+
+```{r, echo = T, results='hide'}
+source(file = "../Rutil/Graphics.R")
+
+source(file = "../scBubbletree/R/util.R")
+source(file = "../scBubbletree/R/main.R")
+source(file = "../scBubbletree/R/annotation.R")
+```
+
+
+```{r, echo = T, results='hide'}
+# library(cluster, "/usr/local/lib/R/site-library")
+library(Seurat, lib.loc = lib.loc)
+library(ggplot2, lib.loc = lib.loc)
+library(reshape2, lib.loc = lib.loc)
+library(parallel, lib.loc = lib.loc)
+library(ape, "/usr/local/lib/R/site-library")
+library(ggtree, lib.loc = lib.loc)
+library(org.Hs.eg.db, lib.loc = lib.loc)
+library(SummarizedExperiment, lib.loc = lib.loc)
+library(ggrepel, lib.loc = lib.loc)
+```
+
+
+```{r}
+redo_case_b <- F
+```
+
+
+
+
+```{r}
+d <- get(load(file = "raw_data/Hao_2021/Hao_2021.RData"))
+p <- subset(x = d, (donor == "P3" | donor == "P2" | donor == "P1") & time == "0")
+p@meta.data$i <- 1:nrow(p@meta.data)
+is <- sample(x = 1:nrow(p@meta.data), size = 6000, replace = F)
+p <- subset(x = p, (i %in% is))
+p@assays$ADT <- NULL
+d <- p
+save(d, file = "case_study_D/d.RData")
+```
+
+
+
+Lets look at the number of cells per donor at a given sampling time:
+
+```{r, echo = T}
+table(d@meta.data$time, d@meta.data$donor)
+```
+
+Also, we can show the number of cells per donor and predicted cell type at the 
+lowest resolution (*l1*):
+
+```{r, echo=T}
+table(d@meta.data$donor, d@meta.data$celltype.l1)
+```
+
+How many distinct *cell types* are there at each resolution?
+
+```{r, echo=T}
+length(unique(d@meta.data$celltype.l1))
+length(unique(d@meta.data$celltype.l2))
+length(unique(d@meta.data$celltype.l3))
+```
+
+
+
+Next we will show the 2D UMAP. Cells are color coded according to their 
+cell type predictions resolution level *l1* (left UMAP) and *l2* (right 
+UMAP).
+
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+
+umap_centers <- merge(x = aggregate(UMAP_1~celltype.l1, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~celltype.l1, data = umap_data, FUN = median),
+                      by = "celltype.l1")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = celltype.l1), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = celltype.l1), 
+            min.segment.length = 0, size = 2.5)+
+  theme(legend.position = "none")
+
+g_umap
+```
+
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+umap_data <- cbind(d@meta.data, d@reductions$umap@cell.embeddings)
+umap_data$closest_cluster <- NA
+
+umap_centers <- merge(x = aggregate(UMAP_1~celltype.l2, data = umap_data, FUN = median),
+                      y = aggregate(UMAP_2~celltype.l2, data = umap_data, FUN = median),
+                      by = "celltype.l2")
+
+g_umap <- ggplot()+
+  geom_point(data = umap_data,
+             aes(x = UMAP_1, y = UMAP_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = umap_centers,
+            aes(x = UMAP_1, y = UMAP_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2.5)+
+  theme(legend.position = "none")
+
+g_umap
+```
+
+
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+tsne_data <- cbind(d@meta.data, d@reductions$tsne@cell.embeddings)
+tsne_data$closest_cluster <- NA
+
+tsne_centers <- merge(x = aggregate(tSNE_1~celltype.l2, data = tsne_data, FUN = median),
+                      y = aggregate(tSNE_2~celltype.l2, data = tsne_data, FUN = median),
+                      by = "celltype.l2")
+
+g_tsne <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = tSNE_1, y = tSNE_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = tSNE_1, y = tSNE_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2.5)+
+  theme(legend.position = "none")
+
+g_tsne
+```
+
+```{r, fig.width=6, fig.height=4, fig.align='center', echo=T}
+tsne_data <- cbind(d@meta.data, d@reductions$tsne@cell.embeddings)
+tsne_data$closest_cluster <- NA
+
+tsne_centers <- merge(x = aggregate(tSNE_1~celltype.l2, data = tsne_data, FUN = median),
+                      y = aggregate(tSNE_2~celltype.l2, data = tsne_data, FUN = median),
+                      by = "celltype.l2")
+
+g_umap <- ggplot()+
+  geom_point(data = tsne_data,
+             aes(x = tSNE_1, y = tSNE_2, col = celltype.l2), size = 0.25)+
+  geom_text_repel(data = tsne_centers,
+            aes(x = tSNE_1, y = tSNE_2, label = celltype.l2), 
+            min.segment.length = 0, size = 2.5)+
+  theme(legend.position = "none")
+
+g_umap
+```
+
+
+
+
+
+```{r, fig.width=4, fig.height=3}
+var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
+
+g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
+                                            PC = 1:length(var_explained)))+
+  geom_point(aes(y = var_explained, x = PC), size = 1)+
+  ylab(label = "Variance explained [%]")
+
+g_var_explained
+```
+
+
+
+```{r, echo = T}
+# This is the main input of scBubbletree 
+# -> matrix A with n=cells, f=features (from PCA)
+A <- d@reductions$pca@cell.embeddings[, 1:15]
+save(A, file = "case_study_D/A.RData")
+```
+
+
+```{r, echo = T}
+# meta data
+meta <- d@meta.data
+save(meta, file = "case_study_D/meta.RData")
+```
+
+
+
+```{r, echo = T}
+# quantitative features (gene expressions of marker genes) to be used later on:
+# * GNLY, NKG7:	NK cells
+# * IL7R:	CD4 T cells
+# * CD8A:	CD8 T cells
+# * MS4A1:	B cells
+# * CD14, LYZ:	CD14+ Monocytes
+# * FCGR3A, MS4A7:	FCGR3A+ Monocytes
+# * FCER1A, CST3:	Dendritic Cells
+# * PPBP:	Megakaryocytes
+markers <- as.matrix(t(d@assays$SCT@data[
+  rownames(d@assays$SCT@data) %in% 
+    c("IL7R", 
+      "CD14", "LYZ", 
+      "MS4A1", 
+      "CD8A", 
+      "GNLY", "NKG7",
+      "FCGR3A", "MS4A7",
+      "FCER1A", "CST3",
+      "PPBP"), ]))
+save(markers, file = "case_study_D/markers.RData")
+```
+
+
+```{r}
+# cleanup
+rm(d)
+gc()
+```
+
+
+
+```{r}
+A <- get(load(file = "case_study_D/A.RData"))
+meta <- get(load(file = "case_study_D/meta.RData"))
+markers <- get(load(file = "case_study_D/markers.RData"))
+```
+
+
+
+
+```{r, fig.width=4, fig.height=3, echo = T}
+
+b <- get_k(B = 5,
+           cv_prop = 0.5,
+           ks = seq(from = 1, to = 40, by = 3),
+           x = A,
+           cores = 4,
+           mini_output = F,
+           kmeans_algorithm = "MacQueen")
+
+```
+
+
+
+```{r}
+g0 <- ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "Gap")|
+ggplot(data = b$wss_stats_summary)+
+  geom_point(aes(x = k, y = wss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "WCSS")+
+  scale_y_log10()+
+  annotation_logticks(base = 10, sides = "l")
+```
+
+
+```{r, fig.width=6, fig.height=3, fig.align='center'}
+g0
+```
+
+
+
+
+
+
+
+
+## Lets try `k=18`
+
+
+```{r, echo=T}
+
+k18 <- get_bubbletree(x = A,
+                        k = 18,
+                        seed = 954,
+                        cores = 4,
+                        B = 100,
+                        N_eff = 100,
+                        round_digits = 1,
+                        show_branch_support = T)
+
+```
+
+
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+c1 <- meta$celltype.l1
+c2 <- gsub(pattern = "Proliferating", replacement = 'prolif.', meta$celltype.l2)
+c2 <- gsub(pattern = "CD56bright", replacement = 'CD56', x = c2)
+donor <- meta$donor
+```
+
+
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+w2 <- get_cat_feature_tiles(d = k18,
+                            a = donor,
+                            feature_composition = T,
+                            round_digits = 1,
+                            show_hclust = F,
+                            tile_text_size = 2.75)
+```
+
+
+```{r, fig.width=8, fig.height=5}
+k18$tree+w2$w
+```
+
+
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+w0_1 <- get_cat_feature_tiles(d = k18,
+                            a = c1, # res = 1
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2.75)
+
+
+w0_2 <- get_cat_feature_tiles(d = k18,
+                            a = c1, 
+                            feature_composition = F,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2.75)
+```
+
+
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
+w1_1 <- get_cat_feature_tiles(d = k18,
+                            a = c2,
+                            feature_composition = T,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2.25)
+
+w1_2 <- get_cat_feature_tiles(d = k18,
+                            a = c2,
+                            feature_composition = F,
+                            round_digits = 0,
+                            show_hclust = F,
+                            tile_text_size = 2.25)
+```
+
+
+
+```{r, fig.width=8, fig.height=5}
+k18$tree+w0_2$w+patchwork::plot_layout(widths = c(1, 3))
+```
+
+
+
+```{r, fig.width=8, fig.height=5}
+k18$tree+w1_2$w+patchwork::plot_layout(widths = c(1, 3))
+```
+
+
+
+
+
+```{r, echo = F, results='hide', fig.width=7}
+# This function build the nummeric annotations plot
+a <- data.frame(mt_prop = meta$mt,
+                count_RNA = meta$nCount_RNA,
+                count_genes = meta$nFeature_RNA)
+
+sup_w <- (get_num_feature_violins(d = k18,
+                                 as = data.frame(MT = a$mt_prop),
+                                 plot_title = "",
+                                 show_cells = F)$w|
+            get_num_feature_violins(d = k18,
+                                 as = data.frame(count_RNA = a$count_RNA/1000),
+                                 plot_title = "",
+                                 show_cells = F)$w|
+            get_num_feature_violins(d = k18,
+                                 as = data.frame(count_genes = a$count_genes),
+                                 plot_title = "",
+                                 show_cells = F)$w
+          )
+
+
+sup_w
+```
+
+
+
+## Quantiative features
+
+Gene expression annotations can also be integrated to better explain the 
+bubbles and the tree structure. Lets visualize the mean gene expression of some 
+marker genes in the bubbles:
+
+  * GNLY, NKG7:	*NK cells*
+  * IL7R:	*CD4 T cells*
+  * CD8A:	*CD8 T cells*
+  * MS4A1:	*B cells*
+  * CD14, LYZ:	*CD14+ Monocytes*
+  * FCGR3A, MS4A7:	*FCGR3A+ Monocytes*
+  * FCER1A, CST3:	*Dendritic Cells*
+  * PPBP:	*Megakaryocytes*
+
+
+```{r, fig.width=6, fig.height=6, fig.align='center', echo=T}
+# This function build the nummeric annotations plot
+w3 <- get_num_feature_tiles(d = k18,
+                            as = markers,
+                            plot_title = "",
+                            round_digits = 1,
+                            tile_text_size = 2.5)
+
+# Plot
+(k18$tree|w3$w)+patchwork::plot_layout(widths = c(2, 3))
+```
+
+
+```{r, fig.width=8, fig.height=9, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k18,
+                              as = markers,
+                              plot_title = "",
+                              scales = 'free_x',
+                              show_cells = F)
+
+
+((k18$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1)))/w4$w
+```
+
+
+
