@@ -594,15 +594,13 @@ get_bubbletree <- function(x,
 update_bubbletree <- function(btd,
                               updated_bubbles,
                               k,
-                              cores = 1,
-                              verbose = F) {
+                              cores = 1) {
 
   # check input param
   check_input <- function(btd,
                           updated_bubbles,
                           k,
-                          cores = 1,
-                          verbose = F) {
+                          cores = 1) {
 
     # check btd
     if(is.na(btd)||is.null(btd)||is.na(class(btd))||
@@ -652,15 +650,6 @@ update_bubbletree <- function(btd,
     }
     if(cores<=0) {
       stop("cores must be a positive integer")
-    }
-
-
-    # check verbose
-    if(is.logical(verbose)==F) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
-    }
-    if(length(verbose)!=1) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
     }
 
 
@@ -717,8 +706,7 @@ update_bubbletree <- function(btd,
   check_input(btd = btd,
               updated_bubbles = updated_bubbles,
               k = k,
-              cores = cores,
-              verbose = verbose)
+              cores = cores)
 
 
   # loop around updated_bubbles
@@ -746,8 +734,7 @@ update_bubbletree <- function(btd,
                         m = A,
                         c = btd$cluster,
                         N_eff = N_eff,
-                        cores = cores,
-                        verbose = verbose)
+                        cores = cores)
 
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(data = pair_dist$pca_pair_dist,
@@ -798,7 +785,6 @@ dummy_bubbletree <- function(x,
                              N_eff = 100,
                              cores = 1,
                              seed = NA,
-                             verbose = F,
                              round_digits = 2,
                              show_branch_support = T,
                              show_simple_count = F) {
@@ -811,7 +797,6 @@ dummy_bubbletree <- function(x,
                           N_eff,
                           cores,
                           seed,
-                          verbose,
                           round_digits,
                           show_branch_support,
                           show_simple_count) {
@@ -891,14 +876,6 @@ dummy_bubbletree <- function(x,
     }
 
 
-    # check verbose
-    if(is.logical(verbose)==F) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
-    }
-    if(length(verbose)!=1) {
-      stop("verbose is a logical parameter (TRUE or FALSE)")
-    }
-
 
     # check round_digits
     if(is.numeric(round_digits)==F) {
@@ -948,7 +925,6 @@ dummy_bubbletree <- function(x,
               N_eff = N_eff,
               cores = cores,
               seed = seed,
-              verbose = verbose,
               round_digits = round_digits,
               show_branch_support = show_branch_support,
               show_simple_count = show_simple_count)
@@ -960,8 +936,7 @@ dummy_bubbletree <- function(x,
                         m = x,
                         c = cs,
                         N_eff = N_eff,
-                        cores = cores,
-                        verbose = verbose)
+                        cores = cores)
 
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(data = pair_dist$pca_pair_dist,
