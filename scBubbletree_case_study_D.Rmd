@@ -60,7 +60,7 @@ redo_case_b <- F
 d <- get(load(file = "raw_data/Hao_2021/Hao_2021.RData"))
 p <- subset(x = d, (donor == "P3" | donor == "P2" | donor == "P1") & time == "0")
 p@meta.data$i <- 1:nrow(p@meta.data)
-is <- sample(x = 1:nrow(p@meta.data), size = 6000, replace = F)
+is <- sample(x = 1:nrow(p@meta.data), size = 10000, replace = F)
 p <- subset(x = p, (i %in% is))
 p@assays$ADT <- NULL
 d <- p
@@ -206,6 +206,8 @@ save(A, file = "case_study_D/A.RData")
 ```{r, echo = T}
 # meta data
 meta <- d@meta.data
+meta <- meta[, c("nCount_RNA", "nFeature_RNA", "mt", "donor", 
+                 "celltype.l1", "celltype.l2")]
 save(meta, file = "case_study_D/meta.RData")
 ```
 
