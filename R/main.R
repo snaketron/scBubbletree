@@ -343,7 +343,6 @@ get_bubbletree <- function(x,
                            cores = 1,
                            seed = NA,
                            round_digits = 2,
-                           show_branch_support = T,
                            show_simple_count = F,
                            kmeans_algorithm = "MacQueen") {
 
@@ -357,7 +356,6 @@ get_bubbletree <- function(x,
                           cores,
                           seed,
                           round_digits,
-                          show_branch_support,
                           show_simple_count,
                           kmeans_algorithm) {
 
@@ -466,15 +464,6 @@ get_bubbletree <- function(x,
     }
 
 
-    # show_branch_support
-    if(length(show_branch_support)!=1) {
-      stop("show_branch_support is a logical parameter (TRUE or FALSE)")
-    }
-    if(is.logical(show_branch_support)==F) {
-      stop("show_branch_support is a logical parameter (TRUE or FALSE)")
-    }
-
-
     # show_simple_count
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
@@ -516,7 +505,6 @@ get_bubbletree <- function(x,
               cores = cores,
               seed = seed,
               round_digits = round_digits,
-              show_branch_support = show_branch_support,
               show_simple_count = show_simple_count,
               kmeans_algorithm = kmeans_algorithm)
 
@@ -558,7 +546,6 @@ get_bubbletree <- function(x,
   t <- get_dendrogram(ph = ph$main_ph,
                       cluster = km$cluster,
                       round_digits = round_digits,
-                      show_branch_support = show_branch_support,
                       show_simple_count = show_simple_count)
 
   # collect input parameters: can be used for automated update
@@ -568,7 +555,6 @@ get_bubbletree <- function(x,
                     B = B,
                     seed = seed,
                     round_digits = round_digits,
-                    show_branch_support = show_branch_support,
                     show_simple_count = show_simple_count,
                     kmeans_algorithm = kmeans_algorithm,
                     update_iteration = 0)
@@ -690,7 +676,6 @@ update_bubbletree <- function(btd,
   N_eff <- btd$input_par$N_eff
   B <- btd$input_par$B
   round_digits <- btd$input_par$round_digits
-  show_branch_support <- btd$input_par$show_branch_support
   show_simple_count <- btd$input_par$show_simple_count
   seed <- btd$input_par$seed
   kmeans_algorithm <- btd$input_par$kmeans_algorithm
@@ -754,7 +739,6 @@ update_bubbletree <- function(btd,
   t <- get_dendrogram(ph = ph$main_ph,
                       cluster = btd$cluster,
                       round_digits = round_digits,
-                      show_branch_support = show_branch_support,
                       show_simple_count = show_simple_count)
 
   # update iteration
@@ -786,7 +770,6 @@ dummy_bubbletree <- function(x,
                              cores = 1,
                              seed = NA,
                              round_digits = 2,
-                             show_branch_support = T,
                              show_simple_count = F) {
 
 
@@ -798,7 +781,6 @@ dummy_bubbletree <- function(x,
                           cores,
                           seed,
                           round_digits,
-                          show_branch_support,
                           show_simple_count) {
 
     # check x
@@ -889,15 +871,6 @@ dummy_bubbletree <- function(x,
     }
 
 
-    # show_branch_support
-    if(length(show_branch_support)!=1) {
-      stop("show_branch_support is a logical parameter (TRUE or FALSE)")
-    }
-    if(is.logical(show_branch_support)==F) {
-      stop("show_branch_support is a logical parameter (TRUE or FALSE)")
-    }
-
-
     # show_simple_count
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
@@ -926,7 +899,6 @@ dummy_bubbletree <- function(x,
               cores = cores,
               seed = seed,
               round_digits = round_digits,
-              show_branch_support = show_branch_support,
               show_simple_count = show_simple_count)
 
 
@@ -955,7 +927,6 @@ dummy_bubbletree <- function(x,
   t <- get_dendrogram(ph = ph$main_ph,
                       cluster = cs,
                       round_digits = round_digits,
-                      show_branch_support = show_branch_support,
                       show_simple_count = show_simple_count)
 
   # collect input parameters: can be used for automated update
@@ -966,7 +937,6 @@ dummy_bubbletree <- function(x,
                     seed = seed,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
-                    show_branch_support = show_branch_support,
                     kmeans_algorithm = NA)
 
 
