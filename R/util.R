@@ -117,7 +117,6 @@ get_node_descendents_in_phylo <- function(tree,
 get_dendrogram <- function(ph,
                            cluster,
                            round_digits,
-                           show_branch_support,
                            show_simple_count) {
 
 
@@ -157,13 +156,12 @@ get_dendrogram <- function(ph,
                   align = T)
   }
 
-  if(show_branch_support) {
-    tree_data <- tree$data
-    tree <- tree+
-      geom_nodelab(geom='text', color = "red",
-                   aes(label=label, subset=isTip==F),
-                   size = 2.8, hjust=-0.2)
-  }
+
+  tree_data <- tree$data
+  tree <- tree+
+    geom_nodelab(geom='text', color = "red",
+                 aes(label=label, subset=isTip==F),
+                 size = 2.8, hjust=-0.2)
 
   tree <- tree+
     # scale_radius
