@@ -346,7 +346,7 @@ get_num_feature_violins <- function(d,
   if(length(ws_bad)>0) {
     ws_stat <- ws_stat[ws_bad, ]
     ws_new <- ws
-    for(i in 1:nrow(ws_stats)) {
+    for(i in 1:nrow(ws_stat)) {
       ws_new <- ws_new[-which(ws_new$cluster == ws_stat$cluster&
                                 ws_new$feature == ws_stat$feature),]
     }
