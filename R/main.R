@@ -6,7 +6,7 @@
 #'
 #' @exportMethod
 #'
-get_k <- function(B = 20,
+get_k <- function(B = 10,
                   cv_prop = 1,
                   ks,
                   x,
@@ -336,8 +336,8 @@ get_k <- function(B = 20,
 #'
 get_bubbletree <- function(x,
                            k,
-                           n_start = 100,
-                           iter_max = 50,
+                           n_start = 1000,
+                           iter_max = 300,
                            B = 100,
                            N_eff = 100,
                            cores = 1,
