@@ -326,9 +326,6 @@ get_num_feature_violins <- function(d,
     }
   }
 
-
-
-  browser()
   w <- ggplot(data = ws)+
     theme_bw(base_size = 10)+
     facet_grid(.~feature, scales = scales)+
