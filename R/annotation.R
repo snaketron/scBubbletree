@@ -327,6 +327,8 @@ get_num_feature_violins <- function(d,
   }
 
 
+
+  browser()
   w <- ggplot(data = ws)+
     theme_bw(base_size = 10)+
     facet_grid(.~feature, scales = scales)+
@@ -339,27 +341,29 @@ get_num_feature_violins <- function(d,
           legend.box.margin=margin(-10,-10,-10,-10))
 
 
-  # remove small violins n<violin_min_cells
-  ws_stat <- data.frame(table(ws$cluster, ws$feature))
-  colnames(ws_stat) <- c("cluster", "feature", "freq")
-  ws_bad <- which(ws_stat$freq < violin_min_cells)
-  if(length(ws_bad)>0) {
-    ws_stat <- ws_stat[ws_bad, ]
-    ws_new <- ws
-    for(i in 1:nrow(ws_stat)) {
-      ws_new <- ws_new[-which(ws_new$cluster == ws_stat$cluster&
-                                ws_new$feature == ws_stat$feature),]
-    }
+  if(show_cells==F) {
+    w <- w+geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
   } else {
-    ws_new <- ws
-  }
+    # remove small violins n<violin_min_cells
+    ws_stat <- data.frame(table(ws$cluster, ws$feature))
+    colnames(ws_stat) <- c("cluster", "feature", "freq")
+    ws_bad <- which(ws_stat$freq < violin_min_cells)
+    if(length(ws_bad)>0) {
+      ws_stat <- ws_stat[ws_bad, ]
+      ws_new <- ws
+      for(i in 1:nrow(ws_stat)) {
+        ws_new <- ws_new[-which(ws_new$cluster == ws_stat$cluster&
+                                  ws_new$feature == ws_stat$feature),]
+      }
+    } else {
+      ws_new <- ws
+    }
 
-  w <- w + geom_violin(data = ws_new,
-                       aes(x = cluster,
-                           y = value),
-                       fill = NA)
+    w <- w + geom_violin(data = ws_new,
+                         aes(x = cluster,
+                             y = value),
+                         fill = NA)
 
-  if(show_cells==T) {
     w<-w+geom_jitter(data = ws_new,
                      aes(x = cluster, y = value),
                      width = 0.1, height = 0,
