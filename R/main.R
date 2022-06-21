@@ -6,16 +6,16 @@
 #'
 #' @exportMethod
 #'
-get_k <- function(B = 10,
-                  cv_prop = 1,
+get_k <- function(x,
                   ks,
-                  x,
+                  B = 10,
+                  B_gap = 5,
+                  cv_prop = 1,
                   n_start = 100,
                   iter_max = 200,
-                  cores = 1,
-                  mini_output = F,
                   kmeans_algorithm = "MacQueen",
-                  B_gap = 5) {
+                  mini_output = F,
+                  cores = 1) {
 
 
   # check input param
@@ -222,9 +222,13 @@ get_k <- function(B = 10,
 
 
     # draw sample of cells
-    js <- base::sample(x = 1:nrow(x),
-                       size = base::ceiling(nrow(x)*cv_prop),
-                       replace = F)
+    if(cv_prop==1) {
+      js <- 1:nrow(x)
+    } else {
+      js <- base::sample(x = 1:nrow(x),
+                         size = base::ceiling(nrow(x)*cv_prop),
+                         replace = F)
+    }
 
     # clustering
     cat("1) clustering, ")
@@ -240,8 +244,8 @@ get_k <- function(B = 10,
 
 
 
-    # extract WSS
-    wss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
+    # extract WCSS
+    wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
       return(x$tot.withinss)
     })
 
@@ -257,10 +261,10 @@ get_k <- function(B = 10,
                                     n_start = n_start,
                                     iter_max = iter_max,
                                     kmeans_algorithm = kmeans_algorithm)
-    # within sum of squares
-    cat("3) WSS. \n")
+    # within cluster sum of squares
+    cat("3) WCSS. \n")
     boot_obj[[b]] <- list(obj = kmeans_obj,
-                          wss = wss_data,
+                          wcss = wcss_data,
                           gap = gap_stats,
                           cell_i = js)
 
@@ -271,25 +275,25 @@ get_k <- function(B = 10,
 
   # collect clustering info data
   gap_stats <- vector(mode = "list", length = length(boot_obj))
-  wss_stats <- vector(mode = "list", length = length(boot_obj))
+  wcss_stats <- vector(mode = "list", length = length(boot_obj))
 
   for(i in 1:length(boot_obj)) {
     gap_vec <- numeric(length = length(ks))
-    wss_vec <- numeric(length = length(ks))
+    wcss_vec <- numeric(length = length(ks))
 
     for(j in 1:length(ks)) {
       gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
-      wss_vec[j] <- boot_obj[[i]]$wss[[j]]
+      wcss_vec[j] <- boot_obj[[i]]$wcss[[j]]
     }
 
     gap_stats[[i]] <- data.frame(boot = i, gap = gap_vec, k = ks)
-    wss_stats[[i]] <- data.frame(boot = i, wss = wss_vec, k = ks)
+    wcss_stats[[i]] <- data.frame(boot = i, wcss = wcss_vec, k = ks)
 
   }
 
   # collect DFs
   gap_stats <- do.call(rbind, gap_stats)
-  wss_stats <- do.call(rbind, wss_stats)
+  wcss_stats <- do.call(rbind, wcss_stats)
 
   # compute gap-stat summary from B values for each matrix
   gap_stats_summary <- base::merge(
@@ -301,30 +305,30 @@ get_k <- function(B = 10,
   gap_stats_summary$H95 <- gap_stats_summary$gap_mean+gap_stats_summary$gap_SE*1.96
 
 
-  # compute wss summary from B values for each matrix
-  wss_stats_summary <- base::merge(
-    x = stats::aggregate(wss~k, data = wss_stats, FUN = base::mean),
-    y = stats::aggregate(wss~k, data = wss_stats, FUN = get_se),
+  # compute wcss summary from B values for each matrix
+  wcss_stats_summary <- base::merge(
+    x = stats::aggregate(wcss~k, data = wcss_stats, FUN = base::mean),
+    y = stats::aggregate(wcss~k, data = wcss_stats, FUN = get_se),
     by = "k")
-  colnames(wss_stats_summary) <- c("k", "wss_mean", "wss_SE")
-  wss_stats_summary$L95 <- wss_stats_summary$wss_mean-wss_stats_summary$wss_SE*1.96
-  wss_stats_summary$H95 <- wss_stats_summary$wss_mean+wss_stats_summary$wss_SE*1.96
+  colnames(wcss_stats_summary) <- c("k", "wcss_mean", "wcss_SE")
+  wcss_stats_summary$L95 <- wcss_stats_summary$wcss_mean-wcss_stats_summary$wcss_SE*1.96
+  wcss_stats_summary$H95 <- wcss_stats_summary$wcss_mean+wcss_stats_summary$wcss_SE*1.96
 
   if(mini_output) {
     return(base::structure(class = "boot_k",
                            list(boot_obj = NA,
-                                wss_stats_summary = wss_stats_summary,
+                                wcss_stats_summary = wcss_stats_summary,
                                 gap_stats_summary = gap_stats_summary,
-                                wss_stats = wss_stats,
+                                wcss_stats = wcss_stats,
                                 gap_stats = gap_stats)))
 
   }
 
   return(base::structure(class = "boot_k",
                          list(boot_obj = boot_obj,
-                              wss_stats_summary = wss_stats_summary,
+                              wcss_stats_summary = wcss_stats_summary,
                               gap_stats_summary = gap_stats_summary,
-                              wss_stats = wss_stats,
+                              wcss_stats = wcss_stats,
                               gap_stats = gap_stats)))
 }
 
@@ -336,15 +340,15 @@ get_k <- function(B = 10,
 #'
 get_bubbletree <- function(x,
                            k,
-                           n_start = 1000,
-                           iter_max = 300,
                            B = 100,
                            N_eff = 100,
+                           n_start = 1000,
+                           iter_max = 300,
+                           kmeans_algorithm = "MacQueen",
                            cores = 1,
                            seed = NA,
                            round_digits = 2,
-                           show_simple_count = F,
-                           kmeans_algorithm = "MacQueen") {
+                           show_simple_count = F) {
 
   # check input param
   check_input <- function(x,
@@ -562,11 +566,10 @@ get_bubbletree <- function(x,
 
   return(base::structure(class = "bubbletree",
                          list(A = x,
+                              k = k,
                               km = km,
                               ph = ph,
-                              hc = hc,
                               pair_dist = pair_dist,
-                              k = k,
                               cluster = km$cluster,
                               input_par = input_par,
                               tree = t$tree,
@@ -747,11 +750,10 @@ update_bubbletree <- function(btd,
 
   return(base::structure(class = "bubbletree",
                          list(A = A,
+                              k = length(unique(btd$cluster)),
                               km = u_kms,
                               ph = ph,
-                              hc = hc,
                               pair_dist = pair_dist,
-                              k = length(unique(btd$cluster)),
                               cluster = btd$cluster,
                               input_par = btd$input_par,
                               tree = t$tree,
@@ -942,11 +944,10 @@ dummy_bubbletree <- function(x,
 
   return(base::structure(class = "dummy_bubbletree",
                          list(A = x,
+                              k = length(unique(cs)),
                               km = NA,
                               ph = ph,
-                              hc = hc,
                               pair_dist = pair_dist,
-                              k = length(unique(cs)),
                               cluster = cs,
                               input_par = input_par,
                               tree = t$tree,
