@@ -6,7 +6,7 @@
 #'
 get_cat_feature_tiles <- function(d,
                                   a,
-                                  feature_composition = F,
+                                  integrate_vertical = F,
                                   round_digits = 2,
                                   rotate_x_axis = T,
                                   show_hclust = F,
@@ -55,12 +55,12 @@ get_cat_feature_tiles <- function(d,
   ws$norm_percent_feature <- ws$percent_feature/ws$n_cluster
   ws$norm_percent_cluster <- ws$percent_cluster/ws$n_feature
 
-  if(feature_composition==F) {
+  if(integrate_vertical==F) {
     legend <- "Bubble composition\n over features [%]"
     ws$percent <- round(x = ws$percent_cluster, digits = round_digits)
     ws$norm_percent <- ws$norm_percent_cluster
   }
-  if(feature_composition==T) {
+  if(integrate_vertical==T) {
     legend <- "Feature composition\n across bubbles [%]"
     ws$percent <- round(x = ws$percent_feature, digits = round_digits)
     ws$norm_percent <- ws$norm_percent_feature
