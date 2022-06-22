@@ -65,7 +65,8 @@ to be drawn at random and used during each bootstrap iteration}
 relative frequency of cells in each bubble}
 \item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
 bubble will be divided by 1,000 to improve readability. This is only useful for
-samples that are composed of millions of cells.}}
+samples that are composed of millions of cells.}
+}
 
 
 \details{
@@ -124,7 +125,7 @@ data(A)
 
 head(A)
 
-k <- get_bubbletree(x = A,
+b <- get_bubbletree(x = A,
                     k = 18,
                     N_eff = 100)
 }
