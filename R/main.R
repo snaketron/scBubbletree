@@ -273,17 +273,29 @@ get_k <- function(x,
 
 
 
-  # collect clustering info data
+  # collect clustering data
   gap_stats <- vector(mode = "list", length = length(boot_obj))
   wcss_stats <- vector(mode = "list", length = length(boot_obj))
 
+  # raw gap stats
+  gap_matrix <- matrix(data = 0, nrow = B*B_gap, ncol = length(ks))
+  wcss_matrix <- matrix(data = 0, nrow = B, ncol = length(ks))
+
+
+  # loop over top-bootstrap iterations B
   for(i in 1:length(boot_obj)) {
+
     gap_vec <- numeric(length = length(ks))
     wcss_vec <- numeric(length = length(ks))
 
+    # loop over ks
     for(j in 1:length(ks)) {
       gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
       wcss_vec[j] <- boot_obj[[i]]$wcss[[j]]
+
+      gap_matrix[((i-1)*B_gap+1):((i-1)*B_gap+B_gap), j] <-
+        boot_obj[[i]]$gap[[j]]$logWks-boot_obj[[i]]$gap[[j]]$logW
+      wcss_matrix[,j] <- boot_obj[[i]]$wcss[[j]]
     }
 
     gap_stats[[i]] <- data.frame(boot = i, gap = gap_vec, k = ks)
@@ -295,24 +307,28 @@ get_k <- function(x,
   gap_stats <- do.call(rbind, gap_stats)
   wcss_stats <- do.call(rbind, wcss_stats)
 
-  # compute gap-stat summary from B values for each matrix
-  gap_stats_summary <- base::merge(
-    x = stats::aggregate(gap~k, data = gap_stats, FUN = base::mean),
-    y = stats::aggregate(gap~k, data = gap_stats, FUN = get_se),
-    by = "k")
-  colnames(gap_stats_summary) <- c("k", "gap_mean", "gap_SE")
-  gap_stats_summary$L95 <- gap_stats_summary$gap_mean-gap_stats_summary$gap_SE*1.96
-  gap_stats_summary$H95 <- gap_stats_summary$gap_mean+gap_stats_summary$gap_SE*1.96
+
+  # compute gap summary
+  gap_mean <- apply(X = gap_matrix, MARGIN = 2, FUN = base::mean)
+  gap_se <- sqrt((1/(B*B_gap) + 1) * apply(X = gap_matrix, MARGIN = 2,
+                                     FUN = stats::var))
+  gap_stats_summary <- data.frame(gap_mean = gap_mean,
+                                  k = ks,
+                                  gap_SE = gap_se,
+                                  L95 = gap_mean-gap_se*1.96,
+                                  H95 = gap_mean+gap_se*1.96)
 
 
-  # compute wcss summary from B values for each matrix
-  wcss_stats_summary <- base::merge(
-    x = stats::aggregate(wcss~k, data = wcss_stats, FUN = base::mean),
-    y = stats::aggregate(wcss~k, data = wcss_stats, FUN = get_se),
-    by = "k")
-  colnames(wcss_stats_summary) <- c("k", "wcss_mean", "wcss_SE")
-  wcss_stats_summary$L95 <- wcss_stats_summary$wcss_mean-wcss_stats_summary$wcss_SE*1.96
-  wcss_stats_summary$H95 <- wcss_stats_summary$wcss_mean+wcss_stats_summary$wcss_SE*1.96
+  # compute wcss summary
+  wcss_mean <- apply(X = wcss_matrix, MARGIN = 2, FUN = base::mean)
+  wcss_se <- sqrt((1/B + 1) * apply(X = wcss_matrix, MARGIN = 2,
+                                      FUN = stats::var))
+  wcss_stats_summary <- data.frame(wcss_mean = wcss_mean,
+                                   k = ks,
+                                   wcss_SE = wcss_se,
+                                   L95 = wcss_mean-wcss_se*1.96,
+                                   H95 = wcss_mean+wcss_se*1.96)
+
 
   if(mini_output) {
     return(base::structure(class = "boot_k",
