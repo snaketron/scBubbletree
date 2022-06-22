@@ -14,12 +14,20 @@ Clustering with k-means and hierarchical grouping of \eqn{k} clusters (bubbles)
 
 
 \description{
-Given matrix \eqn{A^{n\times f}}, which represents low dimensional projections
-of the original single cell RNA-seq dataset, and number \eqn{k} of clusters,
-this function performs two main procedures: 1) k-means clustering to identify
-groups (bubbles) of transcriptionally similar cells; 2) organization of the
-bubbles in a hierarchical dendrogram (bubbletree) which adequatly represents
-inter-cluster relationships.}
+get_bubble takes two main inputs:
+
+1. numeric matrix \eqn{A^{n\times f}}, which represents a low-dimensional
+projection (obtained e.g. by PCA) of the original high-dimensional scRNA-seq
+data, with \eqn{n} rows as cells and \eqn{f} columns as low-dimension features.
+
+2. number \eqn{k} of clusters
+
+The function get_bubble performs two main operations. First, it performs
+k-means clustering to identify groups (bubbles) of transcriptionally similar
+cells; second, it organizes the bubbles in a hierarchical dendrogram
+(bubbletree) which adequatly represents inter-cluster relationships.
+
+}
 
 
 
@@ -62,34 +70,31 @@ samples that are composed of millions of cells.}}
 
 \details{
 For k-means clustering get_bubbletree uses the function kmeans implemented in
-R-package stats (version 4.2.0). For additional information on clustering see
-the respective documentations. To organize the resulting clusters in a
-hierarchical dendrogram the algorithm performs the following steps:
+R-package stats (version 4.2.0). For additional information on the clustering
+procedure see the documentation of kmeans. To organize the resulting clusters
+in a hierarchical dendrogram the algorithm performs the following steps:
 
-1. In boostrap iteration \eqn{b} N_eff number of cells are drawn at random
-   from each cluster a number of bootstrap
+1. In bootrap iteration \eqn{b} from \eqn{1:B}
 
-2. Euclidean distances between all pairs of cells in cluster \eqn{i} and cluster
-   \eqn{j} are computed
+2. draw \eqn{N_{eff}} number of cells at random from each cluster
 
-3. Average Euclidean distance between cluster \eqn{i} and \eqn{j} is computed and
-   matrix \eqn{D} that contains all pairs of inter-cluster distances is populated
+3. compute Euclidean distances (in space \eqn{A^{n\times f}}) between all pairs
+   of cells in cluster \eqn{i} and cluster \eqn{j}
 
-4. Using hierarchical clustering with average linkage we generate a hierarchical
-   dendrogram \eqn{H}
+4. compute mean Euclidean distance between cluster \eqn{i} and \eqn{j} and
+   populate inter-cluster distance matrix \eqn{D_b^{k \times k}}
 
-5. In each \eqn{B} bootstrap iterations we compute \eqn{B} number of matrices
-   \eqn{D_b} and dendrograms \eqn{H_b}
+5. perform hierarchical clustering with average linkage based on
+   \eqn{D_b^{k \times k}} to generate dendrogram \eqn{H_b}
 
-6. After computing an average distance matrix \eqn{\hat{D}} we also compute a
+6. compute average distance matrix \eqn{\hat{D}} and based on it a
    consensus hierarchical dendrogram (\eqn{\hat{H}}; bubbletree) with average
    linkage
 
-7. By comparing the topology of \eqn{\hat{H}} with \eqn{H_b} we quantify the
-   branch support, i.e. how often each branch in \eqn{\hat{H}} is found among
-   \eqn{B} dendrograms.
+7. quantify branch support level in \eqn{\hat{H}}, i.e. in how many bootrap
+   dendrograms (\eqn{H_b}) do we find each branch of \eqn{H_b}.
 
-8. The bubbletree is visualized with R-package ggtree
+8. visualize the bubbletree (\eqn{\hat{H}}) with R-package ggtree
 }
 
 \value{
