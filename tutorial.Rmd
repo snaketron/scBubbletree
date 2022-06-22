@@ -24,39 +24,45 @@ knitr::opts_chunk$set(echo = T,
 # Before we start we need to install few packages {.unnumbered}
 
 ```{r, echo = T, results='hide'}
+# load R-package devtools
 library(devtools)
-# --- BiocMange
+
+# try to install the development version of scBubbletree
 devtools::install_github("snaketron/scBubbletree")
+
+# if the installation is a success, load scBubbletree
 library(scBubbletree)
+
+# else, ask for help
 ```
 
 
 # CITE-seq data 
 For this tutorial, we will be analyzing a dataset of Peripheral Blood Mononuclear 
-Cells (PBMC) that was obtained from the publication by Hao et al.[^1]. There are 
+Cells (PBMC) which was obtained from the publication by Hao et al.[^1]. There are 
 162,000 single cells in the dataset from eight healthy volunteers enrolled in an 
-HIV vaccine trial. This data was collected by a larger project in which CITE-seq
-[^3] technology was used with up to 228 antibodies, to simultaneously profile 
-single cell gene expressions and cell-surface protein expressions. Sequencing was 
-done on the Illumina NovaSeq 6000 platform. 
+HIV vaccine trial. This data was collected as part of a larger project in which 
+CITE-seq technology[^3] was used with up to 228 antibodies, to simultaneously 
+profile single cell gene expressions and cell surface protein expressions. 
+Sequencing was done on the Illumina NovaSeq 6000 platform. 
 
 As we have limited time and computational resources for this tutorial, we will 
 analyze on a subset of 10,000 randomly selected single cells from three 
 volunteers.
 
 
-## Raw data processing
-Data processing was performed with Seurat. Normalization of gene 
-expressions with R-package SCTransform[^2] and dimensionality reduction was
-performed by principal component analysis (PCA) based on the 5,000 most variable 
-genes in the dataset. 
+## Data processing
+Data processing was performed with Seurat. Normalization of gene expressions 
+with R-package SCTransform[^2] and dimensionality reduction was performed by 
+principal component analysis (PCA) based on the 5,000 most variable genes in 
+the dataset. 
 
 We will use the first 15 principal components (first 15 PCs matrix: 
 $A^{10,000 \times 15}$) for the downstream analysis, as the first 15 PCs 
 captured most of the variance in the data and the proportion of variance 
 explained by each subsequent principal component was negligible.
 
-Read and inspect the matrix $A^{10,000 \times 15}$ now:
+Read and inspect matrix $A^{10,000 \times 15}$ now:
 
 ```{r}
 # load the data
@@ -73,12 +79,13 @@ dim(A)
 
 
 ## Meta-data
-The multimodal data (RNA-seq + protein expression) was clustered with a weighted
-nearest neighbor (WNN) approach to identify different cellular states in PBMCs 
-based on a weighted combination of both modalities. Cell types were predicted 
-by this approach for each cell at three levels of resolution: **l1** with 8 cell 
-types; **l2** with 31 cell types; and **l3** with 57 cell types. The predictions 
-are available as part of a meta-data associated with the dataset.
+The multimodal data (RNA-seq + surface protein expression) was clustered with 
+a weighted nearest neighbor (WNN) approach to identify different cellular 
+states in PBMCs based on a weighted combination of both modalities. Cell types 
+were predicted by this approach for each cell at three levels of resolution: 
+**l1** with 8 cell types; **l2** with 31 cell types; and **l3** with 57 cell 
+types. The predictions are available as part of a meta-data associated with the 
+dataset.
 
 Read and inspect the meta-data now:
 
@@ -89,15 +96,19 @@ meta <- get(load(file = "case_study_D/meta.RData"))
 ```{r}
 # inspect meta!
 #
-# which *l1* resolution cell types are available?
+# which cell types are available in set l1?
 table(meta$celltype.l1)
 ```
 
 
-```{r, eval = F}
-# ... how about *l2*?
+```{r, eval = T}
+# ... how about l2? 
 table(meta$celltype.l2)
-# ... and *l3*?
+```
+
+
+```{r, eval = F}
+# ... and l3?
 table(meta$celltype.l3)
 
 # what other information is included in the meta-data?
@@ -111,8 +122,9 @@ table(meta$celltype.l3)
 
 ## Gene expression data
 
-We have selected 12 marker genes which should help us identify different PBMC 
-subtypes (e.g. B-cells, monocytes, etc.). This includes:
+We have single cell (normalized) expressions for over 20,000 genes in 10,000 
+cells. From this data we selected 12 marker genes which should help us identify 
+different PBMC subtypes (e.g. B-cells, monocytes, etc.), including:
 
   * GNLY, NKG7:	*NK cells*
   * IL7R:	*CD4 T cells*
@@ -188,22 +200,27 @@ with $n$ rows as cells and $f$ columns as low-dimension features.
 
 ## `scBubbletree` workflow
 In short, `scBubbletree` performs clustering to identify groups of 
-transcriptionally similar cells, and then visualizes these clusters as 
-**bubbles** organized in a hierarchical dendrogram (**bubbletree**) which 
-describes the natural (biological) relationships between the bubbles 
+transcriptionally similar cells, and then visualizes the identified clusters 
+as **bubbles** organized in a hierarchical dendrogram (**bubbletree**) which 
+describes the natural (biological) relationships between the bubbles.
 
 The workflow comprises four steps: 
 
-  1. determining the number of clusters in the data ($k$) 
+  1. determining the number $k$ of clusters in the data
   2. clustering with k-means
   3. hierarchical cluster grouping
   4. annotation & evaluation
+  
+  
+
+------------------------------------------------------------------------
+  
   
 In the following we will analyze $A^{10,000 \times 15}$ based on this workflow.
 
 
 
-# (1) determining the number of clusters in the data ($k$)
+# (1) determining the number $k$ of clusters in the data 
 `scBubbletree` uses k-means for clustering. To apply k-means we must first 
 specify the number $k$ of clusters. A choice for $k$ depends on multiple factors. 
 First, $k$ is tissue specific as tissues vary in terms of their cell type 
@@ -225,33 +242,50 @@ the tissue (here PBMCs) to determine a potential range of useful values of $k$.
 
 </hr>
 
-1. Can you please investigate the cellular composition of PBMCs using the human 
-   protein atlas (HPA; https://www.proteinatlas.org/humanproteome/immune+cell) or
-   wikipedia (https://en.wikipedia.org/wiki/Peripheral_blood_mononuclear_cell) 
+1. Can you please investigate the cellular composition of PBMCs based on the 
+   human protein atlas (HPA; https://www.proteinatlas.org/humanproteome/immune+cell) 
+   or wikipedia (https://en.wikipedia.org/wiki/Peripheral_blood_mononuclear_cell) 
    and suggest a reasonable value for $k$?
+   
+2. How many major PBMC subtypes are there (**Hint:** approximate number would 
+   suffice here)?
 
 ------------------------------------------------------------------------
 
-Second, `scBubbletree` offers the function `get_k` to estimate $k$ from the data 
-using the *Gap s`tatistic* and the within-cluster variance (within cluster sum 
-of squares; *WCSS*). These data-driven metrics describe quantitatively the 
+Second, `scBubbletree` offers the function `get_k` to estimate $k$ from the 
+data using the *Gap statistic* and the within-cluster variance (within cluster 
+sum of squares; *WCSS*). These data-driven metrics describe quantitatively the 
 extent to which different observations fall into natural distinct clusters as 
 a function of $k$
 
 ------------------------------------------------------------------------
 
-2. Please run `get_k` now. 
+## PROBLEMS [B]: {.unnumbered}
+
+<hr style="border:3px solid black">
+
+</hr>
+
+1. Please run `get_k` now: 
 
 ```{r, fig.width=4, fig.height=3, echo = T, eval=F}
 # Executing this command can take couple of minutes. You can instead load 
-# the precomputed data (see the next line of code)
-b <- scBubbletree::get_k(B = 3, # 3 bootstrap iterations
-                         cv_prop = 0.5, # 50% of data used in cross-validation
-                         ks = seq(from = 1, to = 45, by = 3), # ks to consider
-                         x = A, # input
-                         cores = 4, # use 4 PC cores to speed up computation
-                         kmeans_algorithm = "MacQueen" # k-means algorithms
-)
+# the precomputed results (see the next line of code)
+
+b <- scBubbletree::get_k(x = A, 
+                         B = 3,
+                         cv_prop = 0.5,
+                         ks = seq(from = 1, to = 45, by = 3),
+                         kmeans_algorithm = "MacQueen",
+                         cores = 4)
+
+# Parameter description:
+# x: input matrix A
+# B: number of bootstrap iterations
+# cv_prop: proportion of the data to be use in each bootstrap iteration
+# ks: vector of k values to consider
+# kmeans_algorithm: one of few k-means algorithm variants
+# cores: umber of PC cores to use in parallel
 ```
 
 ```{r, echo=F, eval=F}
@@ -268,16 +302,17 @@ save(b, file = "case_study_D/b.RData")
 ```
 
 ```{r, eval=T, echo=F}
+# load precomputed 'b'
 b <- get(load(file = "case_study_D/b.RData"))
 ```
 
 
-
-3. Next plot the Gap statistic and the WCSS curves. Do you see an `elbow` in 
+2. Next, plot the Gap statistic and the WCSS curves. Do you see an `elbow` in 
    either curve? 
    
-   (**Hint**: elbow or knee is a point ($k$) where the curve visibly bends, 
-   specifically from high slope to low slope)
+   (**Hint**: elbow or knee is a point where the curve visibly bends, 
+   specifically from high slope to low slope. We are interested in finding $k$
+   that is as near as possible to the elbow/knee point.)
    
 ```{r, fig.width=8, fig.height=4, fig.align='center'}
 ggplot(data = b$gap_stats_summary)+
@@ -293,8 +328,8 @@ ggplot(data = b$wss_stats_summary)+
 ```
 
 
-4. Are $k$ values near the `elbow` consistent with what you learned about the 
-   composition of PBMCs from the human protein database?
+3. Is the $k$ value that is found near the `elbow` approximately equal to the 
+   number of major cell subtypes in PBMCs?
 
 ------------------------------------------------------------------------
 
@@ -304,16 +339,17 @@ k-means clustering with $k=18$ next:
 
 ```{r, echo=T, eval = F}
 
-# This might take a couple of minutes ...
+# Executing this command can take couple of minutes. You can instead load the
+# precomputed resulta (see the next line of code)
 
 k18 <- scBubbletree::get_bubbletree(x = A,
                                     k = 18,
                                     seed = 241142,
                                     cores = 4,
-                                    B = 100,
                                     N_eff = 100,
                                     show_simple_count = F,
-                                    round_digits = 1)
+                                    round_digits = 1,
+                                    kmeans_algorithm = "MacQueen")
 
 
 # Parameter description:
@@ -335,7 +371,8 @@ save(k18, file = "case_study_D/k18.RData")
 k18 <- get(load(file = "case_study_D/k18.RData"))
 ```
 
-## PROBLEMS [B]: {.unnumbered}
+
+## PROBLEMS [C]: {.unnumbered}
 
 <hr style="border:3px solid black">
 
@@ -349,24 +386,30 @@ k18$tree
 
 2. Which are the largest/smallest bubbles in the bubbletree? How many cells
    do they contain?
+   
+   
+3. About 25% of all cells belong to bubble 14. Can you guess the PBMC subtype 
+   of the cells occupying this bubble?
+
+  (*Hint:* Which major PBMC subtype constitutes the largest proportion of PBMCs? 
+  https://en.wikipedia.org/wiki/Peripheral_blood_mononuclear_cell)
 
 
-3. How many major clades do you see in the bubbletree? Based on the prior 
+4. How many major clades do you see in the bubbletree? Based on the prior 
    knowledge on PBMCs can you guess which major PBMC subtypes are contained 
    in these clades?
 
 
-4. Do all branches have high degree of support?
+5. Do all branches have high degree of support?
 
-  (**Hint:** how do we interpret the red labels shown on top of the different 
+  (**Hint:** what is the meaning of the red labels shown on top of the different 
   branches)?
 
-
+------------------------------------------------------------------------
 
 # (4) annotation and model evaluation
-By 'attaching' annotations to the bubbletree we can make it biologically 
+We need to 'attach' annotations to the bubbletree to make it biologically 
 explainable. 
-
 
 
 
@@ -380,7 +423,7 @@ functions to visualize numeric cell features.
    and labeled with the average value of a specific feature in a given bubble.
  
  * Function `get_num_feature_violins`: visualizes the feature distribution in 
-   each bubble as violins.
+   each bubble using violin plots.
 
 Lets use `get_num_feature_tiles` to visualize the average (normalized) gene 
 expressions of 12 markers:
@@ -388,114 +431,216 @@ expressions of 12 markers:
 ```{r}
 markers_RNA_plot <- scBubbletree::get_num_feature_tiles(d = k18,
                                                         as = markers_RNA,
-                                                        plot_title = "",
                                                         round_digits = 1)
 ```
 
 
 ```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
-# * GNLY, NKG7:	*NK cells*
-# * IL7R:	*CD4 T cells*
-# * CD8A:	*CD8 T cells*
-# * MS4A1:	*B cells*
-# * CD14, LYZ:	*CD14+ Monocytes*
-# * FCGR3A, MS4A7:	*FCGR3A+ Monocytes*
-# * FCER1A, CST3:	*Dendritic Cells*
-# * PPBP:	*Megakaryocytes*
-(k18$tree|markers_RNA_plot$w)+patchwork::plot_layout(widths = c(1, 1))
+# Markers and their cell types:
+# * GNLY, NKG7:	NK cells
+# * IL7R:	CD4 T cells
+# * CD8A:	CD8 T cells
+# * MS4A1:	B cells
+# * CD14, LYZ:	CD14+ Monocytes
+# * FCGR3A, MS4A7:	FCGR3A+ Monocytes
+# * FCER1A, CST3:	Dendritic Cells
+# * PPBP:	Megakaryocytes
+
+(k18$tree | markers_RNA_plot$w)+
+  patchwork::plot_layout(widths = c(1, 1))+
+  patchwork::plot_annotation(tag_levels = 'A')
 ```
 
 
-## PROBLEMS [C]: {.unnumbered}
+## PROBLEMS [D]: {.unnumbered}
 
 <hr style="border:3px solid black">
 
 </hr>
 
-1. Which cell type most likely corresponds to:
+1. What is the most likely cell type of the cells occupying:
     a. bubbles 1 and 17
     b. bubbles 4, 10, 12
-    c. 
+    c. bubbles of the top major clade (1, 17, 10, 4, 12, 7, 14, 11, 18)
+    d. bubbles of the bottom major clade (8, 5, 2, 13, 9 and 15)
+    e. bubble 16
+    
 
-2. 
+2. Does the topology of the bubbletree make sense from a biological 
+   point of view?
 
 
+------------------------------------------------------------------------
 
 
+## "Attaching" surface-protein expressions
 
-## "Attaching" cell type predictions (**lv1** set)
+We can also use the surface protein expression to better understand the 
+bubbletree. Lets visualize the average surface protein expressions for five 
+markers using `get_num_feature_tiles`:
+
+  * CD3-1 = T cells
+  * CD19 = B cells
+  * CD14 = CD14+ monocytes
+  * CD56-1 = NK cells
+  * CD11c = dendritic cells (DCs) and monocytes
+
 
 ```{r}
-celltype_lv1 <- scBubbletree::get_cat_feature_tiles(d = k18,
+
+markers_ADT_plot <- scBubbletree::get_num_feature_tiles(d = k18,
+                                                        as = markers_ADT[, c("CD3-1",
+                                                                             "CD19", 
+                                                                             "CD14", 
+                                                                             "CD56-1",
+                                                                             "CD11c")],
+                                                        round_digits = 1)
+```
+
+
+
+```{r, fig.width=9, fig.height=6, fig.align='center', echo=T}
+# combine 3 plots with patchwork: bubbletree + rna-markers + surface-protein-markers
+
+(k18$tree | markers_RNA_plot$w | markers_ADT_plot$w)+
+  patchwork::plot_layout(widths = c(1.5, 2, 1))+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+## PROBLEMS [E]: {.unnumbered}
+
+<hr style="border:3px solid black">
+
+</hr>
+
+1. Are the results obtained based on the different modalities (RNA-seq vs. 
+   surface protein expression) in agreement with each other?
+
+2. Please add CD8 to the list of surface proteins and visualize its mean 
+   expression with `get_num_feature_tiles` to find out which bubbles contain 
+   CD8+ T cells    
+
+
+
+
+## "Attaching" cell type predictions (**l1** and **l2** set)
+
+Cell can have **categorical** features. For instance:
+
+  * predicted cell types (CD4, CD8, B-cell, ...)
+  * cell cycle phase (G1, S, G2, ...)
+  * sample name (P1, P2, P3, ...)
+  * biological condition (e.g. infected vs. control)
+  * singlet vs. multiplet
+  * ...
+ 
+`scBubbletree` can visualize categorical features using tile plots with 
+the function `get_cat_feature_tiles`. With the help of the Boolean input 
+parameter `integrate_vertical` the tiles in the tile plot can be configured 
+for two types of interpretation: 
+
+  * With `integrate_vertical=TRUE` the tiles can be configured to show the 
+  relative frequencies of cells carrying a specific label/category of the 
+  categorical feature across the different bubbles. Columns (features) in the 
+  tile plot will integrate to 100%. With this type of visualization we can answer 
+  questions such as: are cells with a specific label enriched in a particular bubble? 
+
+  * With `integrate_vertical=FALSE` we compute the relative frequencies of the 
+  different labels within in each bubble, i.e. the feature composition of the 
+  different bubbles. Rows (bubbles) in the tile plot will integrate to 100%. With 
+  this we can answer questions such as: how 'pure' is a given bubble, i.e.\ is 
+  the bubble composed of cells that only carry a particular label or a mixture 
+  of different labels? 
+
+Lets visualize the **l1** set of cell type predictions. We will set 
+`integrate_vertical=TRUE` and `integrate_vertical=FALSE` and show both results:
+
+```{r}
+celltype_l1_vertical <- scBubbletree::get_cat_feature_tiles(d = k18,
                                                     a = meta$celltype.l1,
-                                                    feature_composition = T,
+                                                    integrate_vertical = T,
+                                                    round_digits = 1,
+                                                    rotate_x_axis = T)
+
+celltype_l1_horizontal <- scBubbletree::get_cat_feature_tiles(d = k18,
+                                                    a = meta$celltype.l1,
+                                                    integrate_vertical = F,
                                                     round_digits = 1,
                                                     rotate_x_axis = T)
 ```
 
-```{r, fig.width=8, fig.height=5, fig.align='center', echo=T}
-k18$tree+celltype_lv1$w+patchwork::plot_layout(widths = c(1, 2))
+```{r, fig.width=9, fig.height=6, fig.align='center', echo=T}
+(k18$tree | celltype_l1_vertical$w | celltype_l1_horizontal$w)+
+  patchwork::plot_layout(widths = c(1, 1, 1))+
+  patchwork::plot_annotation(tag_levels = 'A')
 ```
 
+Some observations about the above figure:
+
+  * we see enrichment of cells from a specific cell type in either one bubble 
+    or few bubbles that are typically found in proximity of each other in the 
+    bubbletree (Fig. B). For instance, about 98\% of NK cells in the sample are 
+    enriched in bubbles 9, 4 and 14 (Fig. B), while about 98\% of B cells are 
+    enriched in bubbles 11 and 8 (Fig. B). Some cell types, such as monocytes 
+    and T cells, are spread across more than two bubbles.
+    
+  * we confirm that the top and bottom major clades of the bubbletree are formed 
+  by bubbles that are enriched with lymphocytes and monocytes, respectively. The 
+  remaining outgroup bubbles contain a mixture of cells termed as 'other', DCs 
+  and a small multiple other cells. 
+  
+  * within the lymphocyte clade the branching adequately captures the relationship 
+  between the major lymphocyte subtypes, placing T cells, B cells and NK cells 
+  into their own robust subclades. 
+  
+  * the fact that monocytes occupy multiple bubbles of the bottom major clade 
+  suggests that there might exists some degree of heterogeneity within the 
+  monocyte class that is captured by the different bubbles. It is also possible 
+  that the selected value for $k$ is too high leading to oversegmentation of 
+  large but rather homogenous populations. To check which of these claims is 
+  more likely, we need to ``attach'' to the bubbletree cell type predictions 
+  at a higher resolution. We show this in the following.
+  
+  * using Fig. B and C in combination with the bubbletree allows us to get a 
+  clear sense of how the cells are distributed across the bubbles and about the 
+  'purity' of the bubbles. From this we can detect abnormalities at an early
+  stage of the scRNA-seq data analysis
 
 
-```{r}
-celltype_lv1 <- scBubbletree::get_cat_feature_tiles(d = k18,
-                                                    a = meta$celltype.l1,
-                                                    feature_composition = F,
-                                                    round_digits = 1,
-                                                    rotate_x_axis = T)
-```
 
-```{r, fig.width=8, fig.height=5, fig.align='center', echo=T}
-k18$tree+celltype_lv1$w+patchwork::plot_layout(widths = c(1, 2))
-```
+## PROBLEMS [F]: {.unnumbered}
 
+<hr style="border:3px solid black">
 
+</hr>
+
+1. Do the same analysis for the set **l2**
+
+2. We know that the bubbles 8 and 11 contain B cell bubbles. Is this 
+   partitioning of the B cell population biologically sound?
 
 
 
-
-
-## "Attaching" cell type predictions (**lv2** set)
-
-```{r}
-celltype_lv2 <- scBubbletree::get_cat_feature_tiles(d = k18,
+```{r, echo=F}
+celltype_l2_vertical <- scBubbletree::get_cat_feature_tiles(d = k18,
                                                     a = meta$celltype.l2,
-                                                    feature_composition = T,
+                                                    integrate_vertical = T,
+                                                    round_digits = 0,
+                                                    rotate_x_axis = T)
+
+celltype_l2_horizontal <- scBubbletree::get_cat_feature_tiles(d = k18,
+                                                    a = meta$celltype.l2,
+                                                    integrate_vertical = F,
                                                     round_digits = 0,
                                                     rotate_x_axis = T)
 ```
 
-```{r, fig.width=9, fig.height=7, fig.align='center', echo=T}
-k18$tree+celltype_lv2$w+patchwork::plot_layout(widths = c(1, 4))
+```{r, fig.width=15, fig.height=6, fig.align='center', echo=F}
+(k18$tree | celltype_l2_vertical$w | celltype_l2_horizontal$w)+
+  patchwork::plot_layout(widths = c(1, 3, 3))+
+  patchwork::plot_annotation(tag_levels = 'A')
 ```
-
-
-```{r}
-celltype_lv2 <- scBubbletree::get_cat_feature_tiles(d = k18,
-                                                    a = meta$celltype.l2,
-                                                    feature_composition = F,
-                                                    round_digits = 0,
-                                                    rotate_x_axis = T)
-```
-
-```{r, fig.width=9, fig.height=7, fig.align='center', echo=T}
-k18$tree+celltype_lv2$w+patchwork::plot_layout(widths = c(1, 4))
-```
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -507,8 +652,9 @@ conditions we want to check if there are systematic differences in cell type
 composition between the different samples. Finding such compositional 
 differences may help us identify novel cell types (e.g.tumor cells) that occur 
 in some of the samples but not in others, or to detect problematic samples with 
-biased cell type compositions caused by e.g. flaw in the experiment. With donor 
-information provided as categorical cell features we can used the function 
+biased cell type compositions caused by e.g. flaw in the experiment. 
+
+As donor/sample IDs are categorical cell features, we can used the function 
 `get_cat_feature_tiles` to visualize the relative frequency of cells from a 
 given donor across the different bubbles
 
@@ -517,24 +663,23 @@ Lets do this now:
 ```{r, fig.width=7, fig.height=6, fig.align='center', eval=T, echo = T}
 donor_features <- scBubbletree::get_cat_feature_tiles(d = k18,
                                                       a = meta$donor,
-                                                      feature_composition = T,
+                                                      integrate_vertical = T,
                                                       round_digits = 1)
 ```
 
 
 ```{r, fig.width=7, fig.height=6, fig.align='center', eval = T}
-# we can use the R-package patchwork to visualize the 
-# the bubbletree & the corresponding annotations
-k18$tree+donor_features$w+patchwork::plot_layout(widths = c(1, 1))
+(k18$tree | donor_features$w)+
+  patchwork::plot_layout(widths = c(1, 1))
 ```
 
-## PROBLEMS [C]: {.unnumbered}
+## PROBLEMS [G]: {.unnumbered}
 
 <hr style="border:3px solid black">
 
 </hr>
 
-1. Do we see similar relative frequencies (here percentages) of P1, P2 and P3 
+1. Do you see similar relative frequencies (here percentages) of P1, P2 and P3 
    cells across the different bubbles?
 
 **Important remark**: with this `scBubbletree` provides a quick qualitative 
@@ -545,6 +690,8 @@ cell counts for each pair of feature and bubble, which can be used as input for
 quantitative differential abundance analysis of cell type composition[^4].
 
 ```{r}
+# the object donor_features contains the raw data
+
 knitr::kable(x = head(donor_features$ws[, c("cluster", "feature", "freq")]),
              row.names = F)
 ```
@@ -569,22 +716,22 @@ qc <- scBubbletree::get_num_feature_violins(d = k18,
 
 
 ```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
-k18$tree+qc$w+patchwork::plot_layout(widths = c(1.25, 2))
+(k18$tree | qc$w)+
+  patchwork::plot_layout(widths = c(1.25, 2))
 ```
 
 
-## PROBLEMS [D]: {.unnumbered}
+## PROBLEMS [H]: {.unnumbered}
 
 <hr style="border:3px solid black">
 
 </hr>
 
-1. Do you notice any serious issues with the data? 
+1. Do you notice any serious problems with the data? 
 
 (**Hint:** notice the conspicuously low number of genes or RNA molecules 
-in bubble 16; or the unusually high number of genes or RNA molecules 
-in bubble 8 $\rightarrow$ doublets? we will show that this is the case 
-later on)
+in bubble 15. The data should be devoid of major quality problems as it has 
+already been processed by Hao et al.[^1])
 
 
 
