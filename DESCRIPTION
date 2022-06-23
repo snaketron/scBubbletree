@@ -5,8 +5,8 @@ Version: 0.1.5
 Author: Simo Kitanovski
 Maintainer: Simo Kitanovski <simo.kitanovski@uni-due.de>
 Description: Clustering and visualization of scRNA-seq data are necessary to 
-  identify and uncover undiscovered cell types and to extract useful biological 
-  information from this complex and heterogenous data.
+  uncover new cell types and to extract useful biological information from this 
+  complex and heterogenous data.
 License: file LICENSE
 Depends: 
     methods,
@@ -19,4 +19,3 @@ Depends:
     scales (>= 1.1)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
