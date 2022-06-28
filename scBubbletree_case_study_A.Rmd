@@ -35,22 +35,14 @@ To run this vignette we need several R-packages. Load them now:
 
 ```{r, echo = T, results='hide'}
 source(file = "../Rutil/Graphics.R")
-source(file = "../scBubbletree/R/util.R")
-source(file = "../scBubbletree/R/main.R")
-source(file = "../scBubbletree/R/annotation.R")
 ```
 
 
 ```{r, echo = T, results='hide'}
+library(scBubbletree)
 library(cluster, lib.loc = "/usr/lib/R/library")
 library(Seurat, lib.loc = lib.loc)
-library(ggplot2, lib.loc = lib.loc)
-library(reshape2, lib.loc = lib.loc)
-library(parallel, lib.loc = lib.loc)
-library(ape)
-library(ggtree, lib.loc = lib.loc)
 library(org.Hs.eg.db, lib.loc = lib.loc)
-library(bluster, lib.loc = lib.loc)
 library(SummarizedExperiment, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)
 ```
@@ -112,7 +104,8 @@ d <- Seurat::FindVariableFeatures(object = d,
                                   nfeatures = 5000)
 
 # Preprocessing with Seurat: SCT transformation + PCA + UMAP 
-d <- SCTransform(object = d)
+d <- SCTransform(object = d,
+                 variable.features.n = 5000)
 d <- RunPCA(object = d, npcs = 50, features = VariableFeatures(object = d))
 ```
 
@@ -285,11 +278,10 @@ if(redo_case_a) {
              ks = 1:20,
              x = A,
              n_start = 100, 
-             iter_max = 200, 
+             iter_max = 200,
+             kmeans_algorithm = "MacQueen", 
              cores = 20,
-             approx_silhouette = F,
-             mini_output = F,
-             kmeans_algorithm = "MacQueen")
+             mini_output = F)
   
   if(dir.exists("case_study_A")==F) {
     dir.create("case_study_A")
@@ -311,21 +303,14 @@ statistic (middle panel) and WSS (right panel) curves convey a similar story,
 i.e. we see knees (changes in slope) in these curves at $k=5$. 
 
 ```{r}
-g0 <- ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Silhouette")+
-  ylab(label = "Mean Silhouette")|
-ggplot(data = b$gap_stats_summary)+
+g0 <- ggplot(data = b$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Gap")+
-  ylab(label = "Mean Gap")|
-ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "WSS")+
-  ylab(label = "Mean WSS")+
+  ylab(label = "Gap")|
+ggplot(data = b$wcss_stats_summary)+
+  geom_point(aes(x = k, y = wcss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "WCSS")+
   scale_y_log10()+
   annotation_logticks(base = 10, sides = "l")
 ```
@@ -347,11 +332,7 @@ if(redo_case_a) {
                      cores = 1,
                      B = 200,
                      N_eff = 200,
-                     verbose = F,
-                     n_start = 100,
-                     iter_max = 300,
                      round_digits = 1,
-                     show_branch_support = T,
                      show_simple_count = F,
                      kmeans_algorithm = "MacQueen")
   
@@ -533,7 +514,7 @@ categorical features to the bubbletree using `scBubbletree`.
 
 Categorical features can be 'attached' to the bubbletree using the function
 `get_cat_feature_tiles`. Here we will show the relative frequency of different 
-predicted cell types across the bubbles (parameter *feature_composition=T*).
+predicted cell types across the bubbles (parameter *integrate_vertical=T*).
 
 Interpretation of the figure below: 
   
@@ -544,17 +525,18 @@ Interpretation of the figure below:
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
 w1 <- get_cat_feature_tiles(d = k5,
                             a = d@meta.data$cell_line_demuxlet,
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 1,
                             tile_text_size = 2.75,
                             rotate_x_axis = T)
 
-(k5$tree|w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+(k5$tree|w1$w)+
+  patchwork::plot_layout(ncol = 2, widths = c(1, 1))
 ```
 
 We can also show the cell type composition of each bubble, i.e. the relative 
 frequencies of different cell types in a specific bubble (with 
-parameter *feature_composition=F*).
+parameter *integrate_vertical=F*).
 
 Interpretation of the figure below: 
   
@@ -568,12 +550,13 @@ Interpretation of the figure below:
 ```{r, echo=T}
 w2 <- get_cat_feature_tiles(d = k5,
                             a = d@meta.data$cell_line_demuxlet,
-                            feature_composition = F,
+                            integrate_vertical = F,
                             round_digits = 1,
                             tile_text_size = 2.75,
                             rotate_x_axis = T)
 
-(k5$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+(k5$tree|w2$w)+
+  patchwork::plot_layout(ncol = 2, widths = c(1, 1))
 ```
 
 `scBubbletree` uses R-package `ggtree` to visualize the bubbletree, and 
@@ -652,9 +635,9 @@ as <- as.matrix(t(d@assays$SCT@data[
   rownames(d@assays$SCT@data) %in% 
     c("ALDH1A1", 
       "PIP4K2C", 
-      "S100A9", 
       "SLPI",
-      "CT45A2"), ]))
+      "CT45A2",
+      "CD74"), ]))
 
 # 'as' is a matrix with n=rows for cells and a=columns for 
 # annotations (genes). The column names will be shown in
@@ -665,11 +648,12 @@ as <- as.matrix(t(d@assays$SCT@data[
 # HCC827, H1975, H2228 and H838
 as <- as[, c("ALDH1A1", 
              "PIP4K2C", 
-             "S100A9", 
              "SLPI",
-             "CT45A2")]
+             "CT45A2",
+             "CD74")]
 
 ```
+
 
 
 We can visualize numeric features in *two* ways.
@@ -678,7 +662,7 @@ First, we can show feature averages (in this example: average gene
 expressions) in each bubble with `get_num_feature_tiles`. Lets call 
 this function now:
 
-```{r, fig.width=7, fig.height=5, fig.align='center', echo=T}
+```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
 w3 <- get_num_feature_tiles(d = k5,
                             as = as,
                             plot_title = "",
@@ -686,7 +670,8 @@ w3 <- get_num_feature_tiles(d = k5,
                             tile_text_size = 2.75,
                             rotate_x_axis = F)
 
-(k5$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
+(k5$tree|w3$w)+
+  patchwork::plot_layout(widths = c(1, 1))
 ```
 
 
@@ -702,7 +687,8 @@ w4 <- get_num_feature_violins(d = k5,
                              scales = 'free_x',
                              show_cells = F)
 
-(k5$tree|w3$w|w4$w)+patchwork::plot_layout(widths = c(1.5, 2.2, 2.5))
+(k5$tree|w3$w|w4$w)+
+  patchwork::plot_layout(widths = c(1.5, 2.2, 2.5))
 ```
 
 
@@ -735,36 +721,28 @@ generated by any of these package.
 Lets combine the UMAP plots shown earlier with the output of `scBubbletree`:
 
 ```{r, results='hide', echo=F, results='hide'}
-g0 <- (ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Silhouette")+
-  ylab(label = "Mean Silhouette")|
-ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Silhouette")+
-  ylab(label = "Mean Silhouette")|
+g0 <- (ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "Gap")|
 ggplot(data = b$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Gap")+
-  ylab(label = "Mean Gap")|
-ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "WSS")+
-  ylab(label = "Mean WSS")+
+  ylab(label = "Gap")|
+ggplot(data = b$wcss_stats_summary)+
+  geom_point(aes(x = k, y = wcss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "WCSS")+
   scale_y_log10()+
   annotation_logticks(base = 10, sides = "l"))+
-  patchwork::plot_layout(widths = c(1, 0.7, 0.7, 0.7))
+  patchwork::plot_layout(widths = c(1, 0.7, 0.7))
 ```
 
 
 ```{r, fig.width=6.75, fig.height=8, fig.align='center', echo=F}
 w_cell_line <- get_cat_feature_tiles(d = k5,
                                      a = d@meta.data$cell_line_demuxlet,
-                                     feature_composition = T,
+                                     integrate_vertical = T,
                                      round_digits = 1,
                                      tile_text_size = 2.75,
                                      rotate_x_axis = F)
@@ -775,12 +753,8 @@ w_expression_avg <- get_num_feature_tiles(d = k5,
                                           round_digits = 1,
                                           tile_text_size = 2.75,
                                           rotate_x_axis = F)
-
-g <- ((g0)/
-        ((k5$tree|w_cell_line$w)+patchwork::plot_layout(widths = c(1,2)))/
-        ((w_expression_avg$w|w4$w)+patchwork::plot_layout(widths = c(1,1))))+
-  patchwork::plot_layout(heights = c(1, 2, 1.5))+
-  patchwork::plot_annotation(tag_levels = 'A')
+g0
+g <- ((g0)/((k5$tree|w_cell_line$w)+patchwork::plot_layout(widths = c(1,2)))/((w_expression_avg$w|w4$w)+patchwork::plot_layout(widths = c(1,1))))+patchwork::plot_layout(heights = c(1, 2, 1.5))+patchwork::plot_annotation(tag_levels = 'A')
 g
 
 ggsave(plot = g,
@@ -1154,28 +1128,35 @@ ggsave(plot = g_clustering,
 
 
 
-
 ### scBubbletree can incorporate clustering results from approaches
 
-Wide range of clustering approaches are used to cluster scRNA-seq data. To 
-accommodate for this `scBubbletree` implements the function `dummy_bubbletree` 
-which can generate a bubbletree using segmentation of alternative approaches.
+Wide range of clustering approaches are used for clustering of scRNA-seq data. `scBubbletree` implements the function `get_dummy_bubbletree` to allow users
+to incorporate results from various clustering approaches together with our 
+workflow. With this function we skip the k-means clustering portion of the 
+workflow and proceed with computing distances between the clusters and 
+generation of the bubbletree.
 
-Lets do this using k-medoids clustering implemented as part of the R-package 
-cluster:
+Lets try `get_dummy_bubbletree`. First, will perform k-medoids clustering with
+R-package pam and then generate the bubbletree:
 
 ```{r, fig.width=4, fig.height=4, fig.align='center', echo=T}
 pam_k5 <- cluster::pam(x = A, k = 5, metric = "euclidean")
 
-dummy_k5 <- dummy_bubbletree(x = A,
-                             cs = pam_k5$clustering,
-                             B = 100,
-                             N_eff = 100,
-                             cores = 2,
-                             round_digits = 1,
-                             show_branch_support = T)
+dummy_k5_pam <- get_dummy_bubbletree(x = A,
+                                     cs = pam_k5$clustering,
+                                     B = 100,
+                                     N_eff = 100,
+                                     cores = 2,
+                                     round_digits = 1,
+                                     show_branch_support = T)
 
-dummy_k5$tree
+dummy_k5_pam$tree
+```
+
+We can also use graph-based approaches for clustering:
+
+```{r}
+
 ```
 
 
@@ -1202,8 +1183,7 @@ solution, i.e. clustering with global minimum within cluster sum of squares.
 u_k5 <- update_bubbletree(btd = k5,
                           updated_bubbles = c("1", "2", "3"),
                           k = 6,
-                          cores = 20,
-                          verbose = T)
+                          cores = 20)
 ```
 
 Notice the new 6 bubbles with names 1_A to 1_F. The prefix 1 stands for the 
@@ -1223,12 +1203,13 @@ clades or bubbles can be extremely beneficial and revealing.
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
 u_w1 <- get_cat_feature_tiles(d = u_k5,
                               a = d@meta.data$cell_line_demuxlet,
-                              feature_composition = T,
+                              integrate_vertical = T,
                               round_digits = 1,
                               tile_text_size = 2.75,
                               rotate_x_axis = T)
 
-(u_k5$tree|u_w1$w)+patchwork::plot_layout(ncol = 2, widths = c(1, 1))
+(u_k5$tree|u_w1$w)+
+  patchwork::plot_layout(ncol = 2, widths = c(1, 1))
 ```
 
 
