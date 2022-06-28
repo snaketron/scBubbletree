@@ -104,10 +104,10 @@ Lets load the data.
 ```{r, echo=T}
 # To get the data used in this case study do the following steps:
 # 1. download reference data from vignette:
-# https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
+# https://atlas.fredhutch.org/data/nygc/multimodal/pbmc_multimodal.h5seurat
 # 2. load SeuratDistk
 # library(SeuratDisk, lib.loc = lib.loc)
-# d <- LoadH5Seurat("~/BubbleMap/raw_data/Hao_2021/pbmc_multimodal.h5seurat")
+# d <- LoadH5Seurat("case_study_B/pbmc_multimodal.h5seurat")
 # save(d, file = "raw_data/Hao_2021/Hao_2021.RData")
 ```
 
@@ -432,15 +432,14 @@ parameter *cv_prop=0.2*, for faster execution of this large dataset:
 if(redo_case_b) {
   # Determine appropriate number of clusters (k)
   b <- get_k(B = 10,
-             cv_prop = 0.1, # use 20% for gap stat.
+             cv_prop = 0.15, # use 15% for gap stat.
              ks = seq(from = 1, to = 40, by = 1),
              x = A,
              n_start = 100,
              iter_max = 200,
+             kmeans_algorithm = "MacQueen",
              cores = 20,
              mini_output = F,
-             approx_silhouette = F,
-             kmeans_algorithm = "MacQueen",
              B_gap = 5)
   
   if(dir.exists("case_study_B")==F) {
@@ -465,21 +464,14 @@ however, that both curves flatten at around `k=15` to `k=20`.
 
 
 ```{r}
-g0 <- ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Silhouette")+
-  ylab(label = "Mean Silhouette")|
-ggplot(data = b$gap_stats_summary)+
+g0 <- ggplot(data = b$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "Gap")+
-  ylab(label = "Mean Gap")|
-ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ggtitle(label = '', subtitle = "WSS")+
-  ylab(label = "Mean WSS")+
+  ylab(label = "Gap")|
+ggplot(data = b$wcss_stats_summary)+
+  geom_point(aes(x = k, y = wcss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "WCSS")+
   scale_y_log10()+
   annotation_logticks(base = 10, sides = "l")
 ```
@@ -496,80 +488,31 @@ g0
 
 
 
-## Lets try `k=18`
+## Lets try `k=20`
 
 
 ```{r, echo=T}
 
 if(redo_case_b) {
-  k18 <- get_bubbletree(x = A,
-                        k = 18,
-                        n_start = 500,
-                        iter_max = 1000,
+  k20 <- get_bubbletree(x = A,
+                        k = 20,
                         seed = 4321,
+                        n_start = 1000,
+                        iter_max = 1000,
                         cores = 20,
                         B = 200,
                         N_eff = 200,
-                        verbose = FALSE,
                         round_digits = 1,
-                        show_branch_support = T,
                         show_simple_count = T)
-  save(k18, file = "case_study_B/k18.RData")
+  save(k20, file = "case_study_B/k20.RData")
 } else {
-  k18 <- get(load("~/scBubbletree/case_study_B/k18.RData"))
+  k20 <- get(load("~/scBubbletree/case_study_B/k20.RData"))
 }
 
 ```
 
 
 
-
-<!-- ```{r, echo=T} -->
-
-<!-- if(redo_case_b) { -->
-<!--   # do clustering with k=15 -->
-<!--   k15 <- get_bubbletree(x = A, -->
-<!--                         k = 15, -->
-<!--                         n_start = 500, -->
-<!--                         iter_max = 1000, -->
-<!--                         seed = 4321, -->
-<!--                         cores = 20, -->
-<!--                         B = 200, -->
-<!--                         N_eff = 200, -->
-<!--                         verbose = FALSE, -->
-<!--                         round_digits = 1, -->
-<!--                         show_branch_support = T, -->
-<!--                         show_simple_count = T) -->
-<!--   save(k15, file = "case_study_B/k15.RData") -->
-<!-- } else { -->
-<!--   k15 <- get(load("~/scBubbletree/case_study_B/k15.RData")) -->
-<!-- } -->
-
-<!-- ``` -->
-
-
-
-<!-- ```{r, echo=T} -->
-
-<!-- if(redo_case_b) { -->
-<!--   k20 <- get_bubbletree(x = A, -->
-<!--                         k = 20, -->
-<!--                         n_start = 500, -->
-<!--                         iter_max = 1000, -->
-<!--                         seed = 4321, -->
-<!--                         cores = 20, -->
-<!--                         B = 200, -->
-<!--                         N_eff = 200, -->
-<!--                         verbose = FALSE, -->
-<!--                         round_digits = 1, -->
-<!--                         show_branch_support = T, -->
-<!--                         show_simple_count = T) -->
-<!--   save(k20, file = "case_study_B/k20.RData") -->
-<!-- } else { -->
-<!--   k20 <- get(load("~/scBubbletree/case_study_B/k20.RData")) -->
-<!-- } -->
-
-<!-- ``` -->
 
 
 Summary of the bubbletree:
@@ -602,25 +545,25 @@ c2 <- gsub(pattern = "CD56bright", replacement = 'CD56', x = c2)
 donor <- meta$donor
 
 # create tile plots
-w0 <- get_cat_feature_tiles(d = k18,
+w0 <- get_cat_feature_tiles(d = k20,
                             a = c1, # res = 1
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 0,
                             show_hclust = F,
                             tile_text_size = 2.75)
 
 
-w1 <- get_cat_feature_tiles(d = k18,
+w1 <- get_cat_feature_tiles(d = k20,
                             a = c2, # res = 2
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 0,
                             show_hclust = F,
                             tile_text_size = 2.25)
 
 
-w2 <- get_cat_feature_tiles(d = k18,
+w2 <- get_cat_feature_tiles(d = k20,
                             a = donor,
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 0,
                             show_hclust = F,
                             tile_text_size = 2.75)
@@ -636,17 +579,17 @@ c2 <- gsub(pattern = "Proliferating", replacement = 'prolif.', meta$celltype.l2)
 c2 <- gsub(pattern = "CD56bright", replacement = 'CD56', x = c2)
 
 
-w1 <- get_cat_feature_tiles(d = k18,
+w1 <- get_cat_feature_tiles(d = k20,
                             a = c2,
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 0,
                             show_hclust = F,
                             tile_text_size = 2.25)
 
 
-w2 <- get_cat_feature_tiles(d = k18,
+w2 <- get_cat_feature_tiles(d = k20,
                             a = c2,
-                            feature_composition = F,
+                            integrate_vertical = F,
                             round_digits = 0,
                             show_hclust = F,
                             tile_text_size = 2.25)
@@ -655,12 +598,6 @@ w2 <- get_cat_feature_tiles(d = k18,
 ```{r, echo=F, results='hide'}
 fig_3 <- (w1$w)/(w2$w)
 fig_3
-
-ggsave(plot = fig_3,
-       filename = "manuscript_data/Fig_3.svg",
-       device = "svg",
-       width = 5.2,
-       height = 6.8)
 ```
 
 
@@ -695,34 +632,21 @@ g_gini
 
 
 ```{r, echo=F, results='hide'}
-g0 <- ggplot(data = b$sil_stats_summary)+
-  geom_point(aes(x = k, y = sil_mean), size = 0.5)+
-  geom_errorbar(aes(x = k, y = sil_mean, ymin = L95, ymax = H95), width = 0.2)+
-  ggtitle(label = '', subtitle = "Silhouette")+
-  ylab(label = "Mean Silhouette")|
-ggplot(data = b$gap_stats_summary)+
+g0 <- ggplot(data = b$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 0.5)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.2)+
-  ggtitle(label = '', subtitle = "Gap")+
-  ylab(label = "Mean Gap")|
-ggplot(data = b$wss_stats_summary)+
-  geom_point(aes(x = k, y = wss_mean), size = 0.5)+
-  geom_errorbar(aes(x = k, y = wss_mean, ymin = L95, ymax = H95), width = 0.2)+
-  ggtitle(label = '', subtitle = "WSS")+
-  ylab(label = "Mean WSS")+
+  ylab(label = "Gap")|
+ggplot(data = b$wcss_stats_summary)+
+  geom_point(aes(x = k, y = wcss_mean), size = 0.5)+
+  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.2)+
+  ylab(label = "WCSS")+
   scale_y_log10()+
   annotation_logticks(base = 10, sides = "l")
 
 
-fig_2_bottom <- (k18$tree|w2$w|w0$w)+patchwork::plot_layout(widths = c(2, 3, 3))
+fig_2_bottom <- (k20$tree|w2$w|w0$w)+patchwork::plot_layout(widths = c(2, 3, 3))
 fig_2_top <- g0
 fig_2 <- (fig_2_top/fig_2_bottom)+patchwork::plot_layout(heights = c(1, 4))+patchwork::plot_annotation(tag_levels = 'A')
-
-ggsave(plot = fig_2,
-       filename = "manuscript_data/Fig_2.svg",
-       device = "svg",
-       width = 7.5,
-       height = 7)
 ```
 
 
@@ -737,15 +661,15 @@ a <- data.frame(mt_prop = meta$mt,
                 count_RNA = meta$nCount_RNA,
                 count_genes = meta$nFeature_RNA)
 
-sup_w <- (get_num_feature_violins(d = k18,
+sup_w <- (get_num_feature_violins(d = k20,
                                  as = data.frame(MT = a$mt_prop),
                                  plot_title = "",
                                  show_cells = F)$w|
-            get_num_feature_violins(d = k18,
+            get_num_feature_violins(d = k20,
                                  as = data.frame(count_RNA = a$count_RNA),
                                  plot_title = "",
                                  show_cells = F)$w|
-            get_num_feature_violins(d = k18,
+            get_num_feature_violins(d = k20,
                                  as = data.frame(count_genes = a$count_genes),
                                  plot_title = "",
                                  show_cells = F)$w
@@ -764,42 +688,6 @@ ggsave(plot = sup_w,
 Interestingly, the bubbles 1 and 2 contain many different cell types. Additional
 clustering of these bubbles might be necessary.
 
-<!-- ## Bubble update -->
-
-<!-- `scBubbletree` can perform targeted clustering of cells within specific bubbles.  -->
-<!-- This can be achieved with the function `update_bubbletree`. Lets update  -->
-<!-- bubbles 1 and 2 into two sub-bubbles. -->
-
-<!-- **Important remark**: the function `update_bubbletree` should be used to  -->
-<!-- explore the clustering in order to select an appropriate `k` and to explain the  -->
-<!-- segmentation.  -->
-
-<!-- ```{r, echo=T} -->
-
-<!-- if(redo_case_b) { -->
-<!--   # do clustering with k=15 -->
-<!--   u_k18 <- update_bubbletree(btd = k18, -->
-<!--                              updated_bubbles = c("2", "1"), -->
-<!--                              k = 4, -->
-<!--                              cores = 20) -->
-<!--   save(u_k18, file = "case_study_B/u_k18.RData") -->
-<!-- } else { -->
-<!--   u_k18 <- get(load("~/scBubbletree/case_study_B/u_k18.RData")) -->
-<!-- } -->
-
-<!-- ``` -->
-
-
-<!-- ```{r, fig.width=12, fig.height=8, fig.align='center', echo=T} -->
-<!-- # create tile plot -->
-<!-- w2 <- get_cat_feature_tiles(d = u_k18, -->
-<!--                             a = a, -->
-<!--                             feature_composition = T, -->
-<!--                             round_digits = 0, -->
-<!--                             show_hclust = F) -->
-
-<!-- (u_k18$tree|w2$w)+patchwork::plot_layout(ncol = 2, widths = c(4, 9)) -->
-<!-- ``` -->
 
 
 ## Gini index
@@ -887,14 +775,14 @@ marker genes in the bubbles:
 
 ```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
 # This function build the nummeric annotations plot
-w3 <- get_num_feature_tiles(d = k18,
+w3 <- get_num_feature_tiles(d = k20,
                             as = as,
                             plot_title = "",
                             round_digits = 1,
                             tile_text_size = 2.5)
 
 # Plot
-(k18$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
+(k20$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1))
 ```
 
 Second, we can visualize the distribution of each marker gene in each bubble 
@@ -903,15 +791,15 @@ input as `get_num_feature_tiles`.
 
 Lets invoke this function now.
 
-```{r, fig.width=8, fig.height=9, fig.align='center', echo=T}
-w4 <- get_num_feature_violins(d = k18,
+```{r, fig.width=8, fig.height=12, fig.align='center', echo=T}
+w4 <- get_num_feature_violins(d = k20,
                               as = as,
                               plot_title = "",
                               scales = 'free_x',
                               show_cells = F)
 
 
-((k18$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1)))/w4$w
+((k20$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1)))/w4$w
 ```
 
 
@@ -921,9 +809,9 @@ w4 <- get_num_feature_violins(d = k18,
 a <- paste0(meta$donor, '_', meta$time)
 a <- factor(x = a, levels = sort(unique(a)))
 # categorical donor meta data
-w5 <- get_cat_feature_tiles(d = k18,
+w5 <- get_cat_feature_tiles(d = k20,
                             a = a,
-                            feature_composition = T,
+                            integrate_vertical = T,
                             round_digits = 0,
                             show_hclust = F,
                             disable_hclust = T,
@@ -933,7 +821,7 @@ w5$w
 ```
 
 ```{r}
-g_sup <- (((k18$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1.3)))/w5$w)+
+g_sup <- (((k20$tree|w3$w)+patchwork::plot_layout(widths = c(1, 1.3)))/w5$w)+
   patchwork::plot_layout(widths = c(1.5, 1))+
   patchwork::plot_annotation(tag_levels = 'A')
 
@@ -948,7 +836,7 @@ ggsave(plot = g_sup,
 
 
 ```{r, fig.width=9, fig.height=8.5}
-g <- (g0|g_gini)/((k18$tree|w1$w)+patchwork::plot_layout(widths = c(1.5,6)))+
+g <- (g0|g_gini)/((k20$tree|w1$w)+patchwork::plot_layout(widths = c(1.5,6)))+
   patchwork::plot_layout(heights = c(1, 4.5))+
   patchwork::plot_annotation(tag_levels = 'A')
 
@@ -1012,7 +900,7 @@ get_d <- function(A, U_A, T_A, B, verbose=F) {
 
 
 ```{r, echo = F, results='hide'}
-meta$k <- k18$cluster
+meta$k <- k20$cluster
 
 pair_dist <- get_d(B = 5*(10^4),
                    A = A[, 1:15],
@@ -1064,8 +952,8 @@ g_pairs_tsne
 # Benchmarking: k-means, 2D UMAP/tSNE 
 
 ```{r, fig.width=7, fig.height=4.5}
-umap_data$k <- k18$cluster
-tsne_data$k <- k18$cluster
+umap_data$k <- k20$cluster
+tsne_data$k <- k20$cluster
 
 umap_k_centers <- merge(x = aggregate(UMAP_1~k, data = umap_data, FUN = median),
                       y = aggregate(UMAP_2~k, data = umap_data, FUN = median),
