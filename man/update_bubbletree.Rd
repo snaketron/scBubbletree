@@ -86,4 +86,4 @@ ub <- update_bubbletree(x = btd,
 
 }
 
-\seealso{get_k, get_bubbletree, A}
+\seealso{get_k, get_bubbletree, get_dummy_bubbletree, get_gini, get_gini_k, A}

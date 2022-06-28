@@ -89,4 +89,5 @@ b <- get_k(x = A,
           B = 10)
 }
 
-\seealso{get_bubbletree, A}
+\seealso{get_bubbletree, get_dummy_bubbletree, get_gini_k, get_gini,
+update_bubbletree, A}

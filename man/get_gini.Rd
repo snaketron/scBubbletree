@@ -55,4 +55,5 @@ get_gini(labels = sample(x = LETTERS[1:4], size = 100, replace = T),
          clusters = sample(x = letters[1:4], size = 100, replace = T))
 }
 
-\seealso{get_k, update_bubbletree, get_bubbletree, dummy_bubbletree, get_gini_k}
+\seealso{get_k, update_bubbletree, get_bubbletree, dummy_bubbletree,
+get_gini_k, A}

@@ -130,4 +130,4 @@ b <- get_bubbletree(x = A,
                     N_eff = 100)
 }
 
-\seealso{get_k, A}
+\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,A}
