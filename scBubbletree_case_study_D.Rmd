@@ -241,6 +241,20 @@ save(markers_ADT, file = "case_study_D/markers_ADT.RData")
 ```
 
 
+
+```{r}
+umap <- cbind(meta, d@reductions$umap@cell.embeddings)
+tsne <- cbind(meta, d@reductions$tsne@cell.embeddings)
+
+
+save(umap, file = "case_study_D/umap.RData")
+save(tsne, file = "case_study_D/tsne.RData")
+```
+
+
+
+
+
 ```{r}
 # cleanup
 rm(d)
