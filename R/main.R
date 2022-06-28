@@ -1,11 +1,3 @@
-#' Wrapper for k-means. Input: features matrix \code{x} with cells as rows and
-#' features (such as PC embeddings) as columns; vector \code{ks} for the number
-#' of k-means to try; B=number of bootstrapping iterations; the remaining
-#' parameters are described in the function \code{kmeans} or are used for
-#' multicore execution.
-#'
-#' @exportMethod
-#'
 get_k <- function(x,
                   ks,
                   B = 10,
@@ -62,7 +54,7 @@ get_k <- function(x,
 
     # check ks
     if(is.numeric(ks)==F) {
-      stop("ks must be a positive integer or vector of positive integers")
+      stop("ks must be a positive integer  or vector of positive integers")
     }
     if(any(ks<0)==T) {
       stop("ks must be a vector of positive integers")
@@ -351,9 +343,6 @@ get_k <- function(x,
 
 
 
-#'
-#' @exportMethod
-#'
 get_bubbletree <- function(x,
                            k,
                            B = 100,
@@ -390,13 +379,13 @@ get_bubbletree <- function(x,
 
     # check k
     if(is.numeric(k)==F) {
-      stop("k must be a positive integer")
+      stop("k must be a positive integer (k>=3) to build a bubbletree")
     }
     if(length(k)!=1) {
-      stop("k must be a positive integer")
+      stop("k must be a positive integer (k>=3) to build a bubbletree")
     }
     if(k<=0) {
-      stop("k must be a positive integer")
+      stop("k must be a positive integer (k>=3) to build a bubbletree")
     }
 
 
@@ -593,9 +582,9 @@ get_bubbletree <- function(x,
 
 }
 
-#'
-#' @exportMethod
-#'
+
+
+
 update_bubbletree <- function(btd,
                               updated_bubbles,
                               k,
@@ -778,10 +767,7 @@ update_bubbletree <- function(btd,
 
 
 
-#'
-#' @exportMethod
-#'
-dummy_bubbletree <- function(x,
+get_dummy_bubbletree <- function(x,
                              cs,
                              B = 100,
                              N_eff = 100,
@@ -973,9 +959,6 @@ dummy_bubbletree <- function(x,
 
 
 
-#'
-#' @exportMethod
-#'
 get_gini <- function(labels, clusters) {
 
   # check input param
@@ -1061,9 +1044,6 @@ get_gini <- function(labels, clusters) {
 
 
 
-#'
-#' @exportMethod
-#'
 get_gini_k <- function(labels, get_k_obj) {
 
 
