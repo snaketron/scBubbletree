@@ -8,11 +8,11 @@ get_cat_feature_tiles <- function(d,
                                   a,
                                   integrate_vertical = F,
                                   round_digits = 2,
-                                  rotate_x_axis = T,
+                                  rotate_x_axis_labels = T,
                                   show_hclust = F,
                                   disable_hclust = F,
                                   tile_text_size = 3,
-                                  x_axis_label = "Feature") {
+                                  x_axis_name = "Feature") {
 
 
   if(disable_hclust==T & show_hclust==T) {
@@ -99,12 +99,12 @@ get_cat_feature_tiles <- function(d,
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-5,-5,-5,-5))+
-    xlab(label = x_axis_label)+
+    xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
     guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
 
 
-  if(rotate_x_axis==T) {
+  if(rotate_x_axis_labels==T) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }
 
@@ -125,49 +125,204 @@ get_cat_feature_tiles <- function(d,
 #'
 #' @exportMethod
 #'
-get_num_feature_tiles <- function(d,
-                                  as,
-                                  plot_title = '',
+get_num_feature_tiles <- function(btd,
+                                  fs,
+                                  summary_function = "mean",
                                   round_digits = 2,
-                                  rotate_x_axis = T,
                                   show_hclust = F,
                                   disable_hclust = F,
                                   tile_text_size = 3,
-                                  x_axis_label = "Feature") {
+                                  x_axis_name = "Feature",
+                                  rotate_x_axis_labels = T) {
 
-  if(disable_hclust==T & show_hclust==T) {
-    warning("Hclust disabled, set disable_hclust=T to create dendrogram")
+
+  # check input param
+  check_input <- function(btd,
+                          fs,
+                          summary_function,
+                          round_digits,
+                          show_hclust,
+                          disable_hclust,
+                          tile_text_size,
+                          x_axis_name,
+                          rotate_x_axis_labels) {
+
+    # check btd
+    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
+       is.null(class(btd))||class(btd)!="bubbletree") {
+      stop("problem with the input bubbletree")
+    }
+
+    if(is.vector(btd$cluster)==F||
+       is.na(is.vector(btd$cluster))||
+       is.null(is.vector(btd$cluster))) {
+      stop("no clustering results in bubbletree")
+    }
+
+    # check fs
+    if(is.numeric(fs)==F) {
+      stop("fs must be a numeric vector or matrix")
+    }
+    if(length(fs)!=length(btd$cluster)) {
+      stop("length(fs)!=length(btd$cluster)")
+    }
+    if(any(is.infinite(fs))) {
+      warning("some feature values were not finite, they will be omitted.")
+    }
+
+
+    # check round_digits
+    if(is.numeric(round_digits)==F) {
+      stop("round_digits must be an integer >=0")
+    }
+    if(is.integer(round_digits)==F) {
+      stop("round_digits must be an integer >=0")
+    }
+    if(length(round_digits)!=1) {
+      stop("round_digits must be an integer >=0")
+    }
+    if(is.infinite(round_digits)) {
+      stop("round_digits must be an integer >=0")
+    }
+    if(round_digits<0) {
+      stop("round_digits must be an integer >=0")
+    }
+
+
+    # check summary_function
+    if(is.character(summary_function)==F) {
+      stop("summary_function is one of: 'mean', 'median', 'sum'")
+    }
+    if(length(summary_function) != 1) {
+      stop("summary_function is one of: 'mean', 'median', 'sum'")
+    }
+    if(!summary_function %in% c("mean", "median", "sum")) {
+      stop("summary_function is one of: 'mean', 'median', 'sum'")
+    }
+
+
+    # check show_hclust
+    if(is.logical(show_hclust)==F) {
+      stop("show_hclust must be a logical parameter")
+    }
+    if(length(show_hclust)!=1) {
+      stop("show_hclust must be a logical parameter (either TRUE or FALSE)")
+    }
+
+
+    # check disable_hclust
+    if(is.logical(disable_hclust)==F) {
+      stop("disable_hclust must be a logical parameter")
+    }
+    if(length(disable_hclust)!=1) {
+      stop("disable_hclust must be a logical parameter (either TRUE or FALSE)")
+    }
+
+    if(disable_hclust==T & show_hclust==T) {
+      warning("hierarchical feature clustering is disabled (disable_hclust=T),
+              show_hclust=T has no effect (set disable_hclust=F to show
+              hierarchical dendrogram")
+    }
+
+
+    # check tile_text_size
+    if(is.numeric(tile_text_size)==F) {
+      stop("tile_text_size must be a number >0")
+    }
+    if(length(tile_text_size)!=1) {
+      stop("tile_text_size must be a number >0")
+    }
+    if(is.infinite(tile_text_size)) {
+      stop("tile_text_size must be a number >0")
+    }
+    if(tile_text_size<0) {
+      stop("tile_text_size must be an integer >=0")
+    }
+
+
+    # check x_axis_name
+    if(is.character(x_axis_name)==F) {
+      stop("x_axis_name must be a character string")
+    }
+    if(length(tile_text_size)!=1) {
+      stop("x_axis_name must be a character string")
+    }
+
+    # check rotate_x_axis_labels
+    if(is.logical(rotate_x_axis_labels)==F) {
+      stop("rotate_x_axis_labels must be a logical parameter
+           (either TRUE or FALSE)")
+    }
+    if(length(rotate_x_axis_labels)!=1) {
+      stop("rotate_x_axis_labels must be a logical parameter
+           (either TRUE or FALSE)")
+    }
+
   }
 
 
-  get_mu <- function(k, a, feature, round_digits) {
+  # check inputs
+  check_input(btd = btd,
+              fs = fs,
+              summary_function = summary_function,
+              round_digits = round_digits,
+              show_hclust = show_hclust,
+              disable_hclust = disable_hclust,
+              tile_text_size = tile_text_size,
+              x_axis_name = x_axis_name,
+              rotate_x_axis_labels = rotate_x_axis_labels)
+
+
+
+  get_summary <- function(k, a,
+                          feature,
+                          round_digits,
+                          summary_function) {
     f <- data.frame(cluster = k, a = a)
-    f <- stats::aggregate(a~cluster,
-                          data = f,
-                          FUN = mean,
-                          na.action = na.omit)
-    f$value <- round(x = f$a, digits = round_digits)
+
+    if(summary_function == "mean") {
+      f <- stats::aggregate(a~cluster,
+                            data = f,
+                            FUN = mean,
+                            na.action = na.omit)
+      f$value <- round(x = f$a, digits = round_digits)
+    }
+    if(summary_function == "median") {
+      f <- stats::aggregate(a~cluster,
+                            data = f,
+                            FUN = median,
+                            na.action = na.omit)
+      f$value <- round(x = f$a, digits = round_digits)
+    }
+    if(summary_function == "sum") {
+      f <- stats::aggregate(a~cluster,
+                            data = f,
+                            FUN = sum,
+                            na.action = na.omit)
+      f$value <- round(x = f$a, digits = round_digits)
+    }
     f$a <- NULL
     f$feature <- feature
     return(f)
   }
 
 
-  if(is.vector(as)) {
-    as <- matrix(data = as, ncol = 1)
-    base::colnames(as) <- "a"
+  if(is.vector(fs)) {
+    fs <- matrix(data = fs, ncol = 1)
+    base::colnames(fs) <- "f"
   }
 
-  if(is.null(base::colnames(as))) {
-    base::colnames(as) <- paste0("a_", 1:ncol(as))
+  if(is.null(base::colnames(fs))) {
+    base::colnames(fs) <- paste0("f_", 1:ncol(fs))
   }
 
-  ws <- vector(mode = "list", length = ncol(as))
-  for(i in 1:ncol(as)) {
-    ws[[i]] <- get_mu(k = d$cluster,
-                     a = as[, i],
-                     feature = base::colnames(as)[i],
-                     round_digits = round_digits)
+  ws <- vector(mode = "list", length = ncol(fs))
+  for(i in 1:ncol(fs)) {
+    ws[[i]] <- get_summary(k = d$cluster,
+                           a = fs[, i],
+                           feature = base::colnames(fs)[i],
+                           round_digits = round_digits,
+                           summary_function = summary_function)
   }
   ws <- do.call(rbind, ws)
 
@@ -180,13 +335,13 @@ get_num_feature_tiles <- function(d,
     ws$feature <- ws$feature[is.na(ws$feature)==F][1]
   }
   ws$feature <- as.character(ws$feature)
-  ws$feature <- factor(x = ws$feature, levels = base::colnames(as))
+  ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))
 
 
 
   # reorder features based on hclust
   if(disable_hclust==F) {
-    if(ncol(as)>1) {
+    if(ncol(fs)>1) {
       tree <- get_weighted_feature_dist_num(main_ph = d$ph$main_ph,
                                             w = ws,
                                             value_var = "value")
@@ -204,12 +359,11 @@ get_num_feature_tiles <- function(d,
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))+
-    xlab(label = x_axis_label)+
+    xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
-    ggtitle(label = plot_title)+
     guides(fill = guide_colourbar(barwidth = 5, barheight = 0.7))
 
-  if(rotate_x_axis==T) {
+  if(rotate_x_axis_labels==T) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }
 
@@ -227,14 +381,117 @@ get_num_feature_tiles <- function(d,
 #'
 #' @exportMethod
 #'
-get_num_feature_violins <- function(d,
-                                    as,
-                                    plot_title = '',
-                                    scales = "free_x",
-                                    violin_min_cells = 10,
+get_num_feature_violins <- function(btd,
+                                    fs,
                                     show_cells = T,
                                     disable_hclust = F,
-                                    x_axis_label = "Feature distribution") {
+                                    x_axis_name = "Feature distribution",
+                                    rotate_x_axis_labels = T,
+                                    min_cells_for_violin = 10) {
+
+
+
+  # check input param
+  check_input <- function(btd,
+                          fs,
+                          show_cells,
+                          disable_hclust,
+                          x_axis_name,
+                          rotate_x_axis_labels,
+                          min_cells_for_violin) {
+
+    # check btd
+    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
+       is.null(class(btd))||class(btd)!="bubbletree") {
+      stop("problem with the input bubbletree")
+    }
+
+    if(is.vector(btd$cluster)==F||
+       is.na(is.vector(btd$cluster))||
+       is.null(is.vector(btd$cluster))) {
+      stop("no clustering results in bubbletree")
+    }
+
+
+    # check fs
+    if(is.numeric(fs)==F) {
+      stop("fs must be a numeric vector or matrix")
+    }
+    if(length(fs)!=length(btd$cluster)) {
+      stop("length(fs)!=length(btd$cluster)")
+    }
+    if(any(is.infinite(fs))) {
+      warning("some feature values were not finite, they will be omitted.")
+    }
+
+
+    # check show_cells
+    if(is.logical(show_cells)==F) {
+      stop("show_cells must be a logical parameter")
+    }
+    if(length(show_cells)!=1) {
+      stop("show_cells must be a logical parameter (either TRUE or FALSE)")
+    }
+
+
+    # check disable_hclust
+    if(is.logical(disable_hclust)==F) {
+      stop("disable_hclust must be a logical parameter")
+    }
+    if(length(disable_hclust)!=1) {
+      stop("disable_hclust must be a logical parameter (either TRUE or FALSE)")
+    }
+
+
+    # check x_axis_name
+    if(is.character(x_axis_name)==F) {
+      stop("x_axis_name must be a character string")
+    }
+    if(length(tile_text_size)!=1) {
+      stop("x_axis_name must be a character string")
+    }
+
+
+    # check rotate_x_axis_labels
+    if(is.logical(rotate_x_axis_labels)==F) {
+      stop("rotate_x_axis_labels must be a logical parameter
+           (either TRUE or FALSE)")
+    }
+    if(length(rotate_x_axis_labels)!=1) {
+      stop("rotate_x_axis_labels must be a logical parameter
+           (either TRUE or FALSE)")
+    }
+
+
+    # check min_cells_for_violin
+    if(is.numeric(min_cells_for_violin)==F) {
+      stop("min_cells_for_violin must be an integer >0")
+    }
+    if(is.integer(min_cells_for_violin)==F) {
+      stop("min_cells_for_violin must be an integer >0")
+    }
+    if(length(min_cells_for_violin)!=1) {
+      stop("min_cells_for_violin must be an integer >0")
+    }
+    if(is.infinite(min_cells_for_violin)) {
+      stop("min_cells_for_violin must be an integer >0")
+    }
+    if(min_cells_for_violin<0) {
+      stop("min_cells_for_violin must be an integer >0")
+    }
+  }
+
+
+  # check inputs
+  check_input(btd = btd,
+              fs = fs,
+              show_cells = show_cells,
+              disable_hclust = disable_hclust,
+              x_axis_name = x_axis_name,
+              rotate_x_axis_labels = rotate_x_axis_labels,
+              min_cells_for_violin = min_cells_for_violin)
+
+
 
   get_raw <- function(k, a, feature) {
     f <- data.frame(cluster = k, a = a)
@@ -258,29 +515,29 @@ get_num_feature_violins <- function(d,
   }
 
 
-  if(is.vector(as)) {
-    as <- matrix(data = as, ncol = 1)
-    base::colnames(as) <- "a"
+  if(is.vector(fs)) {
+    fs <- matrix(data = fs, ncol = 1)
+    base::colnames(fs) <- "a"
   }
 
-  if(is.null(base::colnames(as))) {
-    base::colnames(as) <- paste0("a_", 1:ncol(as))
+  if(is.null(base::colnames(fs))) {
+    base::colnames(fs) <- paste0("a_", 1:ncol(fs))
   }
 
 
 
   # get summary
-  ws <- vector(mode = "list", length = ncol(as))
-  mu_ws <- vector(mode = "list", length = ncol(as))
-  for(i in 1:ncol(as)) {
+  ws <- vector(mode = "list", length = ncol(fs))
+  mu_ws <- vector(mode = "list", length = ncol(fs))
+  for(i in 1:ncol(fs)) {
 
     ws[[i]] <- get_raw(k = d$cluster,
-                       a = as[, i],
-                       feature = base::colnames(as)[i])
+                       a = fs[, i],
+                       feature = base::colnames(fs)[i])
 
     mu_ws[[i]] <- get_mu(k = d$cluster,
-                         a = as[, i],
-                         feature = base::colnames(as)[i])
+                         a = fs[, i],
+                         feature = base::colnames(fs)[i])
 
   }
   ws <- do.call(rbind, ws)
@@ -296,7 +553,7 @@ get_num_feature_violins <- function(d,
     mu_ws$feature <- mu_ws$feature[is.na(mu_ws$feature)==F][1]
   }
   mu_ws$feature <- as.character(mu_ws$feature)
-  mu_ws$feature <- factor(x = mu_ws$feature, levels = base::colnames(as))
+  mu_ws$feature <- factor(x = mu_ws$feature, levels = base::colnames(fs))
 
 
 
@@ -309,14 +566,14 @@ get_num_feature_violins <- function(d,
     ws$feature <- ws$feature[is.na(ws$feature)==F][1]
   }
   ws$feature <- as.character(ws$feature)
-  ws$feature <- factor(x = ws$feature, levels = base::colnames(as))
+  ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))
 
 
 
 
   # reorder features based on hclust
   if(disable_hclust==F) {
-    if(ncol(as)>1) {
+    if(ncol(fs)>1) {
       tree <- get_weighted_feature_dist_num(main_ph = d$ph$main_ph,
                                             w = mu_ws,
                                             value_var = "value")
@@ -328,11 +585,10 @@ get_num_feature_violins <- function(d,
 
   w <- ggplot(data = ws)+
     theme_bw(base_size = 10)+
-    facet_grid(.~feature, scales = scales)+
+    facet_grid(.~feature, scales = "free_x")+
     coord_flip()+
-    ylab(label = x_axis_label)+
+    ylab(label = x_axis_name)+
     xlab(label = "Bubble")+
-    ggtitle(label = plot_title)+
     theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))
@@ -341,10 +597,10 @@ get_num_feature_violins <- function(d,
   if(show_cells==F) {
     w <- w+geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
   } else {
-    # remove small violins n<violin_min_cells
+    # remove small violins n<min_cells_for_violin
     ws_stat <- data.frame(table(ws$cluster, ws$feature))
     colnames(ws_stat) <- c("cluster", "feature", "freq")
-    ws_bad <- which(ws_stat$freq < violin_min_cells)
+    ws_bad <- which(ws_stat$freq < min_cells_for_violin)
     if(length(ws_bad)>0) {
       ws_stat <- ws_stat[ws_bad, ]
       ws_new <- ws
