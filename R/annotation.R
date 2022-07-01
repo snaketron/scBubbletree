@@ -40,18 +40,14 @@ get_cat_feature_tiles <- function(btd,
 
 
     # check fs
-    if(is.numeric(f)==F) {
-      stop("f must be a numeric vector or matrix")
+    if(is.character(f)==F) {
+      stop("f must be a character vector")
     }
     if(is.vector(f)==F) {
-      stop("f must be a numeric vector")
+      stop("f must be a character vector")
     }
-    if(length(fs)!=length(btd$cluster)) {
+    if(length(f)!=length(btd$cluster)) {
       stop("length(f) != length(btd$cluster)")
-    }
-    if(any(is.infinite(f))) {
-      warning("some feature values in f are infinite,
-              they will be omitted.")
     }
 
 
@@ -145,7 +141,7 @@ get_cat_feature_tiles <- function(btd,
 
   # check inputs
   check_input(btd = btd,
-              fs = fs,
+              f = f,
               integrate_vertical = integrate_vertical,
               round_digits = round_digits,
               show_hclust = show_hclust,
@@ -159,12 +155,20 @@ get_cat_feature_tiles <- function(btd,
   ws <- base::data.frame(table(btd$cluster, f))
   base::colnames(ws) <- c("cluster", "feature", "freq")
 
+
   # compute stats
   n <- stats::aggregate(freq~cluster, data = ws, FUN = sum)
   n$n_cluster <- n$freq
   n$freq <- NULL
   ws <- base::merge(x = ws, y = n, by = "cluster")
   rm(n)
+
+  n <- stats::aggregate(freq~feature, data = ws, FUN = sum)
+  n$n_feature <- n$freq
+  n$freq <- NULL
+  ws <- base::merge(x = ws, y = n, by = "feature")
+  rm(n)
+
 
   ws$prob_cluster <- ws$freq/ws$n_cluster
   ws$prob_feature <- ws$freq/ws$n_feature
@@ -442,14 +446,13 @@ get_num_feature_tiles <- function(btd,
   }
 
 
-  if(is.vector(fs)) {
-    fs <- matrix(data = fs, ncol = 1)
-    base::colnames(fs) <- "f"
+  if(base::is.vector(fs)) {
+    fs <- base::matrix(data = fs, ncol = 1)
+    if(base::is.null(base::colnames(fs))) {
+      base::colnames(fs) <- "f"
+    }
   }
 
-  if(is.null(base::colnames(fs))) {
-    base::colnames(fs) <- paste0("f_", 1:ncol(fs))
-  }
 
   ws <- vector(mode = "list", length = ncol(fs))
   for(i in 1:ncol(fs)) {
@@ -492,13 +495,13 @@ get_num_feature_tiles <- function(btd,
     geom_tile(aes(x = feature, y = cluster, fill = value), col = "white")+
     geom_text(aes(x = feature, y = cluster, label = value), col = "black",
               size = tile_text_size)+
-    scale_fill_distiller(name = "Avg.", palette = "Spectral", na.value = 'white')+
+    scale_fill_distiller(name = "F", palette = "Spectral", na.value = 'white')+
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))+
     xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
-    guides(fill = guide_colourbar(barwidth = 5, barheight = 0.7))
+    guides(fill = guide_colourbar(barwidth = 5, barheight = 1))
 
   if(rotate_x_axis_labels==T) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -596,11 +599,9 @@ get_num_feature_violins <- function(btd,
 
   if(base::is.vector(fs)) {
     fs <- base::matrix(data = fs, ncol = 1)
-    base::colnames(fs) <- "f"
-  }
-
-  if(base::is.null(base::colnames(fs))) {
-    base::colnames(fs) <- base::paste0("f_", 1:base::ncol(fs))
+    if(base::is.null(base::colnames(fs))) {
+      base::colnames(fs) <- "f"
+    }
   }
 
   if(base::is.matrix(fs)) {
