@@ -28,7 +28,8 @@ get_cat_feature_tiles <- function(btd,
 
     # check btd
     if(is.na(btd)||is.null(btd)||is.na(class(btd))||
-       is.null(class(btd))||class(btd)!="bubbletree") {
+       is.null(class(btd))||!class(btd)%in%
+       c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
     }
 
@@ -277,7 +278,8 @@ get_num_feature_tiles <- function(btd,
 
     # check btd
     if(is.na(btd)||is.null(btd)||is.na(class(btd))||
-       is.null(class(btd))||class(btd)!="bubbletree") {
+       is.null(class(btd))||!class(btd)%in%
+       c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
     }
 
@@ -535,7 +537,8 @@ get_num_feature_violins <- function(btd,
 
     # check btd
     if(is.na(btd)||is.null(btd)||is.na(class(btd))||
-       is.null(class(btd))||class(btd)!="bubbletree") {
+       is.null(class(btd))||!class(btd)%in%
+       c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
     }
 
@@ -550,11 +553,22 @@ get_num_feature_violins <- function(btd,
     if(is.numeric(fs)==F) {
       stop("fs must be a numeric vector or matrix")
     }
-    if(length(fs)!=length(btd$cluster)) {
-      stop("length(fs)!=length(btd$cluster)")
+    if(is.vector(fs)==F&is.matrix(fs)==F) {
+      stop("fs must be a numeric vector or matrix")
+    }
+    if(is.vector(fs)) {
+      if(length(fs)!=length(btd$cluster)) {
+        stop("length(fs) != length(btd$cluster)")
+      }
+    }
+    if(is.matrix(fs)) {
+      if(nrow(fs)!=length(btd$cluster)) {
+        stop("nrow(fs) != length(btd$cluster)")
+      }
     }
     if(any(is.infinite(fs))) {
-      warning("some feature values were not finite, they will be omitted.")
+      warning("some feature values in fs are infinite,
+              they will be omitted.")
     }
 
 
