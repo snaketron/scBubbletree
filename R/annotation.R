@@ -6,7 +6,7 @@
 #'
 get_cat_feature_tiles <- function(btd,
                                   f,
-                                  integrate_vertical = F,
+                                  integrate_vertical,
                                   round_digits = 2,
                                   show_hclust = F,
                                   disable_hclust = F,
