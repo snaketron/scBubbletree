@@ -1,3 +1,5 @@
+
+
 get_k <- function(x,
                   ks,
                   B = 10,
@@ -303,7 +305,7 @@ get_k <- function(x,
   # compute gap summary
   gap_mean <- apply(X = gap_matrix, MARGIN = 2, FUN = base::mean)
   gap_se <- sqrt((1/(B*B_gap) + 1) * apply(X = gap_matrix, MARGIN = 2,
-                                     FUN = stats::var))
+                                           FUN = stats::var))
   gap_stats_summary <- data.frame(gap_mean = gap_mean,
                                   k = ks,
                                   gap_SE = gap_se,
@@ -314,7 +316,7 @@ get_k <- function(x,
   # compute wcss summary
   wcss_mean <- apply(X = wcss_matrix, MARGIN = 2, FUN = base::mean)
   wcss_se <- sqrt((1/B + 1) * apply(X = wcss_matrix, MARGIN = 2,
-                                      FUN = stats::var))
+                                    FUN = stats::var))
   wcss_stats_summary <- data.frame(wcss_mean = wcss_mean,
                                    k = ks,
                                    wcss_SE = wcss_se,
@@ -768,13 +770,13 @@ update_bubbletree <- function(btd,
 
 
 get_dummy_bubbletree <- function(x,
-                             cs,
-                             B = 100,
-                             N_eff = 100,
-                             cores = 1,
-                             seed = NA,
-                             round_digits = 2,
-                             show_simple_count = F) {
+                                 cs,
+                                 B = 100,
+                                 N_eff = 100,
+                                 cores = 1,
+                                 seed = NA,
+                                 round_digits = 2,
+                                 show_simple_count = F) {
 
 
   # check input param
@@ -1108,9 +1110,9 @@ get_gini_k <- function(labels, get_k_obj) {
                                        total_gini = gini$total_gini)
       # cluster
       cluster_o[[counter]] <- data.frame(B = i,
-                                    k = as.numeric(ks[j]),
-                                    cluster = base::names(gini$cluster_gini),
-                                    gini = gini$cluster_gini)
+                                         k = as.numeric(ks[j]),
+                                         cluster = base::names(gini$cluster_gini),
+                                         gini = gini$cluster_gini)
       counter <- counter + 1
     }
   }

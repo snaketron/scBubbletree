@@ -14,7 +14,7 @@
 #' @param cores
 #' @return data frame
 #'
-get_dist <- function(B = 20,
+get_dist <- function(B,
                      m,
                      c,
                      N_eff,
@@ -27,6 +27,14 @@ get_dist <- function(B = 20,
                                   c = c,
                                   N_eff = N_eff,
                                   mc.cores = cores)
+  # get distances between clusters
+  # pair_dist <- parallel::mclapply(X = 1:B,
+  #                                 FUN = get_pair_dist_2,
+  #                                 m = m,
+  #                                 c = c,
+  #                                 N_eff = N_eff,
+  #                                 mc.cores = cores)
+
   pair_dist <- base::do.call(rbind, pair_dist)
 
   hc_pair_dist <- get_hc_dist(pair_dist = pair_dist)
@@ -192,7 +200,7 @@ get_dendrogram <- function(ph,
 
 
 # Used in get_dist (util.R)
-get_pair_dist <- function(x, m, c, N_eff) {
+get_pair_dist_2 <- function(x, m, c, N_eff) {
 
   get_euc <- function(x, y) {
     for(i in 1:ncol(y)) {
@@ -242,7 +250,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
       }
 
 
-      # just in check
+      # just in case check
       if(is.vector(x_i)) {
         x_i <- matrix(data = x_i, nrow = 1)
       }
@@ -257,6 +265,83 @@ get_pair_dist <- function(x, m, c, N_eff) {
       for(k in 1:nrow(x_i)) {
         w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
       }
+
+      # symmetric distances
+      stats <- rbind(stats, data.frame(c_i = cs[i],
+                                       c_j = cs[j],
+                                       B = x,
+                                       M = mean(w)))
+      stats <- rbind(stats, data.frame(c_i = cs[j],
+                                       c_j = cs[i],
+                                       B = x,
+                                       M = mean(w)))
+    }
+  }
+
+  return(stats)
+}
+
+
+
+
+# Used in get_dist (util.R)
+get_pair_dist <- function(x, m, c, N_eff) {
+
+
+  get_euc <- function(x,y) {
+    return(base::sqrt(base::outer(base::rowSums(x^2),
+                                  base::rowSums(y^2), '+') -
+                        base::tcrossprod(x, 2 * y)))
+  }
+
+
+  cs <- unique(c)
+  stats <- c()
+  len_cs <- length(cs)
+
+  for(i in 1:(len_cs-1)) {
+
+    x_i <- m[which(c == cs[i]), ]
+    if(is.vector(x_i)) {
+      x_i <- matrix(data = x_i, nrow = 1)
+    }
+
+    # efficiency
+    if(is.na(N_eff) == F) {
+      if(nrow(x_i)>N_eff) {
+        x_i <- x_i[base::sample(x = 1:nrow(x_i),
+                                size = N_eff,
+                                replace = T), ]
+      }
+    }
+
+    for(j in (i+1):len_cs) {
+
+      x_j <- m[which(c == cs[j]), ]
+      if(is.vector(x_j)) {
+        x_j <- matrix(data = x_j, nrow = 1)
+      }
+
+      # efficiency
+      if(is.na(N_eff) == F) {
+        if(nrow(x_j)>N_eff) {
+          x_j <- x_j[base::sample(x = 1:nrow(x_j),
+                                  size = N_eff,
+                                  replace = T), ]
+        }
+      }
+
+
+      # just in case check
+      if(is.vector(x_i)) {
+        x_i <- matrix(data = x_i, nrow = 1)
+      }
+      if(is.vector(x_j)) {
+        x_j <- matrix(data = x_j, nrow = 1)
+      }
+
+      w <- get_euc(x = x_i, y = x_j)
+
 
       # symmetric distances
       stats <- rbind(stats, data.frame(c_i = cs[i],

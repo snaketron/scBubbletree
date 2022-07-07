@@ -252,6 +252,7 @@ get_cat_feature_tiles <- function(btd,
 }
 
 
+
 #'
 #' @exportMethod
 #'
@@ -519,6 +520,7 @@ get_num_feature_tiles <- function(btd,
   return(list(table = ws,
               plot = w))
 }
+
 
 
 
