@@ -247,7 +247,8 @@ get_cat_feature_tiles <- function(btd,
     }
   }
 
-  return(list(ws = ws, w = w))
+  return(list(table = ws,
+              plot = w))
 }
 
 
@@ -515,7 +516,8 @@ get_num_feature_tiles <- function(btd,
     }
   }
 
-  return(list(ws = ws, w = w))
+  return(list(table = ws,
+              plot = w))
 }
 
 
@@ -673,7 +675,8 @@ get_num_feature_violins <- function(btd,
           legend.box.margin=margin(-10,-10,-10,-10))+
     geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
 
-  return(list(ws = ws, w = w))
+  return(list(table = ws,
+              plot = w))
 }
 
 
