@@ -660,8 +660,9 @@ get_num_feature_violins <- function(btd,
 
   j <- base::which(btd$tree_meta$c < 10)
   if(base::length(j)>0) {
-    warning(base::paste0("Bubbles: ", btd$tree_meta$label[j], " have fewer
-                         than 10 cells -> violins might not be robust"))
+    warning(base::paste0("Bubbles: ", paste0(btd$tree_meta$label[j],
+    collapse = ','), " have fewer than 10 cells
+    -> violins might not be robust"))
   }
 
   w <- ggplot(data = ws)+
