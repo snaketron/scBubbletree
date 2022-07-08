@@ -1,19 +1,3 @@
-#' For a features matrix \code{x} with cells as rows and features
-#' (such as PC embeddings) as columns and cell clusters vector \code{c},
-#' this function computes the average Euclidean distance between the pairs
-#' of clusters and highest density interval of the distribution of pairwise
-#' distances estimated between a pair of clusters.
-#'
-#' \code{N_eff} number of cells to use from each cluster (if
-#' N_eff=NA all cells are used). Improves efficiency.
-#'
-#' @param B number.
-#' @param m matrix
-#' @param c vector.
-#' @param N_eff number
-#' @param cores
-#' @return data frame
-#'
 get_dist <- function(B,
                      m,
                      c,
@@ -121,7 +105,6 @@ get_node_descendents_in_phylo <- function(tree,
 
 
 
-# Used in main.R
 get_dendrogram <- function(ph,
                            cluster,
                            round_digits,
@@ -199,7 +182,6 @@ get_dendrogram <- function(ph,
 
 
 
-# Used in get_dist (util.R)
 get_pair_dist_2 <- function(x, m, c, N_eff) {
 
   get_euc <- function(x, y) {
@@ -283,8 +265,6 @@ get_pair_dist_2 <- function(x, m, c, N_eff) {
 
 
 
-
-# Used in get_dist (util.R)
 get_pair_dist <- function(x, m, c, N_eff) {
 
 
@@ -360,8 +340,6 @@ get_pair_dist <- function(x, m, c, N_eff) {
 
 
 
-
-# Computes standard error from vector x of values
 get_se <- function(x) {
   if(length(x) == 1) {
     se <- NA
@@ -371,6 +349,7 @@ get_se <- function(x) {
   }
   return(se)
 }
+
 
 
 get_hc_dist <- function(pair_dist) {
@@ -411,6 +390,7 @@ get_hc_dist <- function(pair_dist) {
 }
 
 
+
 get_pca_dist <- function(pair_dist) {
   B <- base::max(pair_dist$B)
 
@@ -428,6 +408,7 @@ get_pca_dist <- function(pair_dist) {
 
   return(m)
 }
+
 
 
 get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
@@ -510,7 +491,6 @@ get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
 
 
 
-
 get_weighted_feature_dist <- function(main_ph, w, value_var) {
 
 
@@ -578,3 +558,4 @@ get_weighted_feature_dist <- function(main_ph, w, value_var) {
 
 
 }
+
