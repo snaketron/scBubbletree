@@ -4,15 +4,15 @@
 #'
 #' @exportMethod
 #'
-get_cat_feature_tiles <- function(btd,
-                                  f,
-                                  integrate_vertical,
-                                  round_digits = 2,
-                                  show_hclust = F,
-                                  disable_hclust = F,
-                                  tile_text_size = 3,
-                                  x_axis_name = "Feature",
-                                  rotate_x_axis_labels = T) {
+get_cat_tiles <- function(btd,
+                          f,
+                          integrate_vertical,
+                          round_digits = 2,
+                          show_hclust = F,
+                          disable_hclust = F,
+                          tile_text_size = 3,
+                          x_axis_name = "Feature",
+                          rotate_x_axis_labels = T) {
 
 
   # check input param
@@ -256,15 +256,15 @@ get_cat_feature_tiles <- function(btd,
 #'
 #' @exportMethod
 #'
-get_num_feature_tiles <- function(btd,
-                                  fs,
-                                  summary_function = "mean",
-                                  round_digits = 2,
-                                  show_hclust = F,
-                                  disable_hclust = F,
-                                  tile_text_size = 3,
-                                  x_axis_name = "Feature",
-                                  rotate_x_axis_labels = T) {
+get_num_tiles <- function(btd,
+                          fs,
+                          summary_function = "mean",
+                          round_digits = 2,
+                          show_hclust = F,
+                          disable_hclust = F,
+                          tile_text_size = 3,
+                          x_axis_name = "Feature",
+                          rotate_x_axis_labels = T) {
 
 
   # check input param
@@ -527,10 +527,10 @@ get_num_feature_tiles <- function(btd,
 #'
 #' @exportMethod
 #'
-get_num_feature_violins <- function(btd,
-                                    fs,
-                                    x_axis_name = "Feature distribution",
-                                    rotate_x_axis_labels = T) {
+get_num_violins <- function(btd,
+                            fs,
+                            x_axis_name = "Feature distribution",
+                            rotate_x_axis_labels = T) {
 
 
   # check input param
@@ -663,7 +663,7 @@ get_num_feature_violins <- function(btd,
   j <- base::which(btd$tree_meta$c < 10)
   if(base::length(j)>0) {
     warning(base::paste0("Bubbles: ", paste0(btd$tree_meta$label[j],
-    collapse = ','), " have fewer than 10 cells
+                                             collapse = ','), " have fewer than 10 cells
     -> violins might not be robust"))
   }
 
