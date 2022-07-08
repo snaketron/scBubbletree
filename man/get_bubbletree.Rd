@@ -120,15 +120,15 @@ in a hierarchical dendrogram the algorithm performs the following steps:
 
 \examples{
 # input data
-
 data(A)
-
 head(A)
 
 b <- get_bubbletree(x = A,
                     k = 18,
                     N_eff = 100)
+
+b$tree
 }
 
-\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,A,
-get_num_tiles, get_num_violins, get_cat_tiles}
+\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,
+A, fs, f, get_num_tiles, get_num_violins, get_cat_tiles}
