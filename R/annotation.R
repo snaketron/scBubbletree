@@ -27,7 +27,7 @@ get_cat_tiles <- function(btd,
                           rotate_x_axis_labels) {
 
     # check btd
-    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
+    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
        is.null(class(btd))||!class(btd)%in%
        c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
@@ -279,7 +279,7 @@ get_num_tiles <- function(btd,
                           rotate_x_axis_labels) {
 
     # check btd
-    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
+    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
        is.null(class(btd))||!class(btd)%in%
        c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
@@ -540,7 +540,7 @@ get_num_violins <- function(btd,
                           rotate_x_axis_labels) {
 
     # check btd
-    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
+    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
        is.null(class(btd))||!class(btd)%in%
        c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
