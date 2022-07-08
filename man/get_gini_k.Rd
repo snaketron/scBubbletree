@@ -63,4 +63,4 @@ get_gini(labels = sample(x = LETTERS[1:4], size = 100, replace = T),
 }
 
 \seealso{get_k, update_bubbletree, get_bubbletree, get_dummy_bubbletre,
-get_gini_k}
+get_gini_k,A,f,fs,get_num_tiles, get_num_violins, get_cat_tiles}

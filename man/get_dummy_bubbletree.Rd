@@ -91,13 +91,14 @@ head(A)
 # dummy clusters
 cs <- sample(x = LETTERS, size = nrow(A), replace = T)
 
-db <- dummy_bubbletree(x = A,
-                       cs,
-                       B = 100,
-                       N_eff = 100,
-                       cores = 1)
+db <- get_dummy_bubbletree(x = A,
+                           cs = cs,
+                           B = 100,
+                           N_eff = 100,
+                           cores = 1)
 
 
 }
 
-\seealso{get_k, update_bubbletree, get_bubbletree, get_gini, get_gini_k, A}
+\seealso{get_k, update_bubbletree, get_bubbletree, get_gini, get_gini_k, A,fs,f,
+get_num_tiles, get_num_violins, get_cat_tiles}
