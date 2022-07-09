@@ -124,8 +124,9 @@ data(A)
 head(A)
 
 b <- get_bubbletree(x = A,
-                    k = 18,
-                    N_eff = 100)
+                    k = 8,
+                    N_eff = 100,
+                    B = 30)
 
 b$tree
 }
