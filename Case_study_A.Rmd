@@ -1,14 +1,10 @@
 ---
 title: "Case study A: Exploring scRNA-seq data from 5 cancer cell lines with scBubbletree"
 author: "SK"
-output: 
-  rmarkdown::html_document:
-    toc: true
-    toc_depth: 1
-vignette: >
-  %\VignetteIndexEntry{}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
 ---
 
 
@@ -596,6 +592,7 @@ w4 <- get_num_violins(btd = k5,
   patchwork::plot_layout(widths = c(1.5, 2, 2.5))+
   patchwork::plot_annotation(tag_levels = 'A')
 ```
+
 ### quality control with `scBubbletree`
 What is the percent of UMIs coming from mitochondrial genes in each bubble? 
 

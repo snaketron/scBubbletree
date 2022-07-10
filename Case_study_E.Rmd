@@ -1,14 +1,10 @@
 ---
 title: "Case study E: Exploring scRNA-seq data from 2,700 PBMCs with scBubbletree"
 author: "SK"
-output: 
-  rmarkdown::html_document:
-    toc: true
-    toc_depth: 1
-vignette: >
-  %\VignetteIndexEntry{}
-  %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
 ---
 
 
@@ -169,8 +165,8 @@ Two approaches should be used to find $k$.
 
 First, we need to study the literature or databases such as the human protein 
 atlas database (HPA) to identify a reasonable range of $k$s. HPA provides a 
-decomposition of PBMCs into 18 canonical cell populations[^2]. Given that here
-we have only 2,700 PBMCs it might be unrealistic to recover all 18 subtypes,
+decomposition of PBMCs into 18 canonical cell populations[^2]. Given that here 
+we have only 2,700 PBMCs it might be unrealistic to recover all 18 subtypes, 
 however, this gives us an idea about the general range of useful $k$s.
 
 Second, we can use the function `get_k` for data-driven inference of $k$ based 
