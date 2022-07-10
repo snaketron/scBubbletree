@@ -183,7 +183,7 @@ The `scBubbletree` workflow performs the following steps:
 
 
 ### 1. determining the number of clusters $k$
-How many clusters (cell types) are there are in the data? C we guess a 
+How many clusters (cell types) are there are in the data? Can we guess a 
 reasonable value of $k$? 
 
 Two approaches should be used to find $k$. First, we need to study the 
@@ -270,7 +270,7 @@ which will perform $n_{start} = 1000$ (default in scBubbletree) random starts
 and a maximum number of iterations $iter_{max} = 300$. 
 
 **Important remark**: for smaller datasets (e.g. $n<100,000$) $n_{start} = 1000$ 
-and $n_{iter} = 300$ are set to unnecessarily very defaults, however for larger
+and $n_{iter} = 300$ are set to unnecessarily high defaults, however for larger
 datasets this is necessary to make sure that k-means converges.
 
 

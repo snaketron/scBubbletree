@@ -1,0 +1,309 @@
+---
+title: "Case study C: digit recognition with scBubbletree"
+author: "SK"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+
+
+```{r, eval=T, echo=F}
+source(file = "~/Rutil/Init_Rpack.R")
+```
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = F,
+                      comment = F, 
+                      warning = F, 
+                      message = F)
+```
+
+
+This vignette introduces `scBubbletree`, a transparent workflow for exploration
+of single cell RNA-seq data. To run this vignette we need a few R-packages:
+
+```{r, echo = T, eval = F, results='hide'}
+library(scBubbletree)
+library(Seurat)
+library(ggrepel)
+```
+
+
+```{r, echo = F, results='hide'}
+library(scBubbletree)
+library(Seurat, lib.loc = lib.loc)
+library(ggrepel, lib.loc = lib.loc)
+```
+
+
+## Data
+
+For this case study we will **not** explore single cell RNA-seq data. Instead,
+we will look into the **digits** dataset. The data contains 64 feature (8x8 
+pixel values in the range 0 to 16) for 5620 images.
+
+```{r, echo=T}
+# .. _digits_dataset:
+# 
+# Optical recognition of handwritten digits dataset
+# --------------------------------------------------
+# 
+# Data Set Characteristics:
+# 
+#     :Number of Instances: 5620
+#     :Number of Attributes: 64
+#     :Attribute Information: 8x8 image of integer pixels in the range 0..16.
+#     :Missing Attribute Values: None
+#     :Creator: E. Alpaydin (alpaydin '@' boun.edu.tr)
+#     :Date: July; 1998
+# 
+# This is a copy of the test set of the UCI ML hand-written digits datasets
+# https://archive.ics.uci.edu/ml/datasets/Optical+Recognition+of+Handwritten+Digits
+# 
+# The data set contains images of hand-written digits: 10 classes where
+# each class refers to a digit.
+# 
+# Preprocessing programs made available by NIST were used to extract
+# normalized bitmaps of handwritten digits from a preprinted form. From a
+# total of 43 people, 30 contributed to the training set and different 13
+# to the test set. 32x32 bitmaps are divided into nonoverlapping blocks of
+# 4x4 and the number of on pixels are counted in each block. This generates
+# an input matrix of 8x8 where each element is an integer in the range
+# 0..16. This reduces dimensionality and gives invariance to small
+# distortions.
+# 
+# For info on NIST preprocessing routines, see M. D. Garris, J. L. Blue, G.
+# T. Candela, D. L. Dimmick, J. Geist, P. J. Grother, S. A. Janet, and C.
+# L. Wilson, NIST Form-Based Handprint Recognition System, NISTIR 5469,
+# 1994.
+# 
+# .. topic:: References
+# 
+#   - C. Kaynak (1995) Methods of Combining Multiple Classifiers and Their
+#     Applications to Handwritten Digit Recognition, MSc Thesis, Institute of
+#     Graduate Studies in Science and Engineering, Bogazici University.
+#   - E. Alpaydin, C. Kaynak (1998) Cascading Classifiers, Kybernetika.
+#   - Ken Tang and Ponnuthurai N. Suganthan and Xi Yao and A. Kai Qin.
+#     Linear dimensionalityreduction using relevance weighted LDA. School of
+#     Electrical and Electronic Engineering Nanyang Technological University.
+#     2005.
+#   - Claudio Gentile. A New Approximate Maximal Margin Classification
+#     Algorithm. NIPS. 2000.
+```
+
+
+```{r}
+# create directory
+dir.create(path = "case_study_D/")
+
+# Download the data from:
+# https://archive.ics.uci.edu/ml/datasets/Optical+Recognition+of+Handwritten+Digits
+
+digits <- rbind(as.matrix(read.csv(file = "case_study_D/optdigits.tra", header = F)),
+                as.matrix(read.csv(file = "case_study_D/optdigits.tes", header = F)))
+
+labels <- digits[,65]
+digits <- digits[, -65]
+```
+
+
+
+The `scBubbletree` workflow performs the following steps:
+  
+  1. determine number of clusters $k$
+  2. $k$-means clustering
+  3. hierarchical organization of clusters (bubbles)
+  4. annotation and evaluation
+
+
+### 1. determining the number of clusters $k$
+How many clusters (digits) are there are in the data? For this we will use the 
+function `get_k` for data-driven inference of $k$ based on the Gap statistic 
+and the within-cluster sum of squares (WCSS).
+
+The function `get_k` performs $B$ bootstrapping iterations. k-means clustering 
+is performed in each iteration using as input matrix $A$ an a vector of $k$ 
+values. We can use the full matrix $A$ (this is recommended for smaller 
+datasets) or a subset of the rows (cells) of $A$ controlled by the parameter 
+`cv_prop` (recommended for large datasets). In each iteration we compute the 
+Gap statistic and WCSS for all $k$s.
+  
+Lets run `get_k` now:
+
+```{r, echo = T, eval = T}
+b <- get_k(B = 5, 
+           cv_prop = 0.5,
+           ks = seq(from = 1, to = 40, by = 3),
+           x = digits,
+           n_start = 100, 
+           iter_max = 200,
+           kmeans_algorithm = "MacQueen", 
+           cores = 20,
+           mini_output = F)
+```
+
+
+
+The Gap statistic and WCSS curves do not have a noticeable knee (elbow). 
+Instead we see a shallow bent around $k=15$. Lets use $k=15$ as first 
+choice of $k$. Means and 95% confidence intervals are shown for the 
+metrics (panels) at each $k$.
+
+```{r, echo=T, eval=T}
+g0 <- ggplot(data = b$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "Gap")|
+ggplot(data = b$wcss_stats_summary)+
+  geom_point(aes(x = k, y = wcss_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "WCSS")+
+  scale_y_log10()+
+  annotation_logticks(base = 10, sides = "l")
+```
+
+
+```{r, fig.width=7, fig.height=2.5, fig.align='center', echo=T, eval=T}
+g0
+```
+
+
+### 2. $k$-means clustering
+We will use $k=15$ and $A$ as input for k-means clustering with the function 
+kmeans (R-package stats). We will use MacQueen's k-means variant, which will 
+perform $n_{start} = 1000$ (default in scBubbletree) random starts and a 
+maximum number of iterations $iter_{max} = 300$. 
+
+**Important remark**: for smaller datasets (e.g. $n<100000$) the defaults 
+$n_{start}=1000$ and $n_{iter} = 300$ are set to unnecessarily high values, 
+however for larger datasets this is necessary to make sure that k-means 
+converges.
+
+
+### 3. hierarchical grouping
+After the clustering is complete we will organize the bubbles in a natural
+hierarchy. For this we perform $B$ bootstrap iterations (default $B=100$). 
+In iteration $b$ the algorithm draws a random subset of $N_{eff}$ (default 
+$N_{eff}=100$) cells with replacement from each cluster and computes the 
+average inter-cluster Euclidean distance. This data is used to populate 
+the distance matrix ($D^{k\times k}_b$), which is provided as input for 
+hierarchical clustering with average linkage to generate a hierarchical 
+clustering dendrogram $H_b$. 
+
+The collection of distance matrices that are computed during $B$ iterations 
+are used to compute a consensus (average) distance matrix $\hat{D}^{k\times k}$
+and a corresponding consensus hierarchical dendrogram (bubbletree; $\hat{H}$). 
+The collection of dendrograms are used to quantify the robustness of the 
+bubbletree topology, i.e. to count the number of times each branch in the 
+bubbletree is found among the topologies of the bootstrap dendrograms. 
+Branches can have has variable degrees of support ranging between 0 (no 
+support) and $B$ (complete support). Distances between bubbles (inter-bubble 
+relationships) are described quantitatively in the bubbletree as sums of 
+branch lengths. 
+
+Steps 2. and 3. are performed next
+
+```{r, echo=T, eval=T}
+k15 <- get_bubbletree(x = digits,
+                     k = 15,
+                     seed = 1234,
+                     cores = 1,
+                     B = 200,
+                     N_eff = 200,
+                     round_digits = 1,
+                     show_simple_count = F,
+                     kmeans_algorithm = "MacQueen")
+```
+
+
+
+
+... and plot the bubbletree
+
+```{r, fig.width=4, fig.height=7, fig.align='center', echo=T}
+k15$tree
+```
+
+
+
+
+### 4. annotation and evaluation
+
+
+### attaching categorical features (digits labels)
+
+Relative frequencies of digit labels across different bubbles (columns 
+integrate to 100%).
+
+```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
+w1 <- get_cat_tiles(btd = k15,
+                    f = as.character(labels),
+                    integrate_vertical = T, # relative frequency of labels
+                    round_digits = 1,
+                    show_hclust = F,
+                    disable_hclust = F,
+                    x_axis_name = 'Cell line',
+                    rotate_x_axis_labels = T,
+                    tile_text_size = 2.75)
+
+(k15$tree|w1$plot)+
+  patchwork::plot_layout(widths = c(1, 1))
+```
+
+Within-bubble relative frequencies of digit labels (rows integrate to 100%).
+
+```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
+w2 <- get_cat_tiles(btd = k15,
+                    f = as.character(labels),
+                    integrate_vertical = F, # within-bubble rel. freq. of labels
+                    round_digits = 1,
+                    show_hclust = F,
+                    disable_hclust = F,
+                    x_axis_name = 'Cell line',
+                    rotate_x_axis_labels = T,
+                    tile_text_size = 2.75)
+
+(k15$tree|w2$plot)+
+  patchwork::plot_layout(widths = c(1, 1))
+```
+
+
+```{r}
+x <- digits
+
+qs <- c()
+for(i in 1:nrow(digits)) {
+  m <- matrix(data = as.numeric(digits[i, 1:64]), byrow = T, ncol = 8)
+  q <- melt(m)
+  colnames(q) <- c("y", "x", "v")
+  q$y <- abs(q$y-9)
+  q$i <- i
+  q$class <- labels[i]
+  q$bubble <- k15$cluster[i]
+  qs <- rbind(qs, q)
+}
+rm(m, q, i, x)
+```
+
+
+```{r}
+q <- aggregate(v~x+y+bubble, data = qs, FUN = mean)
+```
+
+# Average digit image in each bubble
+
+```{r, fig.width=7, fig.height=5, fig.align='center'}
+ ggplot(data = q)+
+  facet_wrap(facets = ~paste0(bubble), nrow = 3)+
+    geom_tile(aes(x = x, y = y, fill = v))+
+  theme_bw(base_size = 10)+
+  theme(legend.position = "none",
+        strip.text.x = element_text(margin = margin(0.015,0,0.015,0, "cm")))+
+  scale_fill_gradient(low = "white", high = "black")+
+  scale_x_continuous(name = "x pixel", expand = c(0, 0))+
+  scale_y_continuous(name = "y pixel", expand = c(0, 0))
+```
+

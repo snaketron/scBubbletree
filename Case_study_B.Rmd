@@ -209,7 +209,7 @@ The `scBubbletree` workflow performs the following steps:
 
 
 ### 1. determining the number of clusters $k$
-How many clusters (cell types) are there are in the data? C we guess a 
+How many clusters (cell types) are there are in the data? Can we guess a 
 reasonable value of $k$? 
 
 Two approaches should be used to find $k$. 
