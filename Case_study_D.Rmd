@@ -29,6 +29,7 @@ of single cell RNA-seq data. To run this vignette we need a few R-packages:
 library(scBubbletree)
 library(Seurat)
 library(ggrepel)
+library(umap)
 ```
 
 
@@ -293,12 +294,17 @@ rm(m, q, i, x)
 q <- aggregate(v~x+y+bubble, data = qs, FUN = mean)
 ```
 
+
 # Average digit image in each bubble
 
+Lets compute the average pixel values using the digit data in each bubble and 
+'attach' this data to the bubbletree
+
 ```{r, fig.width=7, fig.height=5, fig.align='center'}
- ggplot(data = q)+
-  facet_wrap(facets = ~paste0(bubble), nrow = 3)+
-    geom_tile(aes(x = x, y = y, fill = v))+
+q$bubble <- factor(q$bubble, levels = k15$tree_meta$label)
+g_digit <- ggplot(data = q)+
+  facet_wrap(facets = ~bubble, ncol = 3)+
+  geom_tile(aes(x = x, y = y, fill = v))+
   theme_bw(base_size = 10)+
   theme(legend.position = "none",
         strip.text.x = element_text(margin = margin(0.015,0,0.015,0, "cm")))+
@@ -306,4 +312,122 @@ q <- aggregate(v~x+y+bubble, data = qs, FUN = mean)
   scale_x_continuous(name = "x pixel", expand = c(0, 0))+
   scale_y_continuous(name = "y pixel", expand = c(0, 0))
 ```
+
+
+```{r, fig.width=10, fig.height=6}
+k15$tree|w1$plot|g_digit+
+  patchwork::plot_annotation(tag_levels = 'A')
+```
+
+
+
+
+
+## UMAP
+
+Generating 2D UMAP plots is a standard first step in scRNA-seq data 
+analysis. Lets do this now
+
+```{r, fig.width=8, fig.height=3.25, fig.align='center', echo = T}
+umap_2 <- umap::umap(d = digits)
+
+umap_2_data <- data.frame(UMAP_1 = umap_2$layout[, 1],
+                          UMAP_2 = umap_2$layout[, 2],
+                          bubble = k15$cluster,
+                          digits = labels)
+```
+
+
+```{r, fig.width=6, fig.height=5}
+ggplot(data = umap_2_data)+
+  geom_point(aes(x = UMAP_1, y = UMAP_2, col = as.factor(bubble)), size = 0.25)+
+  geom_text(data = merge(x = aggregate(UMAP_1~bubble, data = umap_2_data, FUN = median),
+                          y = aggregate(UMAP_2~bubble, data = umap_2_data, FUN = median),
+                          by = "bubble"),
+             aes(x = UMAP_1, y = UMAP_2, label = bubble), size = 5)+
+  theme_bw()+
+  theme(legend.position = "none")
+```
+
+
+
+## Are local/global distances between cells preserved by UMAP?
+
+Local cell distances appear to be adequatly recovered, long-range distances 
+are not. Gray points are intra-bubble distances and black points are 
+inter-bubble distances.
+
+```{r, echo = T, results='hide'}
+
+get_d <- function(A, U_A, T_A, B, verbose=F) {
+  
+  get_euc <- function(x, y) {
+    return(sqrt(sum((x-y)^2)))
+  }
+  
+  get_pair_euc <- function(x, A, U_A, T_A) {
+    
+    if(x %% 1000 == 0) {
+      cat(x, "\n")
+    }
+    
+    j <- sample(x = 1:nrow(A), size = 2, replace = T)
+    a_euc <- get_euc(A[j[1],], A[j[2],])
+    u_euc <- get_euc(U_A[j[1],], U_A[j[2],])
+    t_euc <- get_euc(T_A[j[1],], T_A[j[2],])
+    
+    return(data.frame(a_euc = a_euc, 
+                      u_euc = u_euc,
+                      t_euc = t_euc,
+                      i = j[1],
+                      j = j[2]))
+  }
+  
+  o <- lapply(X = 1:B, 
+              FUN = get_pair_euc, 
+              A = A, 
+              U_A = U_A, 
+              T_A = T_A)
+  
+  o <- do.call(rbind, o)
+  return(o)
+}
+
+```
+
+
+```{r, echo = T, results='hide'}
+
+pair_dist <- get_d(B = 10^4,
+                   A = digits,
+                   U_A = umap_2_data[, c("UMAP_1", "UMAP_2")],
+                   T_A = umap_2_data[, c("UMAP_1", "UMAP_2")],
+                   verbose = F)
+
+pair_dist$i_cell <- k15$cluster[pair_dist$i]
+pair_dist$j_cell <- k15$cluster[pair_dist$j]
+
+pair_dist$i_label <- labels[pair_dist$i]
+pair_dist$j_label <- labels[pair_dist$j]
+
+pair_dist$same_cell <- ifelse(test = pair_dist$i_cell==pair_dist$j_cell, 
+                              yes = "w", no = "b")
+pair_dist$same_label <- ifelse(test = pair_dist$i_label==pair_dist$j_label, 
+                               yes = "w", no = "b")
+```
+
+
+
+
+
+```{r, fig.width=5, fig.height=4, fig.align='center', echo = T}
+ggplot(data = pair_dist)+
+  geom_point(aes(y = a_euc, x = u_euc, col = same_cell), size = 0.25)+
+  geom_density_2d(aes(y = a_euc, x = u_euc), col = "orange")+
+  ylab(label = "Distance [PCA]")+
+  xlab(label = "Distance [2D UMAP]")+
+  scale_color_manual(values = c("black", "darkgray"))+
+  theme(legend.position = "none")
+```
+
 

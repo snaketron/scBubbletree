@@ -282,7 +282,7 @@ FALSE   Treg               570  694  242  386   76   68  240  231</code></pre>
 </ol>
 <div id="determining-the-number-of-clusters-k" class="section level3">
 <h3>1. determining the number of clusters <span class="math inline">\(k\)</span></h3>
-<p>How many clusters (cell types) are there are in the data? C we guess a reasonable value of <span class="math inline">\(k\)</span>?</p>
+<p>How many clusters (cell types) are there are in the data? Can we guess a reasonable value of <span class="math inline">\(k\)</span>?</p>
 <p>Two approaches should be used to find <span class="math inline">\(k\)</span>.</p>
 <p>First, we need to study the literature or databases such as the human protein atlas database (HPA) to identify a reasonable range of <span class="math inline">\(k\)</span>s. HPA provides a decomposition of PBMCs into 18 canonical cell populations<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>. Given that here we have about 162k PBMCs we might be able to recover all 18 subtypes, and hence <span class="math inline">\(k\approx18\)</span> is a reasonable first choice.</p>
 <p>Second, we can use the function <code>get_k</code> for data-driven inference of <span class="math inline">\(k\)</span> based on the Gap statistic and the within-cluster sum of squares (WCSS).</p>
