@@ -1,0 +1,365 @@
+---
+title: "Testing the Gap statistic under different levels of cluster overlap"
+author: "SK"
+output:
+  prettydoc::html_pretty:
+    theme: cayman
+    highlight: github
+---
+
+**Simulation study:** How does the Gap statistic behave under different levels 
+of overlap between the clusters.
+
+```{r, eval=T, echo=F}
+source(file = "~/Rutil/Init_Rpack.R")
+```
+
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = F,
+                      comment = F, 
+                      warning = F, 
+                      message = F)
+```
+
+
+To run this vignette we need a few R-packages:
+
+```{r, echo = T, eval = T, results='hide'}
+require(cluster)
+require(ggplot2)
+require(patchwork)
+```
+
+
+
+
+## Data
+
+```{r}
+set.seed(seed = 6543)
+
+# n = 500
+n <- 500
+
+# x~U(min=0, max=1)
+d_0 <- matrix(data = runif(n = n, min = 0, max = 1), ncol = 1)
+
+# x~N(mu=0, sd=1)
+d_1 <- matrix(data = rnorm(n = n, mean = 0, sd = 1), ncol = 1)
+
+# x~N(mu=a, sd=1); a[1] = -1; a[2] = +1
+d_2 <- matrix(data = c(rnorm(n = n/2, mean = -1, sd = 1),
+                       rnorm(n = n/2, mean = +1, sd = 1)), ncol = 1)
+
+# x~N(mu=a, sd=1); a[1] = -2; a[2] = +2
+d_3 <- matrix(data = c(rnorm(n = n/2, mean = -2, sd = 1),
+                       rnorm(n = n/2, mean = +2, sd = 1)), ncol = 1)
+
+# x~N(mu=a, sd=1); a[1] = -5; a[2] = +5
+d_4 <- matrix(data = c(rnorm(n = n/2, mean = -5, sd = 1),
+                       rnorm(n = n/2, mean = +5, sd = 1)), ncol = 1)
+
+# x^{n x f}
+# x[,1]~N(mu=a, sd=1); a[1/2] = -10; a[2/2] = +10
+# x[,2]~N(mu=a, sd=1); a[1/4] = -5; a[2/4] = +5; a[2] = +1; a[2/2] = +0
+# x[,3]~N(mu=a, sd=1); a[1/4] = 0; a[2/4] = 3; a[3/4] = 6; a[4/4] = 9;  
+# + 20 noise features sampled from N(0, 1)
+d_5 <- cbind(c(rnorm(n = n/2, mean = -10, sd = 1), rnorm(n = n/2, mean = +10, sd = 1)),
+             c(rnorm(n = n/4, mean = -5, sd = 1), rnorm(n = n/4, mean = +5, sd = 1), rnorm(n = n/2, mean = 0, sd = 1)),
+             c(rnorm(n = n/4, mean = 0, sd = 1), rnorm(n = n/4, mean = 3, sd = 1), rnorm(n = n/4, mean = 6, sd = 1), rnorm(n = n/4, mean = 9, sd = 1)))
+
+d_noise <- matrix(data = rnorm(n = n*20, mean = 0, sd = 1), ncol = 20, byrow = F)
+d_5 <- cbind(d_5, d_noise)
+```
+
+
+
+
+```{r, fig.width=8, fig.height=2}
+par(mfrow = c(1, 5))
+plot(density(d_0), main = "d_0", xlab = "")
+plot(density(d_1), main = "d_1", xlab = "")
+plot(density(d_2), main = "d_2", xlab = "")
+plot(density(d_3), main = "d_3", xlab = "")
+plot(density(d_4), main = "d_4", xlab = "")
+```
+
+
+
+
+```{r}
+k_0 <- cluster::clusGap(x = d_0,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r}
+k_1 <- cluster::clusGap(x = d_1,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r}
+k_2 <- cluster::clusGap(x = d_2,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r}
+k_3 <- cluster::clusGap(x = d_3,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r}
+k_4 <- cluster::clusGap(x = d_4,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r}
+k_5 <- cluster::clusGap(x = d_5,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = F)
+```
+
+
+
+```{r, fig.width=8, fig.height=8}
+par(mfrow = c(3, 2))
+plot(k_0, main = "gap(d_0)")
+plot(k_1, main = "gap(d_1)")
+plot(k_2, main = "gap(d_2)")
+plot(k_3, main = "gap(d_3)")
+plot(k_4, main = "gap(d_4)")
+plot(k_5, main = "gap(d_5)")
+```
+
+# Simulation of a "clumpy" data
+
+
+## Case A (simple)
+
+We have 30 cell subtypes. They belong to two tissues A and B (or general cell 
+types). 70% of the cell subtypes belong to tissue A and 30% to B. From
+subtype $i$ we simulate $n_i~\sim U(50, 100)$ cells. Each cell has 100 features
+and 30% of them are selected to be tissue marker genes. If a given feature is a 
+marker, then the mean gene expression of the subtype $\mu_{i\in A}~N(5, 1)$ or
+$\mu_{i\in B}~N(-5, 1)$. If a feature is not a marker gene ($\approx 70%$) then 
+gene expression is drawn from $\mu_{i}\sim N(0, 5)$. Gene expression in a 
+particular cell of subtype $i$ is then drawn from $N(\mu_i, 1)$.
+
+We compute the Gap statistic with the resulting data.
+
+```{r}
+p_tissue <- 0.7
+mu_tissue <- c(-5, 5)
+sd_tissue <- c(1, 1)
+
+n_subtype <- 30
+n_feature <- 100
+p_tissue_marker <- 0.3
+
+feature_type <- runif(n = n_feature, min = 0, max = 1)
+
+d <- c()
+meta <- c()
+for(i in 1:n_subtype) {
+  tissue_choice <- NA
+  if(runif(n = 1, min = 0, max = 1) <= p_tissue) {
+    mu_sim <- rnorm(n = 1, mean = mu_tissue[1], sd = sd_tissue[1])
+    tissue_choice <- 1
+  } 
+  else {
+    mu_sim <- rnorm(n = 1, mean = mu_tissue[2], sd = sd_tissue[2])
+    sd_sim <- sd_tissue[2]
+    tissue_choice <- 2
+  }
+  
+  n_cells <- round(x = runif(n = 1, min = 10, max = 50), digits = 0)
+  x <- c()
+  for(j in 1:n_feature) {
+    feature_choice <- NA
+    
+    if(feature_type[j] <= p_tissue_marker) {
+      x <- cbind(x, rnorm(n = n_cells, mean = mu_sim, sd = 1))
+      feature_choice <- "tissue_marker"
+    } 
+    else {
+      # noise
+      x <- cbind(x, rnorm(n = n_cells, mean = 0, sd = 5))
+      feature_choice <- "noise"
+    }
+    meta <- rbind(meta, data.frame(i = i, 
+                                   j = j, 
+                                   tissue_choice = tissue_choice,
+                                   feature_choice = feature_choice,
+                                   n_cells = n_cells, 
+                                   mu_sim = mu_sim, 
+                                   sd_sim = sd_sim))
+  }
+  d <- rbind(d, x)
+  rm(x)
+}
+
+
+
+```
+
+
+```{r}
+k_6 <- cluster::clusGap(x = d,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 100,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = T)
+```
+
+
+```{r}
+plot(k_6)
+```
+
+## Case B (more complex)
+
+We have 30 cell subtypes. They belong to two tissues A and B (or general cell 
+types). 70% of the cell subtypes belong to tissue A and 30% to B. From
+subtype $i$ we simulate $n_i~\sim U(50, 100)$ cells. Each cell has 100 features.
+We draw 100 values from $p\sim U(0, 1)$. If $0.2<p_j\leq0.5$ then feature $j$ 
+is a tissue marker, and its mean gene expression is $\mu_{i\in A}~N(5, 1)$ or 
+$\mu_{i\in B}~N(-5, 1)$. If $p_j\leq0.2$ then feature $j$ is subtype marker, 
+and its mean gene expression is $\mu_{i} \pm N(5, 0.5)$. If $p_j>0.5$ $j$ is a
+noise feature $\mu_{i}\sim N(0, 5)$. Gene expression in a particular cell of 
+subtype $i$ is then drawn from $N(\mu_i, 1)$.
+
+We compute the Gap statistic with the resulting data.
+
+**Strong subtype effect (structure within structure) leads to Gap statistics that keeps on increasing with increasing $k$**
+
+
+```{r}
+p_tissue <- 0.7
+mu_tissue <- c(-5, 5)
+sd_tissue <- c(1, 1)
+
+n_subtype <- 30
+n_feature <- 100
+p_tissue_marker <- 0.5 # 50%
+p_subtype_marker <- 0.2 # 20%
+
+n_cell_range <- c(50, 100)
+
+feature_type <- runif(n = n_feature, min = 0, max = 1)
+
+d <- c()
+meta <- c()
+for(i in 1:n_subtype) {
+  tissue_choice <- NA
+  if(runif(n = 1, min = 0, max = 1) <= p_tissue) {
+    mu_sim <- rnorm(n = 1, mean = mu_tissue[1], sd = sd_tissue[1])
+    tissue_choice <- 1
+  } 
+  else {
+    mu_sim <- rnorm(n = 1, mean = mu_tissue[2], sd = sd_tissue[2])
+    sd_sim <- sd_tissue[2]
+    tissue_choice <- 2
+  }
+  
+  n_cells <- round(x = runif(n = 1, 
+                             min = n_cell_range[1], 
+                             max = n_cell_range[2]), digits = 0)
+  x <- c()
+  for(j in 1:n_feature) {
+    feature_choice <- NA
+    rand_offset <- NA
+    
+    
+    if(feature_type[j] <= p_tissue_marker) {
+      
+      if(feature_type[j] <= p_subtype_marker) {
+        rand_offset <- rnorm(n = 1, mean = 5, sd = 0.5)*sample(x = c(-1, 1), size = 1)
+        x <- cbind(x, rnorm(n = n_cells, mean = mu_sim+rand_offset, sd = 1))
+        feature_choice <- "subtype_marker"
+      } 
+      else {
+        x <- cbind(x, rnorm(n = n_cells, mean = mu_sim, sd = 1))
+        feature_choice <- "tissue_marker"
+      }
+    } 
+    else {
+      # noise
+      x <- cbind(x, rnorm(n = n_cells, mean = 0, sd = 5))
+      feature_choice <- "noise"
+    }
+    meta <- rbind(meta, data.frame(i = i, 
+                                   j = j, 
+                                   tissue_choice = tissue_choice,
+                                   feature_choice = feature_choice,
+                                   n_cells = n_cells, 
+                                   rand_offset = rand_offset, 
+                                   mu_sim = mu_sim, 
+                                   sd_sim = sd_sim))
+  }
+  d <- rbind(d, x)
+  rm(x)
+}
+
+
+
+```
+
+
+```{r}
+d_7 <- d
+k_7 <- cluster::clusGap(x = d_7,
+                        FUNcluster = kmeans,
+                        K.max = 20,
+                        B = 50,
+                        d.power = 1,
+                        spaceH0 = "original",
+                        verbose = T)
+```
+
+
+```{r}
+plot(k_7)
+```
+
+
