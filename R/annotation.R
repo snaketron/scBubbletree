@@ -1,9 +1,6 @@
 
 
 
-#'
-#' @exportMethod
-#'
 get_cat_tiles <- function(btd,
                           f,
                           integrate_vertical,
@@ -253,9 +250,7 @@ get_cat_tiles <- function(btd,
 
 
 
-#'
-#' @exportMethod
-#'
+
 get_num_tiles <- function(btd,
                           fs,
                           summary_function = "mean",
@@ -524,9 +519,6 @@ get_num_tiles <- function(btd,
 
 
 
-#'
-#' @exportMethod
-#'
 get_num_violins <- function(btd,
                             fs,
                             x_axis_name = "Feature distribution",
