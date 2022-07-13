@@ -675,6 +675,45 @@ dev.off()
 
 
 
+```{r, fig.width=6.5, fig.height=4}
+get_sort_paste <- function(x) {
+  return(paste0(sort(x), collapse = ' vs. '))
+}
+
+w <- as.matrix(dist(tpm, method = "euclidean"))
+w <- melt(w)
+colnames(w) <- c("c1", "c2", "d")
+w$pair <- apply(X = w[, c("c1", "c2")], MARGIN = 1, FUN = get_sort_paste)
+w <- w[w$c1 != w$c2, ]
+w <- w[duplicated(w$pair)==F, ]
+w <- w[order(w$d, decreasing = F), ]
+w$rank <- 1:nrow(w)
+
+q <- w[w$c1 %in% c("H838", "H2228", "A549", "H1975", "HCC827") & 
+         w$c2 %in% c("H838", "H2228", "A549", "H1975", "HCC827"), ]
+
+
+gdist <- ggplot()+
+  geom_histogram(data = w, aes(d), bins = 50, fill = "gray", col = "gray")+
+  geom_point(data = q, aes(x = d, y = 0), shape = 21, col = "red", size = 2,
+             position = position_jitter(width = 0, height = 2))+
+  geom_text_repel(data = q[q$pair == "H1975 vs. HCC827", ], 
+                  aes(x = d, y = 0, label = pair), col = "red", size = 3,
+                  min.segment.length = 0, max.overlaps = 100, nudge_y = 5,
+                  force = 2, max.iter = 10^6)+
+  theme_bw()+
+  scale_x_log10()+
+  annotation_logticks(base = 10, sides = "b")+
+  xlab(label = "Euclidean distance")+
+  ylab(label = "Frequency")
+
+gdist
+# ggsave(filename = "manuscript_data/Fig_S1.pdf",
+#        plot = gdist,
+#        device = "pdf",
+#        width = 6.5,
+#        height = 4)
+```
 
 
 
@@ -902,59 +941,59 @@ dummy_k5_snn$tree|
 
 
 
-## In-depth inspection of sets of bubbles
-Imagine a branch of bubbles (or even a single bubble) in the bubbletree that 
-is of particular interest to us. We might want to have a more in-depth look 
-into the substructre structure of that bubble. `scBubbletree` provides the
-function `update_bubbletree` which allows you to perform additional clustering
-over specific set of bubbles and to update the original bubbletree.
+<!-- ## In-depth inspection of sets of bubbles -->
+<!-- Imagine a branch of bubbles (or even a single bubble) in the bubbletree that  -->
+<!-- is of particular interest to us. We might want to have a more in-depth look  -->
+<!-- into the substructre structure of that bubble. `scBubbletree` provides the -->
+<!-- function `update_bubbletree` which allows you to perform additional clustering -->
+<!-- over specific set of bubbles and to update the original bubbletree. -->
 
-Let's say we want to look deeper into bubbles 1, 2 and 3, which correspond to 
-cell lines H1975, HCC827 and A549, respectively. We would like to double the
-clustering resolution, i.e. from 3 bubbles in the original bubbletree now we 
-want to obtain 6 bubbles. The function will update the bubbles and the
-dendrogram structure. 
+<!-- Let's say we want to look deeper into bubbles 1, 2 and 3, which correspond to  -->
+<!-- cell lines H1975, HCC827 and A549, respectively. We would like to double the -->
+<!-- clustering resolution, i.e. from 3 bubbles in the original bubbletree now we  -->
+<!-- want to obtain 6 bubbles. The function will update the bubbles and the -->
+<!-- dendrogram structure.  -->
 
-*Caveat:* this function was implemented to help the user gain better 
-understanding of the data. It is important to note that the final clustering
-solution obtained with this function is not necessarily the optimal clustering 
-solution, i.e. clustering with global minimum within cluster sum of squares.
+<!-- *Caveat:* this function was implemented to help the user gain better  -->
+<!-- understanding of the data. It is important to note that the final clustering -->
+<!-- solution obtained with this function is not necessarily the optimal clustering  -->
+<!-- solution, i.e. clustering with global minimum within cluster sum of squares. -->
 
-```{r}
-u_k5 <- update_bubbletree(btd = k5,
-                          updated_bubbles = c("1", "2", "3"),
-                          k = 6,
-                          cores = 20)
-```
+<!-- ```{r} -->
+<!-- u_k5 <- update_bubbletree(btd = k5, -->
+<!--                           updated_bubbles = c("1", "2", "3"), -->
+<!--                           k = 6, -->
+<!--                           cores = 20) -->
+<!-- ``` -->
 
-Notice the new 6 bubbles with names 1_A to 1_F. The prefix 1 stands for the 
-updating iteration, i.e. if we performed an additional updating of u_k5, then
-the new bubble names would start with prefix 2.
+<!-- Notice the new 6 bubbles with names 1_A to 1_F. The prefix 1 stands for the  -->
+<!-- updating iteration, i.e. if we performed an additional updating of u_k5, then -->
+<!-- the new bubble names would start with prefix 2. -->
 
-Bubble 1 from the original bubbletree was not subdivided into additional bubbles 
-and has the name 1_E. Bubble 2, on the othr hand is now split into bubbles 
-1_A and 1_B. Bubble 3 is split into 3 bubbles: 1_C, 1_D, 1_F.
+<!-- Bubble 1 from the original bubbletree was not subdivided into additional bubbles  -->
+<!-- and has the name 1_E. Bubble 2, on the othr hand is now split into bubbles  -->
+<!-- 1_A and 1_B. Bubble 3 is split into 3 bubbles: 1_C, 1_D, 1_F. -->
 
-We should further inspect each of the new bubbles to try and understand whether
-they carry some distinguishing biological features. As case study A deals with
-a toy dataset this updating analysis is not necessary, however, when analyzing
-more complex datasets (e.g. see case study B) having the ability to zoom into
-clades or bubbles can be extremely beneficial and revealing.
+<!-- We should further inspect each of the new bubbles to try and understand whether -->
+<!-- they carry some distinguishing biological features. As case study A deals with -->
+<!-- a toy dataset this updating analysis is not necessary, however, when analyzing -->
+<!-- more complex datasets (e.g. see case study B) having the ability to zoom into -->
+<!-- clades or bubbles can be extremely beneficial and revealing. -->
 
-```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
-u_w1 <- get_cat_tiles(btd = u_k5,
-                      f = d@meta.data$cell_line_demuxlet,
-                      integrate_vertical = T,
-                      round_digits = 1,
-                      show_hclust = F,
-                      disable_hclust = F,
-                      tile_text_size = 2.75,
-                      x_axis_name = 'Cell line',
-                      rotate_x_axis_labels = T)$plot
+<!-- ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T} -->
+<!-- u_w1 <- get_cat_tiles(btd = u_k5, -->
+<!--                       f = d@meta.data$cell_line_demuxlet, -->
+<!--                       integrate_vertical = T, -->
+<!--                       round_digits = 1, -->
+<!--                       show_hclust = F, -->
+<!--                       disable_hclust = F, -->
+<!--                       tile_text_size = 2.75, -->
+<!--                       x_axis_name = 'Cell line', -->
+<!--                       rotate_x_axis_labels = T)$plot -->
 
-(u_k5$tree|u_w1)+
-  patchwork::plot_layout(ncol = 2, widths = c(1, 1))
-```
+<!-- (u_k5$tree|u_w1)+ -->
+<!--   patchwork::plot_layout(ncol = 2, widths = c(1, 1)) -->
+<!-- ``` -->
 
 
 
