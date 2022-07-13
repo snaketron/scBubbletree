@@ -1,6 +1,5 @@
 export(get_k)
 export(get_bubbletree)
-export(update_bubbletree)
 export(get_dummy_bubbletree)
 export(get_gini)
 export(get_gini_k)
