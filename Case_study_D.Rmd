@@ -1,5 +1,5 @@
 ---
-title: "Case study C: digit recognition with scBubbletree"
+title: "Case study D: digit recognition with scBubbletree"
 author: "SK"
 output:
   prettydoc::html_pretty:
@@ -112,6 +112,30 @@ digits <- digits[, -65]
 
 
 
+
+```{r, fig.width=5, fig.height=3.5, fig.align='center'}
+# if we want we can apply PCA 
+#
+# is <- which(apply(X = digits, MARGIN = 2, FUN = sum) == 0)
+# remove features with all 0s
+# digits <- digits[, -is]
+# 
+# cleanup
+# rm(is)
+# A <- prcomp(x = digits)
+# A_summary <- summary(A)
+# 
+# plot(A_summary$importance["Cumulative Proportion",], 
+#      ylab = "Cumulative var. explained",
+#      xlab = "PCs")
+# A <- A_summary$x[, 1:20]
+```
+
+
+
+
+
+
 The `scBubbletree` workflow performs the following steps:
   
   1. determine number of clusters $k$
@@ -137,7 +161,7 @@ Lets run `get_k` now:
 ```{r, echo = T, eval = T}
 b <- get_k(B = 5, 
            cv_prop = 0.5,
-           ks = seq(from = 1, to = 40, by = 3),
+           ks = seq(from = 1, to = 30, by = 1),
            x = digits,
            n_start = 100, 
            iter_max = 200,
@@ -147,11 +171,10 @@ b <- get_k(B = 5,
 ```
 
 
-
-The Gap statistic and WCSS curves do not have a noticeable knee (elbow). 
-Instead we see a shallow bent around $k=15$. Lets use $k=15$ as first 
-choice of $k$. Means and 95% confidence intervals are shown for the 
-metrics (panels) at each $k$.
+As expected, the Gap statistic and WCSS curves appear to have at $k\approx10$. 
+Lets use a value of $k$ slightly larger than 10, e.g. $k=15$ for clustering. 
+Means and 95% confidence intervals are shown for the metrics (panels) at each 
+$k$.
 
 ```{r, echo=T, eval=T}
 g0 <- ggplot(data = b$gap_stats_summary)+
