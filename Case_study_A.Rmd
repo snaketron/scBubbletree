@@ -34,10 +34,7 @@ library(ggrepel)
 
 ```{r, echo = F, results='hide'}
 library(scBubbletree)
-# library(cluster, lib.loc = "/usr/lib/R/library")
 library(Seurat, lib.loc = lib.loc)
-# library(org.Hs.eg.db, lib.loc = lib.loc)
-# library(SummarizedExperiment, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)
 ```
 
