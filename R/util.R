@@ -125,7 +125,7 @@ get_dendrogram <- function(ph,
     geom_point()+
     layout_rectangular()+
     # geom_tippoint(aes(size = c, fill = c), shape = 21)+ # old bubble coloring
-    geom_tippoint(aes(size = c), shape = 21)+
+    geom_tippoint(aes(size = c), fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
