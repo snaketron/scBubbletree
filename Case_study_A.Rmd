@@ -10,7 +10,6 @@ output:
 
 ```{r, echo = F}
 source(file = "~/Rutil/Init_Rpack.R")
-source(file = "~/Rutil/Graphics.R")
 ```
 
 
@@ -34,6 +33,7 @@ library(ggrepel)
 
 
 ```{r, echo = F, results='hide'}
+source(file = "~/Rutil/Graphics.R")
 library(scBubbletree)
 library(Seurat, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)

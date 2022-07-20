@@ -39,11 +39,6 @@ library(ggrepel, lib.loc = lib.loc)
 ```
 
 
-```{r, echo=F}
-redo_case_a <- F
-```
-
-
 
 
 
