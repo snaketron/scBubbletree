@@ -45,7 +45,27 @@ library(ggrepel, lib.loc = lib.loc)
 
 ```{r}
 
+
 get_clusters_graph <- function(d, res, reduction_type, dims, labels) {
+  
+    d <- Seurat::FindNeighbors(object = d, 
+                               reduction = reduction_type, 
+                               dims = dims)
+    c <- Seurat::FindClusters(object = d, 
+                              resolution = res,
+                              n.start = 100,
+                              n.iter = 100)
+    cs <- as.character(c$seurat_clusters)
+    g2 <- get_gini(labels = labels, clusters = cs)
+
+    return(data.frame(res = res,
+                      k = length(unique(cs)),
+                      gini = g2$total_gini,
+                      reduction_type = reduction_type))
+}
+
+
+get_clusters_graph2 <- function(d, res, reduction_type, dims, labels) {
   
     d <- Seurat::FindNeighbors(object = d, 
                                reduction = reduction_type, 
@@ -96,7 +116,7 @@ d <- get(load(file = "case_study_B/Hao_2021.RData"))
 
 
 ```{r}
-leuven_umap <- mclapply(X = seq(from = -4, to = 0, by = 0.05), 
+leuven_umap <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                         FUN = get_clusters_graph, 
                         d = d,
                         labels = d@meta.data$celltype.l2,
@@ -113,7 +133,7 @@ save(leuven_umap, file = "case_study_B/leuven_umap.RData")
 
 
 ```{r}
-leuven_tsne <- mclapply(X = seq(from = -4, to = 0, by = 0.05), 
+leuven_tsne <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                         FUN = get_clusters_graph, 
                         d = d,
                         labels = d@meta.data$celltype.l2,
@@ -128,7 +148,7 @@ save(leuven_tsne, file = "case_study_B/leuven_tsne.RData")
 
 
 ```{r}
-leuven_pca <- mclapply(X = seq(from = -4, to = 1, by = 0.05), 
+leuven_pca <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                        FUN = get_clusters_graph, 
                        d = d,
                        labels = d@meta.data$celltype.l2,
@@ -166,7 +186,7 @@ d <- get(load(file = "case_study_A/d.RData"))
 
 
 ```{r}
-leuven_umap <- mclapply(X = seq(from = -4, to = 1, by = 0.05), 
+leuven_umap <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                         FUN = get_clusters_graph, 
                         d = d,
                         dims = 1:2, 
@@ -181,7 +201,7 @@ save(leuven_umap, file = "case_study_A/leuven_umap.RData")
 
 
 ```{r}
-leuven_tsne <- mclapply(X = seq(from = -4, to = 1, by = 0.05), 
+leuven_tsne <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                         FUN = get_clusters_graph, 
                         d = d,
                         dims = 1:2, 
@@ -194,7 +214,7 @@ save(leuven_tsne, file = "case_study_A/leuven_tsne.RData")
 
 
 ```{r}
-leuven_pca <- mclapply(X = seq(from = -4, to = 1, by = 0.05), 
+leuven_pca <- mclapply(X = 10^seq(from = -4, to = 1, by = 0.1),
                        FUN = get_clusters_graph, 
                        d = d,
                        dims = 1:15, 
@@ -254,14 +274,19 @@ g_a
 
 
 ```{r, fig.width=5, fig.height=3.75}
-g_a2 <- ggplot(data = gini_A)+
+i <- gini_A[gini_A$reduction_type %in% c("kmeans", "pca"), ]
+i$reduction_type[i$reduction_type == "pca"] <- "Louvain"
+i$reduction_type[i$reduction_type == "kmeans"] <- "k-means"
+
+g_a2 <- ggplot(data = i)+
   geom_line(aes(x = k, y = gini, col = reduction_type), 
             size = 0.8, alpha = 0.8)+
   ylab(label = "Gini impurity (cell line)")+
+  geom_point(aes(x = k, y = gini, col = reduction_type), size = 1)+
   xlim(c(0, 50))+
   theme_bw(base_size = 10)+
   theme(legend.position = "top")+
-  scale_color_grey(name = "clustering")
+  scale_color_grey(name = "algorithm")
 
 g_a2
 ```
@@ -282,24 +307,14 @@ rm(kms, leuven_tsne, leuven_umap, leuven_pca)
 ```{r, fig.width=4, fig.height=4}
 gini_B <- aggregate(gini~k+reduction_type, data = gini_B, FUN = mean)
 
-g_b <- ggplot(data = gini_B)+
-  facet_wrap(facets = ~reduction_type, nrow = 2)+
-  geom_line(aes(x = k, y = gini))+
-  geom_point(aes(x = k, y = gini), size = 1)+
-  ylim(c(0,1))+
-  ylab(label = "Gini impurity (annotation set l2)")+
-  xlim(c(0, 50))+
-  theme_bw(base_size = 10)+
-  theme(legend.position = "top")
+i <- gini_B[gini_B$reduction_type %in% c("kmeans", "pca"), ]
+i$reduction_type[i$reduction_type == "pca"] <- "Louvain"
+i$reduction_type[i$reduction_type == "kmeans"] <- "k-means"
 
-g_b
-```
-
-
-```{r, fig.width=4, fig.height=4}
-g_b2 <- ggplot(data = gini_B)+
+g_b2 <- ggplot(data = i)+
   geom_line(aes(x = k, y = gini, col = reduction_type), 
             size = 0.8, alpha = 0.8)+
+  geom_point(aes(x = k, y = gini, col = reduction_type), size = 1)+
   ylab(label = "Gini impurity (annotation set l2)")+
   xlim(c(0, 50))+
   theme_bw(base_size = 10)+
@@ -315,7 +330,7 @@ g_b2
 g_a|g_b
 ```
 
-```{r, fig.width=6.5, fig.height=4}
+```{r, fig.width=6, fig.height=3.5}
 g <- (g_a2|g_b2)+
   patchwork::plot_annotation(tag_levels = 'A')
 

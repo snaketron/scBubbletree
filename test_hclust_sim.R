@@ -9,22 +9,8 @@ hc <- hclust(dist(x), method = "average")
 plot(hc)
 hc$height
 
-
-get_hdi <- function(vec, hdi_level) {
-  sortedPts <- sort(vec)
-  ciIdxInc <- floor(hdi_level * length(sortedPts))
-  nCIs = length(sortedPts) - ciIdxInc
-  ciWidth = rep(0 , nCIs)
-  for (i in 1:nCIs) {
-    ciWidth[i] = sortedPts[i + ciIdxInc] - sortedPts[i]
-  }
-  HDImin = sortedPts[which.min(ciWidth)]
-  HDImax = sortedPts[which.min(ciWidth) + ciIdxInc]
-  HDIlim = c(HDImin, HDImax)
-  return(HDIlim)
-}
-
-
+source(file = "~/Rutil/Init_Rpack.R")
+require(reshape2)
 
 get_pair_dist <- function(m, c) {
 
@@ -74,3 +60,7 @@ plot(u_hc)
 
 u_hc$height
 hc$height
+
+par(mfrow=c(1, 2))
+plot(hc)
+plot(u_hc)

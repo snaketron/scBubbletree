@@ -124,7 +124,8 @@ get_dendrogram <- function(ph,
   tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
     geom_point()+
     layout_rectangular()+
-    geom_tippoint(aes(size = c, fill = c), shape = 21)+
+    # geom_tippoint(aes(size = c, fill = c), shape = 21)+ # old bubble coloring
+    geom_tippoint(aes(size = c), shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
@@ -158,11 +159,12 @@ get_dendrogram <- function(ph,
     # scale_radius
     scale_radius(range = c(1, 5),
                  limits = c(0, max(km_meta$c)))+
-    scale_fill_gradient(low = "white",
-                        high = "black",
-                        limits = c(0, max(km_meta$c)))+
-    guides(fill = guide_legend(title = "cells", nrow = 2, byrow = TRUE),
-           size = guide_legend(title = "cells", nrow = 2, byrow = TRUE))
+    guides(size = guide_legend(title = "cells", nrow = 2, byrow = TRUE))
+    # scale_fill_gradient(low = "white",
+    #                     high = "black",
+    #                     limits = c(0, max(km_meta$c)))+
+    # guides(fill = guide_legend(title = "cells", nrow = 2, byrow = TRUE),
+    #        size = guide_legend(title = "cells", nrow = 2, byrow = TRUE))
 
 
   # merge order of tips in the tree with metadata

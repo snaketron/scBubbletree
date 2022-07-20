@@ -651,6 +651,102 @@ g_gini
 
 
 
+## Are local/global distances between cells preserved by UMAP/t-SNE?
+
+Local cell distances appear to be adequatly recovered, long-range distances 
+are not. Gray points are intra-bubble distances and black points are 
+inter-bubble distances.
+
+```{r, echo = T, results='hide'}
+
+get_euc_dist <- function(x, pairs, m) {
+  
+  get_euc <- function(x, y) {
+    return(sqrt(sum((x-y)^2)))
+  }
+  
+  i <- pairs[x,1]
+  j <- pairs[x,2]
+
+  return(sqrt(sum((m[i,]-m[j,])^2))) 
+}
+
+
+pairs <- t(replicate(n = 5*10^4, sample(x = 1:nrow(A), size = 2)))
+
+i_cell <- d@meta.data$celltype.l2[pairs[, 1]]
+j_cell <- d@meta.data$celltype.l2[pairs[, 2]]
+comparison <- ifelse(test = i_cell==j_cell, yes = "w", no = "b")
+
+```
+
+
+```{r, echo = T, results='hide'}
+
+euc_a <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = A, FUN = get_euc_dist)
+
+euc_u <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = d@reductions$umap@cell.embeddings[, c("UMAP_1", "UMAP_2")], FUN = get_euc_dist)
+
+euc_t <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = d@reductions$tsne@cell.embeddings[, c("tSNE_1", "tSNE_2")], FUN = get_euc_dist)
+
+# memory issue
+x <- d@assays$SCT@data[, sort(unique(as.vector(pairs)), decreasing = T)]
+x <- as.matrix(x)
+x <- t(x)
+rownames(x) <- sort(unique(as.vector(pairs)), decreasing = T)
+r_x <- rownames(x)
+euc_x <- numeric(length = length(euc_a))
+for(i in 1:nrow(pairs)) {
+  euc_x[i] <- sqrt(sum((x[which(r_x == pairs[i, 1]),]-
+                          x[which(r_x == pairs[i, 2]),])^2))
+  
+}
+
+dist_preservation <- data.frame(euc_a = unlist(euc_a), 
+                                euc_u = unlist(euc_u), 
+                                euc_t = unlist(euc_t), 
+                                euc_x = unlist(euc_x),
+                                i = i_cell, 
+                                j = j_cell, 
+                                comparison = comparison)
+```
+
+
+
+
+
+
+```{r, fig.width=8, fig.height=4, fig.align='center', echo = T}
+g_pairs_umap_tsne <- ggplot(data = dist_preservation)+
+  geom_point(aes(y = euc_a, x = euc_u, col = comparison), size = 0.25)+
+  geom_density_2d(aes(y = euc_a, x = euc_u), col = "orange")+
+  ylab(label = "Distance [PCA]")+
+  xlab(label = "Distance [2D UMAP]")+
+  scale_color_manual(values = c("black", "darkgray"))+
+  theme(legend.position = "none")|
+ggplot(data = dist_preservation)+
+  geom_point(aes(y = euc_a, x = euc_t, col = comparison), size = 0.25)+
+  geom_density_2d(aes(y = euc_a, x = euc_t), col = "orange")+
+  ylab(label = "Distance [PCA]")+
+  xlab(label = "Distance [2D t-SNE]")+
+  scale_color_manual(values = c("black", "darkgray"))+
+  theme(legend.position = "none")
+
+g_pairs_umap_tsne
+```
+
+
+
+```{r, echo=F}
+# save image
+save.image(file = "case_study_B/workspace_image.RData")
+```
+
+
+
 # References
 
 [^1]: Hao, Yuhan, et al. "Integrated analysis of multimodal single-cell 

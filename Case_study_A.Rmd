@@ -10,6 +10,7 @@ output:
 
 ```{r, echo = F}
 source(file = "~/Rutil/Init_Rpack.R")
+source(file = "~/Rutil/Graphics.R")
 ```
 
 
@@ -790,72 +791,68 @@ inter-bubble distances.
 
 ```{r, echo = T, results='hide'}
 
-get_d <- function(A, U_A, T_A, B, verbose=F) {
+get_euc_dist <- function(x, pairs, m) {
   
   get_euc <- function(x, y) {
     return(sqrt(sum((x-y)^2)))
   }
   
-  get_pair_euc <- function(x, A, U_A, T_A) {
-    
-    if(x %% 1000 == 0) {
-      cat(x, "\n")
-    }
-    
-    j <- sample(x = 1:nrow(A), size = 2, replace = T)
-    a_euc <- get_euc(A[j[1],], A[j[2],])
-    u_euc <- get_euc(U_A[j[1],], U_A[j[2],])
-    t_euc <- get_euc(T_A[j[1],], T_A[j[2],])
-    
-    return(data.frame(a_euc = a_euc, 
-                      u_euc = u_euc,
-                      t_euc = t_euc,
-                      i = j[1],
-                      j = j[2]))
-  }
-  
-  o <- lapply(X = 1:B, 
-              FUN = get_pair_euc, 
-              A = A, 
-              U_A = U_A, 
-              T_A = T_A)
-  
-  o <- do.call(rbind, o)
-  return(o)
+  i <- pairs[x,1]
+  j <- pairs[x,2]
+
+  return(sqrt(sum((m[i,]-m[j,])^2))) 
 }
+
+
+pairs <- t(replicate(n = 5*10^4, sample(x = 1:nrow(A), size = 2)))
+
+i_cell <- d@meta.data$cell_line_demuxlet[pairs[, 1]]
+j_cell <- d@meta.data$cell_line_demuxlet[pairs[, 2]]
+comparison <- ifelse(test = i_cell==j_cell, yes = "w", no = "b")
 
 ```
 
 
 ```{r, echo = T, results='hide'}
 
-pair_dist <- get_d(B = 10^4,
-                   A = A,
-                   U_A = umap_data[, c("UMAP_1", "UMAP_2")],
-                   T_A = tsne_data[, c("tSNE_1", "tSNE_2")],
-                   verbose = F)
+euc_a <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = A, FUN = get_euc_dist)
 
-pair_dist$i_cell <- d@meta.data$cell_line_demuxlet[pair_dist$i]
-pair_dist$j_cell <- d@meta.data$cell_line_demuxlet[pair_dist$j]
-pair_dist$comparison <- ifelse(test = pair_dist$i_cell==pair_dist$j_cell, 
-                               yes = "w", no = "b")
+euc_u <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = umap_data[, c("UMAP_1", "UMAP_2")], FUN = get_euc_dist)
+
+euc_t <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = tsne_data[, c("tSNE_1", "tSNE_2")], FUN = get_euc_dist)
+
+euc_x <- lapply(X = 1:nrow(pairs), pairs = pairs, 
+                m = t(as.matrix(d@assays$SCT@data)), FUN = get_euc_dist)
+
+
+dist_preservation <- data.frame(euc_a = unlist(euc_a), 
+                                euc_u = unlist(euc_u), 
+                                euc_t = unlist(euc_t), 
+                                euc_x = unlist(euc_x),
+                                i = i_cell, 
+                                j = j_cell, 
+                                comparison = comparison)
 ```
 
 
 
 
 
+
 ```{r, fig.width=8, fig.height=4, fig.align='center', echo = T}
-g_pairs_umap_tsne <- ggplot(data = pair_dist)+
-  geom_point(aes(y = a_euc, x = u_euc, col = comparison), size = 0.25)+
-  geom_density_2d(aes(y = a_euc, x = u_euc), col = "orange")+
+g_pairs_umap_tsne <- ggplot(data = dist_preservation)+
+  geom_point(aes(y = euc_a, x = euc_u, col = comparison), size = 0.25)+
+  geom_density_2d(aes(y = euc_a, x = euc_u), col = "orange")+
   ylab(label = "Distance [PCA]")+
   xlab(label = "Distance [2D UMAP]")+
   scale_color_manual(values = c("black", "darkgray"))+
   theme(legend.position = "none")|
-ggplot(data = pair_dist)+
-  geom_point(aes(y = a_euc, x = t_euc, col = comparison), size = 0.25)+
-  geom_density_2d(aes(y = a_euc, x = t_euc), col = "orange")+
+ggplot(data = dist_preservation)+
+  geom_point(aes(y = euc_a, x = euc_t, col = comparison), size = 0.25)+
+  geom_density_2d(aes(y = euc_a, x = euc_t), col = "orange")+
   ylab(label = "Distance [PCA]")+
   xlab(label = "Distance [2D t-SNE]")+
   scale_color_manual(values = c("black", "darkgray"))+
@@ -1006,10 +1003,77 @@ and their relationships which are described by the bubbletree topology.
 
 
 
+
+
+
+<!-- ### What if we selected $k=6$ -->
+
+<!-- ```{r} -->
+<!-- k6 <- get_bubbletree(x = A, -->
+<!--                      k = 6, -->
+<!--                      seed = 1234, -->
+<!--                      cores = 1, -->
+<!--                      B = 200, -->
+<!--                      N_eff = 200, -->
+<!--                      round_digits = 1, -->
+<!--                      show_simple_count = F, -->
+<!--                      kmeans_algorithm = "MacQueen") -->
+
+
+<!-- save(k6, file = "case_study_A/k6.RData") -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- w1 <- get_cat_tiles(btd = k6, -->
+<!--                     f = d@meta.data$cell_line_demuxlet, -->
+<!--                     integrate_vertical = T, -->
+<!--                     round_digits = 1, -->
+<!--                     show_hclust = F, -->
+<!--                     disable_hclust = F, -->
+<!--                     x_axis_name = 'Cell line', -->
+<!--                     rotate_x_axis_labels = T, -->
+<!--                     tile_text_size = 2.75) -->
+
+<!-- (k6$tree|w1$plot)+ -->
+<!--   patchwork::plot_layout(widths = c(1, 1)) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- umap_data$bubble_k6 <- k6$cluster -->
+
+<!-- umap_centers <- merge(x = aggregate(UMAP_1~bubble_k6,  -->
+<!--                                     data = umap_data, FUN = median), -->
+<!--                       y = aggregate(UMAP_2~bubble_k6,  -->
+<!--                                     data = umap_data, FUN = median), -->
+<!--                       by = "bubble_k6") -->
+<!-- ``` -->
+
+
+
+<!-- ```{r} -->
+<!-- ggplot()+ -->
+<!--   geom_point(data = umap_data, -->
+<!--              aes(x = UMAP_1, y = UMAP_2, col = as.factor(bubble_k6)), size = 0.25)+ -->
+<!--   geom_text_repel(data = umap_centers, -->
+<!--             aes(x = UMAP_1, y = UMAP_2, label = bubble_k6),  -->
+<!--             min.segment.length = 0, size = 3)+ -->
+<!--   theme_bw(base_size = 10)+ -->
+<!--   theme(legend.position = "none")+ -->
+<!--   guides(colour = guide_legend(nrow = 4, -->
+<!--                                override.aes = list(size=2))) -->
+<!-- ``` -->
+
+
+
 ```{r, echo=F}
 # save image
 save.image(file = "case_study_A/workspace_image.RData")
 ```
+
+
+
+
+
 
 
 
