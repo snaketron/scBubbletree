@@ -27,7 +27,6 @@ of single cell RNA-seq data. To run this vignette we need a few R-packages:
 
 ```{r, echo = T, eval = F, results='hide'}
 library(scBubbletree)
-library(Seurat)
 library(ggrepel)
 library(umap)
 ```
