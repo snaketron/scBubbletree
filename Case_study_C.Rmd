@@ -149,7 +149,7 @@ The `scBubbletree` workflow performs the following steps:
   1. determine number of clusters $k$
   2. $k$-means clustering
   3. hierarchical organization of clusters (bubbles)
-  4. annotation and evaluation
+  4. visualization
 
 
 ### 1. determining the number of clusters $k$
@@ -258,13 +258,13 @@ Lets describe the bubbletree:
 
 **bubbles**: The bubbletree has `k=11` bubbles (clusters) shown as leaves. The 
 absolute and relative cell frequencies in each bubble and the bubble IDs are 
-shown as labels. Bubble radii and color-code represent cell count in each 
-bubble, i.e. large & dark bubbles have many cells and small & light bubbles 
-contain few cells. 
+shown as labels. Bubble radii are scaled linearly as the absolute cell counts 
+in each bubble, i.e. large bubbles have many cells and small bubbles contain 
+few cells. 
 
-Bubbles 2 and 9 are large and dark 630 (23.3%) and 551(20.4%) of the sample 
-cells, respectively. Bubbles 5 and 3 are small and white and contain 7 (0.3%) 
-and 13 (0.5%) of the sample cells, respectively.
+Bubbles 2 and 9 are large as they contain 630 (23.3% of the sample) and 551 
+(20.4% of the sample) cells, respectively. Bubbles 5 and 3 are small and 
+contain 7 (0.3%) and 13 (0.5%) of the sample cells, respectively.
 
 We can access the bubble data shown in the bubbletree
 
@@ -286,7 +286,7 @@ called `get_bubbletree` with $B=200$. All branches have complete (200 out of
 200) support $\rightarrow$ robust branches.
 
 
-### 4. annotation and evaluation
+### 4. visualization
 
 Lets "attach" numeric cell features to the bubbletree. We will "attach" 
 the expression of different marker genes of PBMC subtypes.
@@ -437,7 +437,7 @@ g_umap_tsne
 
 ## Are local/global distances between cells preserved by UMAP/t-SNE?
 
-Local cell distances appear to be adequatly recovered, long-range distances 
+Local cell distances appear to be adequately recovered, long-range distances 
 are not. Gray points are intra-bubble distances and black points are 
 inter-bubble distances.
 

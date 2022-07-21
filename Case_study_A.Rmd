@@ -177,7 +177,7 @@ The `scBubbletree` workflow performs the following steps:
   1. determine number of clusters $k$
   2. $k$-means clustering
   3. hierarchical organization of clusters (bubbles)
-  4. annotation and evaluation
+  4. visualization
 
 
 ### 1. determining the number of clusters $k$
@@ -344,14 +344,12 @@ Lets describe the bubbletree:
 
 **bubbles**: The bubbletree has `k=5` bubbles (clusters) shown as leaves. The 
 absolute and relative cell frequencies in each bubble and the bubble IDs are 
-shown as labels. Bubble radii and color-code represent cell count in each 
-bubble, i.e. large & dark bubbles have many cells and small & light bubbles 
-contain few cells. 
+shown as labels. Bubble radii scale linearly with absolute cell count in each 
+bubble, i.e. large bubbles have many cells and small bubbles contain few cells. 
 
-Bubble 1 is the largest (and darkest) one in the dendrogram and contains 
-1,253 cells ($\approx$ 32% of all cells in the dataset). Bubble 4 is the 
-smallest one (and brightest) and contains only 436 cells ($\approx$ 11% of 
-all cells in the dataset). 
+Bubble 1 is the largest one in the dendrogram and contains 1,253 cells 
+($\approx$ 32% of all cells in the dataset). Bubble 4 is the smallest one 
+and contains only 436 cells ($\approx$ 11% of all cells in the dataset). 
 
 We can access the bubble data shown in the bubbletree
 
@@ -369,7 +367,8 @@ of 179 (85%). This tells us that the branch between bubbles (3, 4) and 1 is not
 as robust.
 
 
-### 4. annotation and evaluation
+### 4. visualization
+
 To extract biologically useful information from the bubbletree (and also for 2D 
 UMAP or t-SNE plots) we need to adorn it with biologically relevant cell 
 features. This includes both **numeric** and **categorical** cell features.

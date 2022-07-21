@@ -141,8 +141,7 @@ The `scBubbletree` workflow performs the following steps:
   1. determine number of clusters $k$
   2. $k$-means clustering
   3. hierarchical organization of clusters (bubbles)
-  4. annotation and evaluation
-
+  4. visualization
 
 ### 1. determining the number of clusters $k$
 How many clusters (digits) are there are in the data? For this we will use the 
@@ -254,8 +253,7 @@ k15$tree
 
 
 
-### 4. annotation and evaluation
-
+### 4. visualization
 
 ### attaching categorical features (digits labels)
 
@@ -376,7 +374,7 @@ ggplot(data = umap_2_data)+
 
 ## Are local/global distances between cells preserved by UMAP?
 
-Local cell distances appear to be adequatly recovered, long-range distances 
+Local cell distances appear to be adequately recovered, long-range distances 
 are not. Gray points are intra-bubble distances and black points are 
 inter-bubble distances.
 

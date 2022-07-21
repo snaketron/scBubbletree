@@ -206,7 +206,7 @@ The `scBubbletree` workflow performs the following steps:
   1. determine number of clusters $k$
   2. $k$-means clustering
   3. hierarchical organization of clusters (bubbles)
-  4. annotation and evaluation
+  4. visualization
 
 
 ### 1. determining the number of clusters $k$
@@ -380,15 +380,15 @@ Lets describe the bubbletree:
 
 **bubbles**: The bubbletree has `k=20` bubbles (clusters) shown as leaves. 
 The absolute and relative cell frequencies in each bubble and the bubble 
-IDs are shown as labels. Bubble radii and color-code represent cell count 
-in each bubble, i.e. large & dark bubbles have many cells and small & light 
+IDs are shown as labels. Bubble radii are scaled linearly as the absolute 
+cell count in each bubble, i.e. large bubbles have many cells and small
 bubbles contain few cells. 
 
-Bubble 14 is remarkably large and dark as it contains about 33,100 (19.2% of 
-the cells in the dataset). In contrast to this, bubbles 9, 13, 5 and 17 are 
-small and white as they contained between 600 (0.4%) and 1,300 (0.8%) cells. 
-The remaining bubbles contained between 2,700 (1.7%) and 15,900 (9.8%) cells, 
-and had small to medium sizes and varying levels of brightness.
+Bubble 14 is remarkably large as it contains about 33,100 (19.2% of the cells 
+in the dataset). In contrast to this, bubbles 9, 13, 5 and 17 are small as 
+they contained between 600 (0.4%) and 1,300 (0.8%) cells. The remaining 
+bubbles contained between 2,700 (1.7%) and 15,900 (9.8%) cells, and had small 
+to medium sizes.
 
 We can access the bubble data shown in the bubbletree
 
@@ -415,8 +415,8 @@ in 170 (85%) out of 200 bootstrap dendrograms.
 Biological interpretation of the different clades and their complex within-
 clade branching patterns are provided in the following.
 
-### 4. annotation and evaluation
 
+### 4. visualization
 
 #### attaching categorical cell features
 We will visualize the relative frequencies of categorical cell features 
