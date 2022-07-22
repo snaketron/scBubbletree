@@ -257,7 +257,8 @@ k15$tree
 ### attaching categorical features (digits labels)
 
 Relative frequencies of digit labels across different bubbles (columns 
-integrate to 100%).
+integrate to 100%). We will use a black and white color scale by setting 
+`tile_bw=T`.
 
 ```{r, fig.width=8, fig.height=6, fig.align='center', echo=T}
 w1 <- get_cat_tiles(btd = k15,
@@ -268,7 +269,8 @@ w1 <- get_cat_tiles(btd = k15,
                     disable_hclust = F,
                     x_axis_name = 'Cell line',
                     rotate_x_axis_labels = T,
-                    tile_text_size = 2.75)
+                    tile_text_size = 2.75,
+                    tile_bw = T)
 
 (k15$tree|w1$plot)+
   patchwork::plot_layout(widths = c(1, 1))
@@ -285,7 +287,8 @@ w2 <- get_cat_tiles(btd = k15,
                     disable_hclust = F,
                     x_axis_name = 'Cell line',
                     rotate_x_axis_labels = T,
-                    tile_text_size = 2.75)
+                    tile_text_size = 2.75,
+                    tile_bw = T)
 
 (k15$tree|w2$plot)+
   patchwork::plot_layout(widths = c(1, 1))

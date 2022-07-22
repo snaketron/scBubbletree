@@ -238,7 +238,7 @@ get_cat_tiles <- function(btd,
     guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
 
 
-  if(tiles_bw==T) {
+  if(tile_bw==F) {
     w <- w+scale_fill_distiller(name = legend,
                          palette = "Spectral",
                          na.value = 'white')
@@ -277,7 +277,7 @@ get_num_tiles <- function(btd,
                           show_hclust = F,
                           disable_hclust = F,
                           tile_text_size = 3,
-                          tiles_bw = F,
+                          tile_bw = F,
                           x_axis_name = "Feature",
                           rotate_x_axis_labels = T) {
 
@@ -533,7 +533,7 @@ get_num_tiles <- function(btd,
     guides(fill = guide_colourbar(barwidth = 5, barheight = 1))
 
 
-  if(tiles_bw==T) {
+  if(tile_bw==F) {
     w <- w+scale_fill_distiller(name = "Feature",
                                 palette = "Spectral",
                                 na.value = 'white')
