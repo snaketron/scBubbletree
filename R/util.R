@@ -151,7 +151,8 @@ get_dendrogram <- function(ph,
 
   tree_data <- tree$data
   tree <- tree+
-    geom_nodelab(geom='text', color = "red",
+    geom_nodelab(geom='text',
+                 color = "#4c4c4c", # previously red
                  aes(label=label, subset=isTip==F),
                  size = 2.8, hjust=-0.2)
 
