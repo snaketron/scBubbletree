@@ -43,7 +43,7 @@ library(SeuratDisk, lib.loc = lib.loc)
 
 
 ```{r, echo=F}
-redo_case_b <- T
+redo_case_b <- F
 ```
 
 
