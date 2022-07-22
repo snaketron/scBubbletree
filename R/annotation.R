@@ -8,6 +8,7 @@ get_cat_tiles <- function(btd,
                           show_hclust = F,
                           disable_hclust = F,
                           tile_text_size = 3,
+                          tile_bw = F,
                           x_axis_name = "Feature",
                           rotate_x_axis_labels = T) {
 
@@ -20,6 +21,7 @@ get_cat_tiles <- function(btd,
                           show_hclust,
                           disable_hclust,
                           tile_text_size,
+                          tile_bw,
                           x_axis_name,
                           rotate_x_axis_labels) {
 
@@ -116,6 +118,15 @@ get_cat_tiles <- function(btd,
     }
 
 
+    # check tile_bw
+    if(is.logical(tile_bw)==F) {
+      stop("tile_bw must be a logical parameter")
+    }
+    if(length(tile_bw)!=1) {
+      stop("tile_bw must be a logical parameter (either TRUE or FALSE)")
+    }
+
+
     # check x_axis_name
     if(is.character(x_axis_name)==F) {
       stop("x_axis_name must be a character string")
@@ -145,6 +156,7 @@ get_cat_tiles <- function(btd,
               show_hclust = show_hclust,
               disable_hclust = disable_hclust,
               tile_text_size = tile_text_size,
+              tile_bw = tile_bw,
               x_axis_name = x_axis_name,
               rotate_x_axis_labels = rotate_x_axis_labels)
 
@@ -218,10 +230,6 @@ get_cat_tiles <- function(btd,
     geom_tile(aes(x = feature, y = cluster, fill = percent), col = "white")+
     geom_text(aes(x = feature, y = cluster, label = percent),
               col = "black", size = tile_text_size)+
-    scale_fill_distiller(name = legend,
-                         palette = "Spectral",
-                         # limits = c(0, 100),
-                         na.value = 'white')+
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-5,-5,-5,-5))+
@@ -229,6 +237,17 @@ get_cat_tiles <- function(btd,
     ylab(label = "Bubble")+
     guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
 
+
+  if(tiles_bw==T) {
+    w <- w+scale_fill_distiller(name = legend,
+                         palette = "Spectral",
+                         na.value = 'white')
+  } else {
+    w <- w+scale_fill_gradient(name = legend,
+                               low = "#f9f9f9",
+                               high = "#666666",
+                               na.value = 'white')
+  }
 
   if(rotate_x_axis_labels==T) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
@@ -258,6 +277,7 @@ get_num_tiles <- function(btd,
                           show_hclust = F,
                           disable_hclust = F,
                           tile_text_size = 3,
+                          tiles_bw = F,
                           x_axis_name = "Feature",
                           rotate_x_axis_labels = T) {
 
@@ -270,6 +290,7 @@ get_num_tiles <- function(btd,
                           show_hclust,
                           disable_hclust,
                           tile_text_size,
+                          tile_bw,
                           x_axis_name,
                           rotate_x_axis_labels) {
 
@@ -378,6 +399,15 @@ get_num_tiles <- function(btd,
     }
 
 
+    # check tile_bw
+    if(is.logical(tile_bw)==F) {
+      stop("tile_bw must be a logical parameter")
+    }
+    if(length(tile_bw)!=1) {
+      stop("tile_bw must be a logical parameter (either TRUE or FALSE)")
+    }
+
+
     # check x_axis_name
     if(is.character(x_axis_name)==F) {
       stop("x_axis_name must be a character string")
@@ -407,6 +437,7 @@ get_num_tiles <- function(btd,
               show_hclust = show_hclust,
               disable_hclust = disable_hclust,
               tile_text_size = tile_text_size,
+              tile_bw = tile_bw,
               x_axis_name = x_axis_name,
               rotate_x_axis_labels = rotate_x_axis_labels)
 
@@ -494,13 +525,25 @@ get_num_tiles <- function(btd,
     geom_tile(aes(x = feature, y = cluster, fill = value), col = "white")+
     geom_text(aes(x = feature, y = cluster, label = value), col = "black",
               size = tile_text_size)+
-    scale_fill_distiller(name = "F", palette = "Spectral", na.value = 'white')+
     theme(legend.position = "top",
           legend.margin=margin(0,0,0,0),
           legend.box.margin=margin(-10,-10,-10,-10))+
     xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
     guides(fill = guide_colourbar(barwidth = 5, barheight = 1))
+
+
+  if(tiles_bw==T) {
+    w <- w+scale_fill_distiller(name = "Feature",
+                                palette = "Spectral",
+                                na.value = 'white')
+  } else {
+    w <- w+scale_fill_gradient(name = "Feature",
+                               low = "#f9f9f9",
+                               high = "#666666",
+                               na.value = 'white')
+  }
+
 
   if(rotate_x_axis_labels==T) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
