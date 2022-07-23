@@ -333,6 +333,9 @@ if(redo_case_a) {
 ```
 
 
+
+
+
 ... and plot the bubbletree
 
 ```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}

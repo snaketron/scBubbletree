@@ -56,7 +56,7 @@ get_k <- function(x,
 
     # check ks
     if(is.numeric(ks)==F) {
-      stop("ks must be a positive integer  or vector of positive integers")
+      stop("ks must be a positive integer or vector of positive integers")
     }
     if(any(ks<0)==T) {
       stop("ks must be a vector of positive integers")
@@ -546,18 +546,35 @@ get_bubbletree <- function(x,
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
   ph <- ape::as.phylo(x = hc)
-  ph <- ape::unroot(phy = ph)
 
-  # get branch support
-  ph <- get_ph_support(main_ph = ph,
-                       x = pair_dist$raw_pair_dist)
+  if(k<=2) {
+
+    # browser()
+    # build treetree
+    t <- get_dendrogram(ph = ph,
+                        cluster = km$cluster,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+
+  }
+  else {
+
+    ph <- ape::unroot(phy = ph)
+
+    # get branch support
+    ph <- get_ph_support(main_ph = ph,
+                         x = pair_dist$raw_pair_dist)
+
+    # build bubbletree
+    t <- get_dendrogram(ph = ph$main_ph,
+                        cluster = km$cluster,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+
+  }
 
 
-  # build treetree
-  t <- get_dendrogram(ph = ph$main_ph,
-                      cluster = km$cluster,
-                      round_digits = round_digits,
-                      show_simple_count = show_simple_count)
+
 
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
