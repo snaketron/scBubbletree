@@ -394,6 +394,131 @@ test_that("null/na argument", {
 
 
 
+test_that("x argument", {
+
+
+  expect_error(get_k(x = 1:100,
+    ks = 1:5,
+    B = 20,
+    B_gap = 10,
+    cv_prop = 0.1,
+    n_start = 100,
+    iter_max = 100,
+    kmeans_algorithm = "MacQueen",
+    mini_output = F,
+    cores = 1),
+    "x must be numeric matrix")
+
+
+  expect_error(get_k(x = data.frame(matrix(data = rnorm(n = 100*10),
+                                           nrow = 100, ncol = 10)),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "x must be numeric matrix")
+
+
+
+  x <- matrix(data = NA, nrow = 100, ncol = 10)
+  expect_error(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "x must be numeric matrix")
+
+
+  x <- matrix(data = Inf, nrow = 100, ncol = 10)
+  expect_error(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "x must be numeric matrix, infinite values not allowed")
+
+
+  x <- matrix(data = rnorm(n = 100*10), nrow = 100, ncol = 10)
+  x[10, 1] <- NA
+  expect_error(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "x must be numeric matrix, NAs not allowed")
+
+
+  x <- matrix(data = rnorm(n = 100*10), nrow = 100, ncol = 10)
+  x[10, 1] <- Inf
+  expect_error(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "x must be numeric matrix, infinite values not allowed")
+
+
+  # identical elements in x
+  x <- matrix(data = 0, nrow = 1000, ncol = 10)
+  expect_error(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "all elements in x are identical")
+
+
+  # more colls than rows
+  x <- matrix(data = rnorm(n = 50*100), nrow = 50, ncol = 100)
+  expect_warning(get_k(x = x,
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "more columns \\(features\\) than rows \\(cells\\) in x")
+
+
+})
+
+
+
+
+
 
 #
 # test_that("Null input", {
