@@ -498,7 +498,7 @@ test_that("x argument", {
                "all elements in x are identical")
 
 
-  # more colls than rows
+  # more cols than rows
   x <- matrix(data = rnorm(n = 50*100), nrow = 50, ncol = 100)
   expect_warning(get_k(x = x,
                      ks = 1:5,
@@ -515,6 +515,149 @@ test_that("x argument", {
 
 })
 
+
+
+
+test_that("ks argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = matrix(data = 1:10, ncol = 1),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = matrix(data = 1:10, nrow = 1),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = data.frame(x = 1:10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = numeric(length = 0),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = c(1, 3, NA, 10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers,
+           no NAs are allowed")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = c(1, 3, Inf, 10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers,
+           no infinite values are allowed")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = c(1, 3, -5, 10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = c(1, 3, NULL, 10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = c(1, 3, 3, 10),
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers,
+           duplicate k values are not allowed")
+
+
+
+
+})
 
 
 
