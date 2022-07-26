@@ -25,109 +25,150 @@ get_k <- function(x,
                           kmeans_algorithm) {
 
     # check x
-    if(is.numeric(x)==F) {
+    if(base::missing(x)==TRUE) {
+      stop("x input not found")
+    }
+    if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
     }
-    if(is.matrix(x)==F) {
+    if(base::is.matrix(x)==FALSE) {
       stop("x must be numeric matrix")
     }
+
 
     # check B
-    if(is.numeric(B)==F) {
-      stop("B must be a positive integer")
+    if(base::missing(B)==TRUE) {
+      stop("B input not found")
     }
-    if(length(B)!=1) {
-      stop("B must be a positive integer")
+    if(base::is.numeric(B)==FALSE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::length(B)!=1) {
+      stop("B must be a positive integer > 0")
     }
     if(B<0) {
-      stop("B must be a positive integer")
+      stop("B must be a positive integer > 0")
     }
+
 
     # check B_gap
-    if(is.numeric(B_gap)==F) {
-      stop("B_gap must be a positive integer")
+    if(base::missing(B_gap)==TRUE) {
+      stop("B_gap input not found")
     }
-    if(length(B_gap)!=1) {
-      stop("B_gap must be a positive integer")
+    if(base::is.numeric(B_gap)==FALSE) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(base::length(B_gap)!=1) {
+      stop("B_gap must be a positive integer > 0")
     }
     if(B_gap<0) {
-      stop("B_gap must be a positive integer")
+      stop("B_gap must be a positive integer > 0")
     }
 
+
     # check ks
-    if(is.numeric(ks)==F) {
+    if(base::missing(ks)==TRUE) {
+      stop("ks input not found")
+    }
+    if(base::is.numeric(ks)==FALSE) {
       stop("ks must be a positive integer or vector of positive integers")
     }
-    if(any(ks<0)==T) {
+    if(base::any(ks<0)==TRUE) {
       stop("ks must be a vector of positive integers")
     }
-    if(any(ks>nrow(x))==T) {
-      stop("ks must be a vector of positive integers < nrow(x)")
+    if(base::any(ks>=base::nrow(x))==TRUE) {
+      stop("ks must be a vector of positive integers smaller than nrow(x)")
     }
-    if(length(ks)==1) {
-      if(all(ks<=1)) {
-        stop("ks must be a positive integer > 1 or vector of positive integers")
+    if(base::length(ks)==1) {
+      if(base::all(ks<=1)) {
+        stop("ks must be a positive integer or vector of positive integers")
       }
     }
 
 
     # check cv_prop
-    if(is.numeric(cv_prop) == F) {
+    if(base::missing(cv_prop)==TRUE) {
+      stop("cv_prop input not found")
+    }
+    if(base::is.numeric(cv_prop) == FALSE) {
       stop("cv_prop is a number between 0 (excluding) and 1")
     }
-    if(length(cv_prop) != 1) {
+    if(base::length(cv_prop)!=1) {
       stop("cv_prop is a number between 0 (excluding) and 1")
     }
     if(cv_prop<0|cv_prop>1) {
       stop("cv_prop is a number between 0 (excluding) and 1")
     }
 
+
     # check cores
-    if(is.numeric(cores)==F) {
+    if(base::missing(cores)==TRUE) {
+      stop("cores input not found")
+    }
+    if(base::is.numeric(cores)==FALSE) {
       stop("cores must be a positive integer")
     }
-    if(length(cores)!=1) {
+    if(base::length(cores)!=1) {
       stop("cores must be a positive integer")
     }
 
+
     # mini_output
-    if(is.logical(mini_output)==F) {
+    if(base::missing(mini_output)==TRUE) {
+      stop("mini_output input not found")
+    }
+    if(base::is.logical(mini_output)==FALSE) {
       stop("mini_output is a logical parameter (TRUE or FALSE)")
     }
-    if(length(mini_output)!=1) {
+    if(base::length(mini_output)!=1) {
       stop("mini_output is a logical parameter (TRUE or FALSE)")
     }
+    if(is.na(mini_output)==TRUE) {
+      stop("mini_output is a logical parameter (TRUE or FALSE)")
+    }
+
 
 
     # n_start
-    if(is.numeric(n_start)==F) {
+    if(base::missing(n_start)==TRUE) {
+      stop("n_start input not found")
+    }
+    if(base::is.numeric(n_start)==FALSE) {
       stop("n_start must be a positive integer")
     }
-    if(length(n_start) != 1) {
+    if(base::length(n_start) != 1) {
       stop("n_start must be a positive integer")
     }
     if(n_start < 0) {
       stop("n_start must be a positive integer")
     }
 
+
     # iter_max
-    if(is.numeric(iter_max)==F) {
+    if(base::missing(iter_max)==TRUE) {
+      stop("iter_max input not found")
+    }
+    if(base::is.numeric(iter_max)==FALSE) {
       stop("iter_max must be a positive integer")
     }
-    if(length(iter_max) != 1) {
+    if(base::length(iter_max)!=1) {
       stop("iter_max must be a positive integer")
     }
-    if(iter_max < 0) {
+    if(iter_max<0) {
       stop("iter_max must be a positive integer")
     }
 
+
     # kmeans_algorithm
-    if(length(kmeans_algorithm) != 1) {
+    if(base::missing(kmeans_algorithm)==TRUE) {
+      stop("kmeans_algorithm input not found")
+    }
+    if(base::length(kmeans_algorithm)!=1) {
       stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
       Lloyd, Forgy, MacQueen")
     }
     if(kmeans_algorithm %in% c("Hartigan-Wong", "Lloyd", "Forgy",
-                               "MacQueen") == F) {
+                               "MacQueen")==FALSE) {
       stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
       Lloyd, Forgy, MacQueen")
     }
