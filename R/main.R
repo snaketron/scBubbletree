@@ -34,6 +34,22 @@ get_k <- function(x,
     if(base::is.matrix(x)==FALSE) {
       stop("x must be numeric matrix")
     }
+    if(base::any(base::is.infinite(x))==TRUE) {
+      stop("x must be numeric matrix, infinite values not allowed")
+    }
+    if(base::any(base::is.na(x))==TRUE) {
+      stop("x must be numeric matrix, NAs not allowed")
+    }
+    if(base::any(base::is.null(x))==TRUE) {
+      stop("x must be numeric matrix, NULLs not allowed")
+    }
+    if(base::all(x == x[1,1])==TRUE) {
+      stop("all elements in x are identical")
+    }
+    if(ncol(x)>nrow(x)) {
+      warning("more columns (features) than rows (cells) in x")
+    }
+
 
 
     # check B
