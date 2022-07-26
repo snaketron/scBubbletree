@@ -148,7 +148,13 @@ get_k <- function(x,
     if(base::length(cv_prop)!=1) {
       stop("cv_prop is a number between 0 (excluding) and 1")
     }
-    if(cv_prop<0|cv_prop>1) {
+    if(base::is.infinite(cv_prop)==TRUE) {
+      stop("cv_prop is a number between 0 (excluding) and 1")
+    }
+    if(base::is.na(cv_prop)==TRUE) {
+      stop("cv_prop is a number between 0 (excluding) and 1")
+    }
+    if(cv_prop<=0|cv_prop>1) {
       stop("cv_prop is a number between 0 (excluding) and 1")
     }
 
@@ -161,6 +167,15 @@ get_k <- function(x,
       stop("cores must be a positive integer")
     }
     if(base::length(cores)!=1) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.infinite(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.na(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<1) {
       stop("cores must be a positive integer")
     }
 
@@ -191,9 +206,19 @@ get_k <- function(x,
     if(base::length(n_start) != 1) {
       stop("n_start must be a positive integer")
     }
-    if(n_start < 0) {
+    if(n_start < 1) {
       stop("n_start must be a positive integer")
     }
+    if(base::is.infinite(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.na(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.null(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+
 
 
     # iter_max
@@ -206,7 +231,16 @@ get_k <- function(x,
     if(base::length(iter_max)!=1) {
       stop("iter_max must be a positive integer")
     }
-    if(iter_max<0) {
+    if(iter_max<1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.infinite(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.na(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.null(iter_max)==TRUE) {
       stop("iter_max must be a positive integer")
     }
 
@@ -216,6 +250,10 @@ get_k <- function(x,
       stop("kmeans_algorithm input not found")
     }
     if(base::length(kmeans_algorithm)!=1) {
+      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+    }
+    if(base::is.character(kmeans_algorithm)==FALSE) {
       stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
       Lloyd, Forgy, MacQueen")
     }
@@ -311,6 +349,9 @@ get_k <- function(x,
   # in case decimal B and B_gap
   B <- base::round(x = B, digits = 0)
   B_gap <- base::round(x = B_gap, digits = 0)
+  n_start <- base::round(x = n_start, digits = 0)
+  iter_max <- base::round(x = iter_max, digits = 0)
+  cores <- base::round(x = cores, digits = 0)
 
 
   boot_obj <- base::vector(mode = "list", length = B)
