@@ -71,6 +71,9 @@ get_k <- function(x,
     if(base::is.na(B)==TRUE) {
       stop("B must be a positive integer > 0")
     }
+    if(B%%1!=0) {
+      stop("B must be a positive integer > 0")
+    }
 
 
 
@@ -91,6 +94,9 @@ get_k <- function(x,
       stop("B_gap must be a positive integer > 0")
     }
     if(base::is.na(B_gap)==TRUE) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(B_gap%%1!=0) {
       stop("B_gap must be a positive integer > 0")
     }
 
@@ -178,6 +184,9 @@ get_k <- function(x,
     if(cores<1) {
       stop("cores must be a positive integer")
     }
+    if(cores%%1!=0) {
+      stop("cores must be a positive integer")
+    }
 
 
     # mini_output
@@ -218,6 +227,9 @@ get_k <- function(x,
     if(base::is.null(n_start)==TRUE) {
       stop("n_start must be a positive integer")
     }
+    if(n_start%%1!=0) {
+      stop("n_start must be a positive integer")
+    }
 
 
 
@@ -241,6 +253,9 @@ get_k <- function(x,
       stop("iter_max must be a positive integer")
     }
     if(base::is.null(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max%%1!=0) {
       stop("iter_max must be a positive integer")
     }
 
@@ -345,13 +360,6 @@ get_k <- function(x,
   # sort ks, smallest k first, largest last
   ks <- base::sort(ks, decreasing = F)
 
-
-  # in case decimal B and B_gap
-  B <- base::round(x = B, digits = 0)
-  B_gap <- base::round(x = B_gap, digits = 0)
-  n_start <- base::round(x = n_start, digits = 0)
-  iter_max <- base::round(x = iter_max, digits = 0)
-  cores <- base::round(x = cores, digits = 0)
 
 
   boot_obj <- base::vector(mode = "list", length = B)
@@ -503,7 +511,7 @@ get_bubbletree <- function(x,
                            iter_max = 300,
                            kmeans_algorithm = "MacQueen",
                            cores = 1,
-                           seed = NA,
+                           seed = NULL,
                            round_digits = 2,
                            show_simple_count = F) {
 
@@ -520,139 +528,274 @@ get_bubbletree <- function(x,
                           show_simple_count,
                           kmeans_algorithm) {
 
+
     # check x
-    if(is.numeric(x)==F) {
+    if(base::missing(x)==TRUE) {
+      stop("x input not found")
+    }
+    if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
     }
-    if(is.matrix(x)==F) {
+    if(base::is.matrix(x)==FALSE) {
       stop("x must be numeric matrix")
     }
-
-
-    # check k
-    if(is.numeric(k)==F) {
-      stop("k must be a positive integer (k>=3) to build a bubbletree")
+    if(base::any(base::is.infinite(x))==TRUE) {
+      stop("x must be numeric matrix, infinite values not allowed")
     }
-    if(length(k)!=1) {
-      stop("k must be a positive integer (k>=3) to build a bubbletree")
+    if(base::any(base::is.na(x))==TRUE) {
+      stop("x must be numeric matrix, NAs not allowed")
     }
-    if(k<=0) {
-      stop("k must be a positive integer (k>=3) to build a bubbletree")
+    if(base::any(base::is.null(x))==TRUE) {
+      stop("x must be numeric matrix, NULLs not allowed")
     }
-
-
-    # n_start
-    if(is.numeric(n_start)==F) {
-      stop("n_start must be a positive integer")
+    if(base::all(x == x[1,1])==TRUE) {
+      stop("all elements in x are identical")
     }
-    if(length(n_start) != 1) {
-      stop("n_start must be a positive integer")
-    }
-    if(n_start < 0) {
-      stop("n_start must be a positive integer")
+    if(base::ncol(x)>base::nrow(x)) {
+      warning("more columns (features) than rows (cells) in x")
     }
 
-
-    # iter_max
-    if(is.numeric(iter_max)==F) {
-      stop("iter_max must be a positive integer")
-    }
-    if(length(iter_max) != 1) {
-      stop("iter_max must be a positive integer")
-    }
-    if(iter_max < 0) {
-      stop("iter_max must be a positive integer")
-    }
 
 
     # check B
-    if(is.numeric(B)==F) {
-      stop("B must be a positive integer")
+    if(base::missing(B)==TRUE) {
+      stop("B input not found")
     }
-    if(length(B)!=1) {
-      stop("B must be a positive integer")
+    if(base::is.numeric(B)==FALSE) {
+      stop("B must be a positive integer > 0")
     }
-    if(B<=0) {
-      stop("B must be a positive integer")
+    if(base::length(B)!=1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B<1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.infinite(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.na(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B%%1!=0) {
+      stop("B must be a positive integer > 0")
     }
 
 
-    # check N_eff
-    if(is.numeric(N_eff)==F) {
-      stop("N_eff must be a positive integer")
+
+    # check k
+    if(base::missing(k)==TRUE) {
+      stop("k input not found")
     }
-    if(length(N_eff) != 1) {
-      stop("N_eff must be a positive integer")
+    if(is.numeric(k)==F) {
+      stop("k must be a positive integer (k>=2) to build a bubbletree")
     }
-    if(N_eff<=0) {
-      stop("N_eff must be a positive integer")
+    if(length(k)!=1) {
+      stop("k must be a positive integer (k>=2) to build a bubbletree")
     }
+    if(k<=1) {
+      stop("k must be a positive integer (k>=2) to build a bubbletree")
+    }
+    if(is.infinite(k)==TRUE) {
+      stop("k must be a positive integer (k>=2) to build a bubbletree")
+    }
+    if(k%%1!=0) {
+      stop("k must be a positive integer (k>=2) to build a bubbletree")
+    }
+
+
 
 
     # check cores
-    if(is.numeric(cores)==F) {
+    if(base::missing(cores)==TRUE) {
+      stop("cores input not found")
+    }
+    if(base::is.numeric(cores)==FALSE) {
       stop("cores must be a positive integer")
     }
-    if(length(cores)!=1) {
+    if(base::length(cores)!=1) {
       stop("cores must be a positive integer")
     }
-    if(cores<=0) {
+    if(base::is.infinite(cores)==TRUE) {
       stop("cores must be a positive integer")
     }
+    if(base::is.na(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<1) {
+      stop("cores must be a positive integer")
+    }
+    if(cores%%1!=0) {
+      stop("cores must be a positive integer")
+    }
+
+
+
+
+    # n_start
+    if(base::missing(n_start)==TRUE) {
+      stop("n_start input not found")
+    }
+    if(base::is.numeric(n_start)==FALSE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::length(n_start) != 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start < 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.infinite(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.na(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.null(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start%%1!=0) {
+      stop("n_start must be a positive integer")
+    }
+
+
+
+    # iter_max
+    if(base::missing(iter_max)==TRUE) {
+      stop("iter_max input not found")
+    }
+    if(base::is.numeric(iter_max)==FALSE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::length(iter_max)!=1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max<1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.infinite(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.na(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.null(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max%%1!=0) {
+      stop("iter_max must be a positive integer")
+    }
+
+
+
+
+    # kmeans_algorithm
+    if(base::missing(kmeans_algorithm)==TRUE) {
+      stop("kmeans_algorithm input not found")
+    }
+    if(base::length(kmeans_algorithm)!=1) {
+      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+    }
+    if(base::is.character(kmeans_algorithm)==FALSE) {
+      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+    }
+    if(kmeans_algorithm %in% c("Hartigan-Wong", "Lloyd", "Forgy",
+                               "MacQueen")==FALSE) {
+      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+    }
+
+
+
+
+
+    # check N_eff
+    if(base::missing(N_eff)==TRUE) {
+      stop("N_eff input not found")
+    }
+    if(base::is.numeric(N_eff)==FALSE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::length(N_eff)!=1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff<1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.infinite(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.na(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.null(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff%%1!=0) {
+      stop("N_eff must be a positive integer")
+    }
+
 
 
     # check seed
-    if(is.numeric(seed)==F) {
-      stop("seed must be a positive integer")
+    if(base::is.null(seed)==FALSE) {
+      if(base::is.numeric(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(base::length(seed)!=1) {
+        stop("seed must be a positive integer")
+      }
+      if(seed<=0) {
+        stop("seed must be a positive integer")
+      }
+      if(base::is.finite(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(seed%%1!=0) {
+        stop("seed must be a positive integer")
+      }
     }
-    if(length(seed)!=1) {
-      stop("seed must be a positive integer")
-    }
-    if(seed<=0) {
-      stop("seed must be a positive integer")
-    }
+
 
 
     # check round_digits
-    if(is.numeric(round_digits)==F) {
+    if(base::missing(round_digits)==TRUE) {
+      stop("round_digits input not found")
+    }
+    if(base::is.numeric(round_digits)==F) {
       stop("round_digits must be a positive integer")
     }
-    if(length(round_digits)!=1) {
+    if(base::length(round_digits)!=1) {
       stop("round_digits must be a positive integer")
     }
     if(round_digits<0) {
       stop("round_digits must be a positive integer")
     }
+    if(base::is.finite(round_digits)==FALSE) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits%%1!=0) {
+      stop("round_digits must be a positive integer")
+    }
+
 
 
     # show_simple_count
+    if(base::missing(show_simple_count)==TRUE) {
+      stop("show_simple_count input not found")
+    }
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
     if(is.logical(show_simple_count)==F) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-
-
-    # kmeans_algorithm
-    if(length(kmeans_algorithm) != 1) {
-      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+    if(base::is.na(show_simple_count)==TRUE) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    if(kmeans_algorithm %in% c("Hartigan-Wong", "Lloyd", "Forgy",
-                               "MacQueen") == F) {
-      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
-    }
-  }
 
 
-  # set seed for reproducibility
-  if(is.na(seed) == F) {
-    set.seed(seed = seed)
-  }else {
-    seed <- base::sample(x = 1:10^6, size = 1)
-    set.seed(seed = seed)
   }
 
 
@@ -668,6 +811,17 @@ get_bubbletree <- function(x,
               round_digits = round_digits,
               show_simple_count = show_simple_count,
               kmeans_algorithm = kmeans_algorithm)
+
+
+  # set seed for reproducibility
+  if(base::is.null(seed)==FALSE) {
+    base::set.seed(seed = seed)
+  }
+  else {
+    seed <- base::sample(x = 1:10^6, size = 1)
+    base::set.seed(seed = seed)
+  }
+
 
 
   # perform k-means clustering
