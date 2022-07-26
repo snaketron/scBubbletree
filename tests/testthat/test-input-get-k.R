@@ -800,7 +800,7 @@ test_that("B_gap argument", {
                      kmeans_algorithm = "MacQueen",
                      mini_output = F,
                      cores = 1),
-               NA)
+               "B_gap must be a positive integer > 0")
 
 
   expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
@@ -906,7 +906,7 @@ test_that("B arguments", {
                      kmeans_algorithm = "MacQueen",
                      mini_output = F,
                      cores = 1),
-               NA)
+               "B must be a positive integer > 0")
 
 })
 
@@ -1012,7 +1012,7 @@ test_that("n_start argument", {
                      kmeans_algorithm = "MacQueen",
                      mini_output = F,
                      cores = 1),
-               NA)
+               "n_start must be a positive integer")
 
 })
 
@@ -1107,7 +1107,7 @@ test_that("iter_max argument", {
                "iter_max must be a positive integer")
 
 
-  suppressWarnings(expr = expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
                                 nrow = 100, ncol = 10),
                      ks = 1:5,
                      B = 20,
@@ -1118,7 +1118,7 @@ test_that("iter_max argument", {
                      kmeans_algorithm = "MacQueen",
                      mini_output = F,
                      cores = 1),
-               NA))
+               "iter_max must be a positive integer")
 
 })
 
@@ -1330,7 +1330,7 @@ test_that("cores argument", {
                      kmeans_algorithm = "MacQueen",
                      mini_output = F,
                      cores = 1.5),
-               NA)
+               "cores must be a positive integer")
 
 })
 
