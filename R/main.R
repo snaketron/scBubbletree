@@ -46,7 +46,7 @@ get_k <- function(x,
     if(base::all(x == x[1,1])==TRUE) {
       stop("all elements in x are identical")
     }
-    if(ncol(x)>nrow(x)) {
+    if(base::ncol(x)>base::nrow(x)) {
       warning("more columns (features) than rows (cells) in x")
     }
 
@@ -89,8 +89,30 @@ get_k <- function(x,
     if(base::is.numeric(ks)==FALSE) {
       stop("ks must be a positive integer or vector of positive integers")
     }
+    if(base::is.vector(x = ks)==FALSE) {
+      stop("ks must be a positive integer or vector of positive integers")
+    }
+    if(base::length(ks)<=0) {
+      stop("ks must be a positive integer or vector of positive integers")
+    }
+    if(base::any(base::is.infinite(ks))==TRUE) {
+      stop("ks must be a positive integer or vector of positive integers,
+           no infinite values are allowed")
+    }
+    if(base::any(base::is.na(ks))==TRUE) {
+      stop("ks must be a positive integer or vector of positive integers,
+           no NAs are allowed")
+    }
+    if(base::any(base::is.null(ks))==TRUE) {
+      stop("ks must be a positive integer or vector of positive integers,
+           no NULLs are allowed")
+    }
     if(base::any(ks<0)==TRUE) {
-      stop("ks must be a vector of positive integers")
+      stop("ks must be a positive integer or vector of positive integers")
+    }
+    if(base::any(base::duplicated(ks))==TRUE) {
+      stop("ks must be a positive integer or vector of positive integers,
+           duplicate k values are not allowed")
     }
     if(base::any(ks>=base::nrow(x))==TRUE) {
       stop("ks must be a vector of positive integers smaller than nrow(x)")
@@ -99,6 +121,9 @@ get_k <- function(x,
       if(base::all(ks<=1)) {
         stop("ks must be a positive integer or vector of positive integers")
       }
+    }
+    if(base::length(ks)>base::nrow(x)) {
+      warning("more clusters than rows (cells) in x")
     }
 
 
