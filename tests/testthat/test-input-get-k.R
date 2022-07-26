@@ -517,7 +517,6 @@ test_that("x argument", {
 
 
 
-
 test_that("ks argument", {
 
 
@@ -657,8 +656,256 @@ test_that("ks argument", {
 
 
 
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = -10,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 0,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "ks must be a positive integer or vector of positive integers")
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:200,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "max\\(ks\\) should be smaller than nrow\\(x\\)")
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 5:1,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+
+
 })
 
+
+
+
+
+test_that("B_gap arguments", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = -1,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B_gap must be a positive integer > 0")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = -1.5,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B_gap must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 0.2,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B_gap must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = Inf,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B_gap must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 10,
+                     B_gap = 1.5,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 10,
+                     B_gap = "100",
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B_gap must be a positive integer > 0")
+
+})
+
+
+
+test_that("B arguments", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = -1,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B must be a positive integer > 0")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = -1.5,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 0.2,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = Inf,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = "100",
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "B must be a positive integer > 0")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 1.5,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+})
 
 
 
