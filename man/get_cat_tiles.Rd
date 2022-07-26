@@ -29,7 +29,8 @@ get_cat_tiles(btd,
               disable_hclust = F,
               tile_text_size = 3,
               x_axis_name = "Feature",
-              rotate_x_axis_labels = T)
+              rotate_x_axis_labels = T,
+              tile_bw = F)
 }
 
 
@@ -50,6 +51,8 @@ of the feature classes will be performed}
 \item{rotate_x_axis_labels}{logical, should the x-axis labels be shown
 horizontally (rotate_x_axis_labels  = FALSE) or vertically
 (rotate_x_axis_labels = TRUE)}
+\item{tile_bw}{logical, tile grayscale (tile_bw = TRUE) vs. color
+(tile_bw = FALSE, default)}
 }
 
 
