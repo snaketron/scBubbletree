@@ -146,6 +146,7 @@ test_that("missing argument", {
 
 
 
+
 test_that("null/na argument", {
 
 
@@ -394,6 +395,7 @@ test_that("null/na argument", {
 
 
 
+
 test_that("x argument", {
 
 
@@ -514,6 +516,7 @@ test_that("x argument", {
 
 
 })
+
 
 
 
@@ -726,8 +729,7 @@ test_that("ks argument", {
 
 
 
-
-test_that("B_gap arguments", {
+test_that("B_gap argument", {
 
 
   expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
@@ -815,6 +817,7 @@ test_that("B_gap arguments", {
                "B_gap must be a positive integer > 0")
 
 })
+
 
 
 
@@ -910,348 +913,716 @@ test_that("B arguments", {
 
 
 
-#
-# test_that("Null input", {
-#
-#
-#   expect_error(checkInput(usage.data = NULL,
-#                           mcmc.chains = NULL,
-#                           mcmc.cores = NULL,
-#                           mcmc.steps = NULL,
-#                           mcmc.warmup = NULL,
-#                           hdi.level = NULL),
-#                "arguments must be specified")
-#
-#
-#   expect_error(checkInput(),
-#                "arguments must be specified")
-#
-#
-# })
-#
-#
-#
-# test_that("usage.data check", {
-#
-#   expect_error(checkUsageData(usage.data = NA),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = NULL),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = Inf),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = character()),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = numeric()),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = logical()),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = array()),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = matrix()),
-#                "usage.data must be data.frame")
-#
-#   expect_error(checkUsageData(usage.data = data.frame()),
-#                "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(
-#     usage.data = data.frame(a = NA, b = NA, c = NA, d = NA)),
-#     "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2), condition = numeric(length = 2),
-#     gene_name = numeric(length = 2), gene_usage_count = numeric(length = 2))),
-#     "column sample_id must be of character type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2),
-#     condition = numeric(length = 2),
-#     gene_name = numeric(length = 2),
-#     gene_usage_count = numeric(length = 2),
-#     temp = numeric(length = 2))),
-#     "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2),
-#     condition = numeric(length = 2),
-#     gene_name = numeric(length = 2))),
-#     "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2),
-#     gene_name = numeric(length = 2))),
-#     "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2))),
-#     "usage.data must contain the following columns: 'sample_id',
-#          'condition', 'gene_name' and 'gene_usage_count'")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = numeric(length = 2),
-#     condition = numeric(length = 2),
-#     gene_name = character(length = 2),
-#     gene_usage_count = character(length = 2),
-#     stringsAsFactors = FALSE)),
-#     "column sample_id must be of character type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 2),
-#     condition = numeric(length = 2),
-#     gene_name = character(length = 2),
-#     gene_usage_count = character(length = 2),
-#     stringsAsFactors = FALSE)),
-#     "column condition must be of character type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 2),
-#     condition = character(length = 2),
-#     gene_name = character(length = 2),
-#     gene_usage_count = character(length = 2),
-#     stringsAsFactors = FALSE)),
-#     "column gene_usage_count must be of numeric type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 2),
-#     condition = character(length = 2),
-#     gene_name = character(length = 2),
-#     gene_usage_count = NA,
-#     stringsAsFactors = FALSE)),
-#     "column gene_usage_count must be of numeric type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 2),
-#     condition = character(length = 2),
-#     gene_name = character(length = 2),
-#     gene_usage_count = logical(length = 2),
-#     stringsAsFactors = FALSE)),
-#     "column gene_usage_count must be of numeric type.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 2),
-#     condition = c("A", "A"),
-#     gene_name = character(length = 2),
-#     gene_usage_count = numeric(length = 2),
-#     stringsAsFactors = FALSE)),
-#     "exactly 2 biological conditions must be provided.")
-#
-#   expect_error(checkUsageData(usage.data = data.frame(
-#     sample_id = character(length = 3),
-#     condition = c("A", "B", "C"),
-#     gene_name = character(length = 3),
-#     gene_usage_count = numeric(length = 3),
-#     stringsAsFactors = FALSE)),
-#     "exactly 2 biological conditions must be provided.")
-# })
-#
-#
-#
-# test_that("hdi.level check", {
-#
-#   expect_error(object = checkHdi(hdi.level = NA),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(object = checkHdi(hdi.level = NULL),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(object = checkHdi(hdi.level = Inf),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(object = checkHdi(hdi.level = numeric(length = 1)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = double(length = 1)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = integer(length = 1)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = character(length = 1)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = logical(length = 1)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#
-#
-#   expect_error(checkHdi(hdi.level = numeric(length = 3)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = double(length = 3)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = integer(length = 3)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = character(length = 3)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-#   expect_error(checkHdi(hdi.level = logical(length = 3)),
-#                regexp = "hdi\\.level must be a number in range \\(0, 1\\)")
-#
-# })
-#
-#
-#
-# test_that("mcmc.chains check", {
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = NA),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = NULL),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = Inf),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = numeric(length = 1)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = double(length = 1)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = integer(length = 1)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = character(length = 1)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = logical(length = 1)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_silent(object = checkMcmcChains(mcmc.chains = as.integer(x = 2)))
-#
-#   # len > 1
-#   expect_error(object = checkMcmcChains(mcmc.chains = numeric(length = 3)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = double(length = 3)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = integer(length = 3)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = character(length = 3)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcChains(mcmc.chains = logical(length = 3)),
-#                regexp = "mcmc.chains must be a positive integer > 0")
-# })
-#
-#
-#
-# test_that("mcmc.cores check", {
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = NA),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = NULL),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = Inf),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = numeric(length = 1)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = double(length = 1)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = integer(length = 1)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = character(length = 1)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = logical(length = 1)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_silent(object = checkMcmcCores(mcmc.cores = as.integer(x = 2)))
-#
-#   # len > 1
-#   expect_error(object = checkMcmcCores(mcmc.cores = numeric(length = 3)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = double(length = 3)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = integer(length = 3)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = character(length = 3)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-#
-#   expect_error(object = checkMcmcCores(mcmc.cores = logical(length = 3)),
-#                regexp = "mcmc.cores must be a positive integer > 0")
-# })
-#
-#
-#
-# test_that("mcmc.steps and mcmc.warmup check", {
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = NA, mcmc.warmup = NA),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = NULL, mcmc.warmup = NULL),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = Inf, mcmc.warmup = Inf),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = numeric(length = 1),
-#                                        mcmc.warmup = numeric(length = 1)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = double(length = 1),
-#                                        mcmc.warmup = double(length = 1)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = integer(length = 1),
-#                                        mcmc.warmup = integer(length = 1)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = character(length = 1),
-#                                        mcmc.warmup = character(length = 1)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = logical(length = 1),
-#                                        mcmc.warmup = logical(length = 1)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_silent(object = checkMcmcSteps(mcmc.steps = as.integer(x = 500),
-#                                         mcmc.warmup = as.integer(x = 100)))
-#
-#   # len > 1
-#   expect_error(object = checkMcmcSteps(mcmc.steps = numeric(length = 2),
-#                                        mcmc.warmup = numeric(length = 2)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = double(length = 2),
-#                                        mcmc.warmup = double(length = 2)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = integer(length = 2),
-#                                        mcmc.warmup = integer(length = 2)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = character(length = 2),
-#                                        mcmc.warmup = character(length = 2)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-#
-#   expect_error(object = checkMcmcSteps(mcmc.steps = logical(length = 2),
-#                                        mcmc.warmup = logical(length = 2)),
-#                regexp = "mcmc.steps >= 500 & mcmc.warmup >= 100.")
-# })
-#
-#
+test_that("n_start argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = -1,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = Inf,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = -Inf,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 0.5,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 1:10,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = "100",
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "n_start must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 1.5,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+})
+
+
+
+
+test_that("iter_max argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = -1,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = Inf,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = -Inf,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max  = 0.5,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 1:10,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = "100",
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "iter_max must be a positive integer")
+
+
+  suppressWarnings(expr = expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 1.5,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA))
+
+})
+
+
+
+
+test_that("cv_prop argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = -1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = Inf,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.25,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 3,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = FALSE,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = "0.5",
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               "cv_prop is a number between 0 \\(excluding\\) and 1")
+
+
+})
+
+
+
+
+test_that("cores argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = -1),
+               "cores must be a positive integer")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = Inf),
+               "cores must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 0.5),
+               "cores must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1:5),
+               "cores must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = "2"),
+               "cores must be a positive integer")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1.5),
+               NA)
+
+})
+
+
+
+
+test_that("kmeans_algorithm argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "Mac",
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = c("MacQueen", "Lloyd"),
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "A",
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "L",
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = Inf,
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = NA,
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = 1,
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = FALSE,
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "Hartigan-Wong",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "Forgy",
+                     mini_output = F,
+                     cores = 1),
+              NA)
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "Lloyd",
+                     mini_output = F,
+                     cores = 1),
+               NA)
+
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = base::unique,
+                     mini_output = F,
+                     cores = 1),
+               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
+      Lloyd, Forgy, MacQueen")
+
+
+})
+
+
+
+
+test_that("mini_output argument", {
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = 1,
+                     cores = 1),
+               "mini_output is a logical parameter \\(TRUE or FALSE\\)")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = 2,
+                     cores = 1),
+               "mini_output is a logical parameter \\(TRUE or FALSE\\)")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = "T",
+                     cores = 1),
+               "mini_output is a logical parameter \\(TRUE or FALSE\\)")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = c(T, F),
+                     cores = 1),
+               "mini_output is a logical parameter \\(TRUE or FALSE\\)")
+
+
+
+  expect_error(get_k(x = matrix(data = rnorm(n = 100*10),
+                                nrow = 100, ncol = 10),
+                     ks = 1:5,
+                     B = 20,
+                     B_gap = 10,
+                     cv_prop = 0.1,
+                     n_start = 100,
+                     iter_max = 100,
+                     kmeans_algorithm = "MacQueen",
+                     mini_output = base::unique,
+                     cores = 1),
+               "mini_output is a logical parameter \\(TRUE or FALSE\\)")
+
+})
+
+
+
