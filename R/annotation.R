@@ -26,77 +26,105 @@ get_cat_tiles <- function(btd,
                           rotate_x_axis_labels) {
 
     # check btd
-    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
-       is.null(class(btd))||!class(btd)%in%
+    if(base::missing(btd)) {
+      stop("bubbletree (btd) is missing")
+    }
+    if(base::any(base::is.na(btd))||base::is.null(btd)||
+       base::any(base::is.na(base::class(btd)))||
+       base::is.null(base::class(btd))||!base::class(btd)%in%
        c("bubbletree", "dummy_bubbletree")) {
       stop("problem with the input bubbletree")
     }
 
-    if(is.vector(btd$cluster)==F||
-       is.na(is.vector(btd$cluster))||
-       is.null(is.vector(btd$cluster))) {
+    if(base::is.vector(btd$cluster)==FALSE||
+       base::is.na(base::is.vector(btd$cluster))||
+       base::is.null(base::is.vector(btd$cluster))) {
       stop("no clustering results in bubbletree")
     }
 
 
     # check fs
-    if(is.character(f)==F) {
+    if(base::missing(f)){
+      stop("f is missing")
+    }
+    if(base::is.character(f)==FALSE) {
       stop("f must be a character vector")
     }
-    if(is.vector(f)==F) {
+    if(base::is.vector(f)==FALSE) {
       stop("f must be a character vector")
     }
-    if(length(f)!=length(btd$cluster)) {
-      stop("length(f) != length(btd$cluster)")
+    if(base::is.na(f)||base::is.null(f)) {
+      stop("f must be a character vector")
+    }
+    if(base::length(f)!=base::length(btd$cluster)) {
+      stop("length of f is not equal to number of cells in btd")
     }
 
 
     # check integrate_vertical
-    if(is.logical(integrate_vertical)==F) {
+    if(base::missing(integrate_vertical)) {
+      stop("integrate_vertical is missing")
+    }
+    if(base::is.logical(integrate_vertical)==FALSE) {
       stop("integrate_vertical must be a logical parameter")
     }
-    if(length(integrate_vertical)!=1) {
+    if(base::length(integrate_vertical)!=1) {
       stop("integrate_vertical must be a logical parameter
            (either TRUE or FALSE)")
     }
 
 
     # check round_digits
-    if(is.numeric(round_digits)==F) {
-      stop("round_digits must be an integer >=0")
+    if(base::missing(round_digits)==TRUE) {
+      stop("round_digits input not found")
     }
-    if(round_digits%%1!=0) {
-      stop("round_digits must be an integer >=0")
+    if(base::is.numeric(round_digits)==F) {
+      stop("round_digits must be a positive integer")
     }
-    if(length(round_digits)!=1) {
-      stop("round_digits must be an integer >=0")
-    }
-    if(is.infinite(round_digits)) {
-      stop("round_digits must be an integer >=0")
+    if(base::length(round_digits)!=1) {
+      stop("round_digits must be a positive integer")
     }
     if(round_digits<0) {
-      stop("round_digits must be an integer >=0")
+      stop("round_digits must be a positive integer")
+    }
+    if(base::is.finite(round_digits)==FALSE) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits%%1!=0) {
+      stop("round_digits must be a positive integer")
     }
 
 
     # check show_hclust
-    if(is.logical(show_hclust)==F) {
-      stop("show_hclust must be a logical parameter")
+    if(base::missing(show_hclust)==TRUE) {
+      stop("show_hclust input not found")
     }
-    if(length(show_hclust)!=1) {
-      stop("show_hclust must be a logical parameter (either TRUE or FALSE)")
+    if(base::is.logical(show_hclust)==FALSE) {
+      stop("show_hclust is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::length(show_hclust)!=1) {
+      stop("show_hclust is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(show_hclust)==TRUE) {
+      stop("show_hclust is a logical parameter (TRUE or FALSE)")
     }
 
 
     # check disable_hclust
-    if(is.logical(disable_hclust)==F) {
-      stop("disable_hclust must be a logical parameter")
+    if(base::missing(disable_hclust)==TRUE) {
+      stop("disable_hclust input not found")
     }
-    if(length(disable_hclust)!=1) {
-      stop("disable_hclust must be a logical parameter (either TRUE or FALSE)")
+    if(base::is.logical(disable_hclust)==FALSE) {
+      stop("disable_hclust is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::length(disable_hclust)!=1) {
+      stop("disable_hclust is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(disable_hclust)==TRUE) {
+      stop("disable_hclust is a logical parameter (TRUE or FALSE)")
     }
 
-    if(disable_hclust==T & show_hclust==T) {
+    if(disable_hclust==TRUE & show_hclust==TRUE) {
       warning("hierarchical feature clustering is disabled (disable_hclust=T),
               show_hclust=T has no effect (set disable_hclust=F to show
               hierarchical dendrogram")
@@ -104,26 +132,35 @@ get_cat_tiles <- function(btd,
 
 
     # check tile_text_size
-    if(is.numeric(tile_text_size)==F) {
+    if(base::missing(tile_text_size)) {
+      stop("tile_text_size is missing")
+    }
+    if(base::is.numeric(tile_text_size)==FALSE) {
       stop("tile_text_size must be a number >0")
     }
-    if(length(tile_text_size)!=1) {
+    if(base::length(tile_text_size)!=1) {
       stop("tile_text_size must be a number >0")
     }
-    if(is.infinite(tile_text_size)) {
+    if(base::is.infinite(tile_text_size)) {
       stop("tile_text_size must be a number >0")
     }
     if(tile_text_size<0) {
-      stop("tile_text_size must be an integer >=0")
+      stop("tile_text_size must be an number >=0")
     }
 
 
     # check tile_bw
-    if(is.logical(tile_bw)==F) {
-      stop("tile_bw must be a logical parameter")
+    if(base::missing(tile_bw)==TRUE) {
+      stop("tile_bw input not found")
     }
-    if(length(tile_bw)!=1) {
-      stop("tile_bw must be a logical parameter (either TRUE or FALSE)")
+    if(base::is.logical(tile_bw)==FALSE) {
+      stop("tile_bw is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::length(tile_bw)!=1) {
+      stop("tile_bw is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(tile_bw)==TRUE) {
+      stop("tile_bw is a logical parameter (TRUE or FALSE)")
     }
 
 
@@ -135,14 +172,19 @@ get_cat_tiles <- function(btd,
       stop("x_axis_name must be a character string")
     }
 
+
     # check rotate_x_axis_labels
-    if(is.logical(rotate_x_axis_labels)==F) {
-      stop("rotate_x_axis_labels must be a logical parameter
-           (either TRUE or FALSE)")
+    if(base::missing(rotate_x_axis_labels)==TRUE) {
+      stop("rotate_x_axis_labels input not found")
     }
-    if(length(rotate_x_axis_labels)!=1) {
-      stop("rotate_x_axis_labels must be a logical parameter
-           (either TRUE or FALSE)")
+    if(base::is.logical(rotate_x_axis_labels)==FALSE) {
+      stop("rotate_x_axis_labels is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::length(rotate_x_axis_labels)!=1) {
+      stop("rotate_x_axis_labels is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(rotate_x_axis_labels)==TRUE) {
+      stop("rotate_x_axis_labels is a logical parameter (TRUE or FALSE)")
     }
 
   }
