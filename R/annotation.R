@@ -165,10 +165,13 @@ get_cat_tiles <- function(btd,
 
 
     # check x_axis_name
-    if(is.character(x_axis_name)==F) {
+    if(base::missing(x_axis_name)==TRUE) {
+      stop("x_axis_name input not found")
+    }
+    if(base::is.character(x_axis_name)==F) {
       stop("x_axis_name must be a character string")
     }
-    if(length(x_axis_name)!=1) {
+    if(base::length(x_axis_name)!=1) {
       stop("x_axis_name must be a character string")
     }
 
