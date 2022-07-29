@@ -390,10 +390,7 @@ get_k <- function(x,
 
 
 
-    # extract WCSS
-    wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
-      return(x$tot.withinss)
-    })
+
 
 
     cat("2) gap-stat, ")
@@ -407,10 +404,27 @@ get_k <- function(x,
                                     n_start = n_start,
                                     iter_max = iter_max,
                                     kmeans_algorithm = kmeans_algorithm)
+
     # within cluster sum of squares
     cat("3) WCSS. \n")
+    # extract WCSS
+    wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
+      return(x$tot.withinss)
+    })
+
+
+    # extract CH: Calinski-Harabasz Index
+    ch_data <- lapply(X = kmeans_obj, FUN = function(x) {
+      k <- base::nrow(x$centers)
+      return((x$betweenss/x$tot.withinss)*
+               ((base::sum(x$size)-k)/
+                  (k-1)))
+    })
+
+
     boot_obj[[b]] <- list(obj = kmeans_obj,
                           wcss = wcss_data,
+                          ch = ch_data,
                           gap = gap_stats,
                           cell_i = js)
 
@@ -422,10 +436,12 @@ get_k <- function(x,
   # collect clustering data
   gap_stats <- base::vector(mode = "list", length = base::length(boot_obj))
   wcss_stats <- base::vector(mode = "list", length = base::length(boot_obj))
+  ch_stats <- base::vector(mode = "list", length = base::length(boot_obj))
 
   # raw gap stats
   gap_matrix <- base::matrix(data = 0, nrow = B*B_gap, ncol = base::length(ks))
   wcss_matrix <- base::matrix(data = 0, nrow = B, ncol = base::length(ks))
+  ch_matrix <- base::matrix(data = 0, nrow = B, ncol = base::length(ks))
 
 
   # loop over top-bootstrap iterations B
@@ -433,26 +449,31 @@ get_k <- function(x,
 
     gap_vec <- base::numeric(length = base::length(ks))
     wcss_vec <- base::numeric(length = base::length(ks))
+    ch_vec <- base::numeric(length = base::length(ks))
 
     # loop over ks
     for(j in 1:base::length(ks)) {
       gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
       wcss_vec[j] <- boot_obj[[i]]$wcss[[j]]
+      ch_vec[j] <- boot_obj[[i]]$ch[[j]]
 
       gap_matrix[((i-1)*B_gap+1):((i-1)*B_gap+B_gap), j] <-
         boot_obj[[i]]$gap[[j]]$logWks-boot_obj[[i]]$gap[[j]]$logW
       wcss_matrix[,j] <- boot_obj[[i]]$wcss[[j]]
+      ch_matrix[,j] <- boot_obj[[i]]$ch[[j]]
+
     }
 
     gap_stats[[i]] <- base::data.frame(boot = i, gap = gap_vec, k = ks)
     wcss_stats[[i]] <- base::data.frame(boot = i, wcss = wcss_vec, k = ks)
+    ch_stats[[i]] <- base::data.frame(boot = i, wcss = ch_vec, k = ks)
 
   }
 
   # collect DFs
   gap_stats <- base::do.call(base::rbind, gap_stats)
   wcss_stats <- base::do.call(base::rbind, wcss_stats)
-
+  ch_stats <- base::do.call(base::rbind, ch_stats)
 
   # compute gap summary
   gap_mean <- base::apply(X = gap_matrix,
@@ -482,13 +503,29 @@ get_k <- function(x,
                                          H95 = wcss_mean+wcss_se*1.96)
 
 
+  # compute ch summary
+  ch_mean <- base::apply(X = ch_matrix,
+                         MARGIN = 2,
+                         FUN = base::mean)
+  ch_se <- base::sqrt((1/B + 1)*base::apply(X = ch_matrix,
+                                            MARGIN = 2,
+                                            FUN = stats::var))
+  ch_stats_summary <- base::data.frame(ch_mean = ch_mean,
+                                       k = ks,
+                                       ch_SE = ch_se,
+                                       L95 = ch_mean-ch_se*1.96,
+                                       H95 = ch_mean+ch_se*1.96)
+
+
   if(mini_output) {
     return(base::structure(class = "boot_k",
                            base::list(boot_obj = NA,
                                       wcss_stats_summary = wcss_stats_summary,
                                       gap_stats_summary = gap_stats_summary,
+                                      ch_stats_summary = ch_stats_summary,
                                       wcss_stats = wcss_stats,
-                                      gap_stats = gap_stats)))
+                                      gap_stats = gap_stats,
+                                      ch_stats = ch_stats)))
 
   }
 
@@ -496,8 +533,10 @@ get_k <- function(x,
                          base::list(boot_obj = boot_obj,
                                     wcss_stats_summary = wcss_stats_summary,
                                     gap_stats_summary = gap_stats_summary,
+                                    ch_stats_summary = ch_stats_summary,
                                     wcss_stats = wcss_stats,
-                                    gap_stats = gap_stats)))
+                                    gap_stats = gap_stats,
+                                    ch_stats = ch_stats)))
 }
 
 
