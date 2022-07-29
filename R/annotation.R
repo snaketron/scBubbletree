@@ -53,24 +53,28 @@ get_cat_tiles <- function(btd,
     if(base::is.vector(f)==FALSE) {
       stop("f must be a character vector")
     }
-    if(base::is.na(f)||base::is.null(f)) {
-      stop("f must be a character vector")
-    }
     if(base::length(f)!=base::length(btd$cluster)) {
       stop("length of f is not equal to number of cells in btd")
+    }
+    if(base::any(base::is.na(f))|
+       base::any(base::is.null(f))|
+       base::any(base::is.infinite(f))) {
+      stop("f must be a character vector")
     }
 
 
     # check integrate_vertical
-    if(base::missing(integrate_vertical)) {
-      stop("integrate_vertical is missing")
+    if(base::missing(integrate_vertical)==TRUE) {
+      stop("integrate_vertical input not found")
     }
     if(base::is.logical(integrate_vertical)==FALSE) {
-      stop("integrate_vertical must be a logical parameter")
+      stop("integrate_vertical is a logical parameter (TRUE or FALSE)")
     }
     if(base::length(integrate_vertical)!=1) {
-      stop("integrate_vertical must be a logical parameter
-           (either TRUE or FALSE)")
+      stop("integrate_vertical is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(integrate_vertical)==TRUE) {
+      stop("integrate_vertical is a logical parameter (TRUE or FALSE)")
     }
 
 
