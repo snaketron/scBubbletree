@@ -946,7 +946,7 @@ get_bubbletree <- function(x,
 
 
 
-
+# Not exported at the moment.
 update_bubbletree <- function(btd,
                               updated_bubbles,
                               k,

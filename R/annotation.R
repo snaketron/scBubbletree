@@ -27,25 +27,97 @@ get_cat_tiles <- function(btd,
 
     # check btd
     if(base::missing(btd)) {
-      stop("bubbletree (btd) is missing")
+      stop("bubbletree (btd) input is missing")
     }
-    if(base::any(base::is.na(btd))||base::is.null(btd)||
+    if(length(btd)!=9) {
+      stop("btd should be a list with 9 elements")
+    }
+    if(base::any(base::is.na(btd))||
+       base::is.null(btd)||
        base::any(base::is.na(base::class(btd)))||
-       base::is.null(base::class(btd))||!base::class(btd)%in%
-       c("bubbletree", "dummy_bubbletree")) {
-      stop("problem with the input bubbletree")
+       base::is.null(base::class(btd))||
+       !base::class(btd)%in%c("bubbletree", "dummy_bubbletree")) {
+      stop("NA/NULL elements or wrong class detected in the bubbletree")
+    }
+    if(base::is.vector(btd$cluster)==FALSE||
+       base::any(base::is.na(base::is.vector(btd$cluster)))|
+       base::any(base::is.infinite(base::is.vector(btd$cluster)))|
+       base::any(base::is.null(base::is.vector(btd$cluster)))) {
+      stop("NA/NULL/Inf cluster assignments present in bubbletree")
     }
 
-    if(base::is.vector(btd$cluster)==FALSE||
-       base::is.na(base::is.vector(btd$cluster))||
-       base::is.null(base::is.vector(btd$cluster))) {
-      stop("no clustering results in bubbletree")
+    # check btd$A
+    if(base::is.numeric(btd$A)==FALSE) {
+      stop("btd$A must be numeric matrix")
     }
+    if(base::is.matrix(btd$A)==FALSE) {
+      stop("btd$A must be numeric matrix")
+    }
+    if(base::any(base::is.infinite(btd$A))==TRUE) {
+      stop("btd$A must be numeric matrix, infinite values not allowed")
+    }
+    if(base::any(base::is.na(btd$A))==TRUE) {
+      stop("btd$A must be numeric matrix, NAs not allowed")
+    }
+    if(base::any(base::is.null(btd$A))==TRUE) {
+      stop("btd$A must be numeric matrix, NULLs not allowed")
+    }
+    if(base::all(btd$A == btd$A[1,1])==TRUE) {
+      stop("all elements in btd$A are identical")
+    }
+    if(base::ncol(btd$A)>base::nrow(btd$A)) {
+      warning("more columns (features) than rows (cells) in btd$A")
+    }
+    if(nrow(btd$A)!=length(btd$cluster)) {
+      stop("problem in btd: nrow(btd$A)!=length(btd$cluster)")
+    }
+    if(is.numeric(btd$k)==F) {
+      stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    }
+    if(length(btd$k)!=1) {
+      stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    }
+    if(btd$k<=1) {
+      stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    }
+    if(base::is.infinite(btd$k)==TRUE) {
+      stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    }
+    if(btd$k%%1!=0) {
+      stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    }
+    if(base::class(btd$km)!="kmeans") {
+      stop("problem in btd: btd$km is not kmeans class")
+    }
+    if(base::class(btd$ph$main_ph)!="phylo") {
+      stop("problem in btd: btd$ph$main_ph is not phylo class")
+    }
+    if(base::class(btd$ph$boot_ph)!="multiPhylo") {
+      stop("problem in btd: btd$ph$boot_ph is not multiPhylo class")
+    }
+    if(base::length(btd$cluster)!=base::nrow(btd$A)) {
+      stop("problem in btd: length(btd$cluster)!=nrow(btd$A)")
+    }
+    if(btd$k!=length(unique(btd$cluster))) {
+      stop("problem in btd: k != length(unique(btd$cluster))")
+    }
+    if(is.data.frame(btd$tree_meta)==FALSE||
+       nrow(btd$tree_meta)<=0) {
+      stop("problem in btd: btd$tree_meta is not a data.frame")
+    }
+    if(btd$k!=base::nrow(btd$tree_meta)) {
+      stop("problem in btd: k!=nrow(btd$tree_meta)")
+    }
+    if(base::any(base::is.na(btd$tree_meta))) {
+      stop("problem in btd: NAs in btd$tree_meta")
+    }
+
+
 
 
     # check fs
     if(base::missing(f)){
-      stop("f is missing")
+      stop("f input is missing")
     }
     if(base::is.character(f)==FALSE) {
       stop("f must be a character vector")
@@ -63,9 +135,10 @@ get_cat_tiles <- function(btd,
     }
 
 
+
     # check integrate_vertical
     if(base::missing(integrate_vertical)==TRUE) {
-      stop("integrate_vertical input not found")
+      stop("integrate_vertical input is missing")
     }
     if(base::is.logical(integrate_vertical)==FALSE) {
       stop("integrate_vertical is a logical parameter (TRUE or FALSE)")
@@ -76,6 +149,7 @@ get_cat_tiles <- function(btd,
     if(base::is.na(integrate_vertical)==TRUE) {
       stop("integrate_vertical is a logical parameter (TRUE or FALSE)")
     }
+
 
 
     # check round_digits

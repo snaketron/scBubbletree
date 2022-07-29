@@ -33,7 +33,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "bubbletree \\(btd\\) is missing")
+    "bubbletree \\(btd\\) input is missing")
 
   expect_error(get_cat_tiles(
     btd = btd,
@@ -46,7 +46,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "f is missing")
+    "f input is missing")
 
   expect_error(get_cat_tiles(
     btd = btd,
@@ -59,7 +59,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "integrate_vertical is missing")
+    "integrate_vertical input is missing")
 
   expect_error(get_cat_tiles(
     btd = btd,
@@ -187,7 +187,7 @@ test_that("null/na argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem with the input bubbletree")
+    "btd should be a list with 9 elements")
   expect_error(get_cat_tiles(
     btd = NULL,
     f = f,
@@ -199,7 +199,7 @@ test_that("null/na argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem with the input bubbletree")
+    "btd should be a list with 9 elements")
 
 
 
@@ -446,5 +446,301 @@ test_that("null/na argument", {
     "rotate_x_axis_labels is a logical parameter \\(TRUE or FALSE\\)")
 })
 
+
+
+
+
+test_that("btd argument", {
+
+  # build bubbletree
+  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+                        k = 3,
+                        B = 20,
+                        N_eff = 50,
+                        n_start = 100,
+                        iter_max = 100,
+                        kmeans_algorithm = "MacQueen",
+                        cores = 1,
+                        seed = NULL,
+                        round_digits = 2,
+                        show_simple_count = F)
+
+  f <- sample(x = LETTERS[1:5], size = 100, replace = T)
+
+
+
+  btd_test <- btd
+  btd_test$A <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$A <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+  btd_test <- btd
+  btd_test$A <- 1
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd\\$A must be numeric matrix")
+
+
+
+  btd_test <- btd
+  btd_test$k <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$k <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+  btd_test <- btd
+  btd_test$k <- 1
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "problem in btd\\: btd\\$k must be a positive integer \\(k>=2\\)")
+  btd_test <- btd
+  btd_test$k <- c(T, F)
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "problem in btd\\: btd\\$k must be a positive integer \\(k>=2\\)")
+
+
+
+
+  btd_test <- btd
+  btd_test$km <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$km <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+
+
+
+  btd_test <- btd
+  btd_test$ph <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$ph <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+
+
+
+  btd_test <- btd
+  btd_test$pair_dist <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$pair_dist <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+
+
+
+  btd_test <- btd
+  btd_test$cluster <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$cluster <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+
+
+
+  btd_test <- btd
+  btd_test$tree_meta <- NULL
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "btd should be a list with 9 elements")
+  btd_test <- btd
+  btd_test$tree_meta <- NA
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "NA/NULL elements or wrong class detected in the bubbletree")
+  btd_test <- btd
+  btd_test$tree_meta <- 1
+  expect_error(get_cat_tiles(
+    btd = btd_test,
+    f = f,
+    integrate_vertical = T,
+    round_digits = 2,
+    show_hclust = F,
+    disable_hclust = F,
+    tile_text_size = 3,
+    tile_bw = F,
+    x_axis_name = "Feature",
+    rotate_x_axis_labels = T),
+    "problem in btd: btd\\$tree_meta is not a data.frame")
+
+})
 
 
