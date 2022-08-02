@@ -1406,11 +1406,11 @@ get_gini <- function(labels, clusters) {
 
 
 
-get_gini_k <- function(labels, get_k_obj) {
+get_gini_k <- function(labels, k_obj) {
 
 
   # check input param
-  check_input <- function(labels, get_k_obj) {
+  check_input <- function(labels, k_obj) {
 
     # check labels
     if(length(labels)<=1) {
@@ -1426,41 +1426,41 @@ get_gini_k <- function(labels, get_k_obj) {
       stop("labels contains NAs or NULLs")
     }
 
-    # check get_k_obj
-    if(is.na(get_k_obj)||is.null(get_k_obj)||is.na(class(get_k_obj))||
-       is.null(class(get_k_obj))||class(get_k_obj)!="boot_k") {
-      stop("problem with the input get_k_obj")
+    # check k_obj
+    if(is.na(k_obj)||is.null(k_obj)||is.na(class(k_obj))||
+       is.null(class(k_obj))||class(k_obj)!="boot_k") {
+      stop("problem with the input k_obj")
     }
 
-    if(is.list(get_k_obj$boot_obj)==F||
-       is.na(get_k_obj$boot_obj)||
-       is.null(get_k_obj$boot_obj)||
-       length(get_k_obj$boot_obj)<=1) {
-      stop("no boot_obj results in get_k_obj")
+    if(is.list(k_obj$boot_obj)==F||
+       is.na(k_obj$boot_obj)||
+       is.null(k_obj$boot_obj)||
+       length(k_obj)<=1) {
+      stop("no boot_obj results in k_obj")
     }
   }
 
 
   # check inputs
   check_input(labels = labels,
-              get_k_obj = get_k_obj)
+              k_obj = k_obj)
 
 
-  if(length(get_k_obj$boot_obj)==1&&
-     is.na(get_k_obj$boot_obj)) {
+  if(length(k_obj$boot_obj)==1&&
+     is.na(k_obj$boot_obj)) {
     stop("You have to run 'get_k' with mini_output=FALSE. \n")
   }
 
-  B <- length(get_k_obj$boot_obj)
-  ks <- base::names(get_k_obj$boot_obj[[1]]$obj)
+  B <- length(k_obj$boot_obj)
+  ks <- base::names(k_obj$boot_obj[[1]]$obj)
 
   total_o <- vector(mode = "list", length = B*length(ks))
   cluster_o <- vector(mode = "list", length = B*length(ks))
   counter <- 1
   for(i in 1:B) {
     for(j in 1:length(ks)) {
-      cell_id <- get_k_obj$boot_obj[[i]]$cell_i
-      gini <- get_gini(clusters = get_k_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
+      cell_id <- k_obj$boot_obj[[i]]$cell_i
+      gini <- get_gini(clusters = k_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
                        labels = labels[cell_id])
 
       # collect total gini and cluster specific gini scores
