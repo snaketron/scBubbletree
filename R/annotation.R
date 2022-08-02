@@ -86,9 +86,6 @@ get_cat_tiles <- function(btd,
     if(btd$k%%1!=0) {
       stop("problem in btd: btd$k must be a positive integer (k>=2)")
     }
-    if(base::class(btd$km)!="kmeans") {
-      stop("problem in btd: btd$km is not kmeans class")
-    }
     if(base::class(btd$ph$main_ph)!="phylo") {
       stop("problem in btd: btd$ph$main_ph is not phylo class")
     }
