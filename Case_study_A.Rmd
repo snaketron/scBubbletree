@@ -41,7 +41,7 @@ library(ggrepel, lib.loc = lib.loc)
 
 
 ```{r, echo=F}
-redo_case_a <- F
+redo_case_a <- FALSE
 ```
 
 
@@ -201,7 +201,8 @@ each iteration we compute the Gap statistic and WCSS for all $k$s.
 Lets run `get_k` now:
 
 ```{r, echo = T, eval = F}
-b <- get_k(B = 10, 
+b <- get_k(B = 1, 
+           B_gap = 20,
            cv_prop = 1,
            ks = 1:20,
            x = A,
@@ -217,7 +218,8 @@ b <- get_k(B = 10,
 
 if(redo_case_a) {
   # Determine appropriate number of clusters (k)
-  b <- get_k(B = 10, 
+  b <- get_k(B = 1, 
+             B_gap = 20,
              cv_prop = 1,
              ks = 1:20,
              x = A,
@@ -274,9 +276,9 @@ datasets this is necessary to make sure that k-means converges.
 
 ### 3. hierarchical grouping
 After the clustering is complete we will organize the bubbles in a natural
-hierarchy. For this we perform $B$ bootstrap iterations (default $B=100$). 
+hierarchy. For this we perform $B$ bootstrap iterations (default $B=200$). 
 In iteration $b$ the algorithm draws a random subset of $N_{eff}$ (default 
-$N_{eff}=100$) cells with replacement from each cluster and computes the 
+$N_{eff}=200$) cells with replacement from each cluster and computes the 
 average inter-cluster Euclidean distance. This data is used to populate the 
 distance matrix ($D^{k\times k}_b$), which is provided as input for hierarchical
 clustering with average linkage to generate a hierarchical clustering dendrogram
@@ -496,7 +498,7 @@ $k$ values with function `get_gini_k`, which takes as main input the output of
 
 ```{r, echo = T}
 gini_boot <- get_gini_k(labels = d@meta.data$cell_line_demuxlet,
-                        get_k_obj = b)
+                        k_obj = b)
 ```
 
 From the figure we can conclude that the Gini impurity reaches values close to 
@@ -880,12 +882,14 @@ Lets try `get_dummy_bubbletree`. First, will perform k-medoids clustering with
 R-package pam and then generate the bubbletree:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
-pam_k5 <- cluster::pam(x = A, k = 5, metric = "euclidean")
+pam_k5 <- cluster::pam(x = A, 
+                       k = 5, 
+                       metric = "euclidean")
 
 dummy_k5_pam <- get_dummy_bubbletree(x = A,
                                      cs = pam_k5$clustering,
                                      B = 200,
-                                     N_eff = 100,
+                                     N_eff = 200,
                                      cores = 2,
                                      round_digits = 1)
 
@@ -1075,8 +1079,44 @@ save.image(file = "case_study_A/workspace_image.RData")
 
 
 
+<!-- ```{r} -->
+<!-- require("tidyverse", lib.loc = lib.loc) -->
+<!-- # devtools::install_github("PaulingLiu/ROGUE") -->
+<!-- require("ROGUE", lib.loc = lib.loc) -->
+<!-- # e <- ROGUE::Entropy(expr = d@assays$SCT@counts) -->
+<!-- ``` -->
 
 
+<!-- ```{r} -->
+<!-- se <- ROGUE::SE_fun(expr = d@assays$RNA@counts) -->
+<!-- ROGUE::SEplot(.x = se) -->
+<!-- ``` -->
+
+
+<!-- ```{r} -->
+<!-- rogue_value <- ROGUE::CalculateRogue(se, platform = "UMI") -->
+<!-- rogue_value -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- d@meta.data$sample <- "S" -->
+<!-- rogue_res <- ROGUE::rogue(expr = d@assays$RNA@counts,  -->
+<!--                           labels = d@meta.data$cell_line_demuxlet,  -->
+<!--                           samples = d@meta.data$sample, -->
+<!--                           platform = "UMI",  -->
+<!--                           span = 0.6) -->
+<!-- ROGUE::rogue.boxplot(rogue_res) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- d@meta.data$sample <- "S" -->
+<!-- rogue_res <- ROGUE::rogue(expr = d@assays$RNA@counts,  -->
+<!--                           labels = d@meta.data$cell_line_demuxlet,  -->
+<!--                           samples = d@meta.data$sample, -->
+<!--                           platform = "UMI",  -->
+<!--                           span = 0.6) -->
+<!-- ROGUE::rogue.boxplot(rogue_res) -->
+<!-- ``` -->
 
 
 
