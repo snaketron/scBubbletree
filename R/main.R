@@ -135,7 +135,7 @@ get_k <- function(x,
            duplicate k values are not allowed")
     }
     if(base::length(ks)==1) {
-      if(base::all(ks<=1)) {
+      if(base::all(ks<1)) {
         stop("ks must be a positive integer or vector of positive integers")
       }
     }
@@ -292,6 +292,7 @@ get_k <- function(x,
                        spaceH0 = "original",
                        kmeans_algorithm) {
 
+
     cs <- km$cluster
     n <- base::nrow(x)
     ii <- base::seq_len(n)
@@ -303,10 +304,22 @@ get_k <- function(x,
                             algorithm = kmeans_algorithm,
                             iter.max = iter_max,
                             nstart = n_start)$cluster
+
       0.5 * base::sum(base::vapply(base::split(ii, clus), function(I) {
         xs <- X[I, , drop = FALSE]
         base::sum(stats::dist(xs)^d.power/base::nrow(xs))
       }, 0))
+    }
+
+    get_Wk <- function(X, kk) {
+      clus <- stats::kmeans(x = X,
+                            centers = kk,
+                            algorithm = kmeans_algorithm,
+                            iter.max = iter_max,
+                            nstart = n_start)
+
+      log_Wk <- base::log(base::sum(clus$withinss)*0.5)
+      return(log_Wk)
     }
 
     get_logW <- function(X, cs) {
@@ -320,7 +333,11 @@ get_k <- function(x,
     E.logW <- base::numeric(1)
     SE.sim <- base::numeric(1)
 
-    logW <- base::log(get_logW(x, cs=cs))
+    # original
+    # logW <- base::log(get_logW(x, cs=cs))
+    # simpler
+    logW <- base::log(base::sum(km$withinss)*0.5)
+
     xs <- base::scale(x, center = TRUE, scale = FALSE)
     m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
     rng.x1 <- base::apply(xs, 2L, base::range)
@@ -329,7 +346,13 @@ get_k <- function(x,
       z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
         nn, min = M[1], max = M[2]), nn = n)
       z <- z1 + m.x
-      logWks[b, 1] <- base::log(W.k(z, kk = kk))
+
+      # original
+      # logWks[b, 1] <- base::log(W.k(z, kk = kk))
+
+      # simpler
+      logWks[b, 1] <- get_Wk(X = z,
+                             kk = kk)
     }
     E.logW <- base::colMeans(logWks)
     SE.sim <- base::sqrt((1 + 1/B_gap) * base::apply(logWks, 2, stats::var))
