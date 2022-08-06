@@ -1346,6 +1346,7 @@ get_dummy_bubbletree <- function(x,
 
 get_gini <- function(labels, clusters) {
 
+
   # check input param
   check_input <- function(labels, clusters) {
 
@@ -1353,18 +1354,14 @@ get_gini <- function(labels, clusters) {
     if(length(labels)<=1) {
       stop("label is a vector has 1 or 0 element")
     }
-
     # check clusters
     if(length(clusters)<=1) {
       stop("clusters is a vector has 1 or 0 element")
     }
 
-    # check labels
     if(is.vector(labels)==F) {
       stop("labels should be a vector")
     }
-
-    # check clusters
     if(is.vector(clusters)==F) {
       stop("clusters should be a vector")
     }
@@ -1372,7 +1369,6 @@ get_gini <- function(labels, clusters) {
     if(length(labels)!=length(clusters)) {
       stop("labels and clusters have different lengths")
     }
-
     if(any(is.na(labels)|is.null(labels))) {
       stop("labels contains NAs or NULLs")
     }
@@ -1380,6 +1376,7 @@ get_gini <- function(labels, clusters) {
       stop("clusters contains NAs or NULLs")
     }
   }
+
 
   get_gini_cluster <- function(c, l) {
     ls <- unique(l)
@@ -1403,27 +1400,21 @@ get_gini <- function(labels, clusters) {
   cs <- unique(clusters)
 
   # for each cluster we get gini-index
-  cluster_gini <- numeric(length = length(cs))
-  base::names(cluster_gini) <- cs
+  gi <- numeric(length = length(cs))
+  base::names(gi) <- cs
 
   # cluster weights used to compute total gini
-  cluster_weight <- numeric(length = length(cs))
-  base::names(cluster_weight) <- cs
+  wgi <- numeric(length = length(cs))
+  base::names(wgi) <- cs
 
   for(i in 1:length(cs)) {
     j <- which(clusters == cs[i])
-
-    cluster_weight[i] <- length(j)/length(clusters)
-
-    cluster_gini[i] <- 1-get_gini_cluster(c = clusters[j],
-                                          l = labels[j])
-
+    wgi[i] <- length(j)/length(clusters)
+    gi[i] <- 1-get_gini_cluster(c = clusters[j], l = labels[j])
   }
 
-  total_gini = sum(cluster_gini*cluster_weight)
-
-  return(list(cluster_gini = cluster_gini,
-              total_gini = total_gini))
+  wgi = sum(gi*wgi)
+  return(list(gi = gi, wgi = wgi))
 }
 
 
@@ -1490,12 +1481,12 @@ get_gini_k <- function(labels, k_obj) {
       # total
       total_o[[counter]] <- data.frame(B = i,
                                        k = as.numeric(ks[j]),
-                                       total_gini = gini$total_gini)
+                                       total_gini = gini$wgi)
       # cluster
       cluster_o[[counter]] <- data.frame(B = i,
                                          k = as.numeric(ks[j]),
-                                         cluster = base::names(gini$cluster_gini),
-                                         gini = gini$cluster_gini)
+                                         cluster = base::names(gini$gi),
+                                         gini = gini$gi)
       counter <- counter + 1
     }
   }
@@ -1505,32 +1496,28 @@ get_gini_k <- function(labels, k_obj) {
 
   # next: compute summary from B values for each metric
   # total
-  total_gini_summary <- base::merge(
-    x = stats::aggregate(total_gini~k, data = total_o, FUN = base::mean),
-    y = stats::aggregate(total_gini~k, data = total_o, FUN = get_se),
+  wgi_summary <- base::merge(
+    x = stats::aggregate(wgi~k, data = total_o, FUN = base::mean),
+    y = stats::aggregate(wgi~k, data = total_o, FUN = get_se),
     by = "k")
-  colnames(total_gini_summary) <- c("k", "total_gini_mean", "total_gini_SE")
-  total_gini_summary$L95 <- total_gini_summary$total_gini_mean-
-    total_gini_summary$total_gini_SE*1.96
-  total_gini_summary$H95 <- total_gini_summary$total_gini_mean+
-    total_gini_summary$total_gini_SE*1.96
+  colnames(wgi_summary) <- c("k", "wgi_mean", "wgi_SE")
+  wgi_summary$L95 <- wgi_summary$wgi_mean-wgi_summary$wgi_SE*1.96
+  wgi_summary$H95 <- wgi_summary$wgi_mean+wgi_summary$wgi_SE*1.96
 
   # cluster
-  cluster_gini_summary <- base::merge(
-    x = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = base::mean),
-    y = stats::aggregate(gini~k+cluster, data = cluster_o, FUN = get_se),
+  gi_summary <- base::merge(
+    x = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = base::mean),
+    y = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = get_se),
     by = c("k", "cluster"))
-  colnames(cluster_gini_summary) <- c("k", "clusters", "gini", "gini_SE")
-  cluster_gini_summary$L95 <- cluster_gini_summary$gini-
-    cluster_gini_summary$gini_SE*1.96
-  cluster_gini_summary$H95 <- cluster_gini_summary$gini+
-    cluster_gini_summary$gini_SE*1.96
+  colnames(gi_summary) <- c("k", "clusters", "gi_mean", "gi_SE")
+  gi_summary$L95 <- gi_summary$gi_mean-gi_summary$gi_SE*1.96
+  gi_summary$H95 <- gi_summary$gi_mean+gi_summary$gi_SE*1.96
 
 
-  return(list(total_gini_summary = total_gini_summary,
-              cluster_gini_summary = cluster_gini_summary,
-              total_gini = total_o,
-              cluster_gini = cluster_o))
+  return(list(wgi_summary = wgi_summary,
+              gi_summary = gi_summary,
+              wgi = total_o,
+              gi = cluster_o))
 }
 
 
