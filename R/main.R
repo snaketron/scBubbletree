@@ -1351,44 +1351,60 @@ get_gini <- function(labels, clusters) {
   check_input <- function(labels, clusters) {
 
     # check labels
-    if(length(labels)<=1) {
-      stop("label is a vector has 1 or 0 element")
+    if(base::missing(labels)==TRUE) {
+      stop("labels is missing")
     }
+    if(base::length(labels)<=1) {
+      stop("labels must be a vector with more than one element")
+    }
+    if(base::is.vector(labels)==F) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.infinite(labels))==TRUE) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.na(labels))==TRUE) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.null(labels))==TRUE) {
+      stop("labels must be a vector")
+    }
+
+
     # check clusters
-    if(length(clusters)<=1) {
-      stop("clusters is a vector has 1 or 0 element")
+    if(base::missing(clusters)==TRUE) {
+      stop("clusters is missing")
+    }
+    if(base::length(clusters)<=1) {
+      stop("clusters must be a vector with more than one element")
+    }
+    if(base::is.vector(clusters)==F) {
+      stop("clusters must be a vector")
+    }
+    if(base::any(base::is.infinite(clusters))==TRUE) {
+      stop("clusters must be a vector")
+    }
+    if(base::any(base::is.na(clusters))==TRUE) {
+      stop("clusters must be a vector")
+    }
+    if(base::any(base::is.null(clusters))==TRUE) {
+      stop("clusters must be a vector")
     }
 
-    if(is.vector(labels)==F) {
-      stop("labels should be a vector")
-    }
-    if(is.vector(clusters)==F) {
-      stop("clusters should be a vector")
-    }
-
-    if(length(labels)!=length(clusters)) {
-      stop("labels and clusters have different lengths")
-    }
-    if(any(is.na(labels)|is.null(labels))) {
-      stop("labels contains NAs or NULLs")
-    }
-    if(any(is.na(clusters)|is.null(clusters))) {
-      stop("clusters contains NAs or NULLs")
+    if(base::length(labels)!=base::length(clusters)) {
+      stop("labels and clusters must be equal-length vectors")
     }
   }
 
 
-  get_gini_cluster <- function(c, l) {
-    ls <- unique(l)
-    l_len <- length(l)
-
+  get_gi <- function(c, l) {
+    ls <- base::unique(l)
+    l_len <- base::length(l)
     s <- 0
-    for(i in 1:length(ls)) {
-      s <- s + (sum(l == ls[i])/l_len)^2
+    for(i in 1:base::length(ls)) {
+      s <- s + (base::sum(l == ls[i])/l_len)^2
     }
-
     return(s)
-
   }
 
 
@@ -1397,24 +1413,29 @@ get_gini <- function(labels, clusters) {
               clusters = clusters)
 
 
-  cs <- unique(clusters)
+  cs <- base::unique(clusters)
 
   # for each cluster we get gini-index
-  gi <- numeric(length = length(cs))
+  gi <- base::numeric(length = base::length(cs))
   base::names(gi) <- cs
 
   # cluster weights used to compute total gini
-  wgi <- numeric(length = length(cs))
+  wgi <- base::numeric(length = base::length(cs))
   base::names(wgi) <- cs
 
-  for(i in 1:length(cs)) {
-    j <- which(clusters == cs[i])
-    wgi[i] <- length(j)/length(clusters)
-    gi[i] <- 1-get_gini_cluster(c = clusters[j], l = labels[j])
+  for(i in 1:base::length(cs)) {
+    j <- base::which(clusters == cs[i])
+    wgi[i] <- base::length(j)/base::length(clusters)
+    gi[i] <- 1-get_gi(c = clusters[j], l = labels[j])
   }
 
-  wgi = sum(gi*wgi)
-  return(list(gi = gi, wgi = wgi))
+  # convert to data.frame for better plotting
+  gi <- base::data.frame(cluster = names(gi),
+                         GI = as.numeric(gi))
+
+  wgi = base::sum(gi*wgi)
+  return(base::list(gi = gi,
+                    wgi = wgi))
 }
 
 
@@ -1427,30 +1448,43 @@ get_gini_k <- function(labels, k_obj) {
   check_input <- function(labels, k_obj) {
 
     # check labels
-    if(length(labels)<=1) {
-      stop("label is a vector has 1 or 0 element")
+    if(base::missing(labels)==TRUE) {
+      stop("labels is missing")
+    }
+    if(base::length(labels)<=1) {
+      stop("labels must be a vector with more than one element")
+    }
+    if(base::is.vector(labels)==F) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.infinite(labels))==TRUE) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.na(labels))==TRUE) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.null(labels))==TRUE) {
+      stop("labels must be a vector")
     }
 
-    # check labels
-    if(is.vector(labels)==F) {
-      stop("labels should be a vector")
-    }
-
-    if(any(is.na(labels)|is.null(labels))) {
-      stop("labels contains NAs or NULLs")
-    }
 
     # check k_obj
-    if(is.na(k_obj)||is.null(k_obj)||is.na(class(k_obj))||
-       is.null(class(k_obj))||class(k_obj)!="boot_k") {
-      stop("problem with the input k_obj")
+    if(base::missing(k_obj)==TRUE) {
+      stop("k_obj is missing")
+    }
+    if(base::is.na(k_obj)||
+       base::is.null(k_obj)||
+       base::is.na(class(k_obj))||
+       base::is.null(class(k_obj))||
+       base::class(k_obj)!="boot_k") {
+      stop("problem with k_obj")
     }
 
-    if(is.list(k_obj$boot_obj)==F||
-       is.na(k_obj$boot_obj)||
-       is.null(k_obj$boot_obj)||
-       length(k_obj)<=1) {
-      stop("no boot_obj results in k_obj")
+    if(base::is.list(k_obj$boot_obj)==F||
+       base::is.na(k_obj$boot_obj)||
+       base::is.null(k_obj$boot_obj)||
+       base::length(k_obj)<=1) {
+      stop("no boot_obj found in k_obj")
     }
   }
 
@@ -1460,16 +1494,16 @@ get_gini_k <- function(labels, k_obj) {
               k_obj = k_obj)
 
 
-  if(length(k_obj$boot_obj)==1&&
-     is.na(k_obj$boot_obj)) {
+  if(base::length(k_obj$boot_obj)==1&&
+     base::is.na(k_obj$boot_obj)) {
     stop("You have to run 'get_k' with mini_output=FALSE. \n")
   }
 
-  B <- length(k_obj$boot_obj)
+  B <- base::length(k_obj$boot_obj)
   ks <- base::names(k_obj$boot_obj[[1]]$obj)
 
-  total_o <- vector(mode = "list", length = B*length(ks))
-  cluster_o <- vector(mode = "list", length = B*length(ks))
+  total_o <- base::vector(mode = "list", length = B*base::length(ks))
+  cluster_o <- base::vector(mode = "list", length = B*base::length(ks))
   counter <- 1
   for(i in 1:B) {
     for(j in 1:length(ks)) {
@@ -1479,19 +1513,19 @@ get_gini_k <- function(labels, k_obj) {
 
       # collect total gini and cluster specific gini scores
       # total
-      total_o[[counter]] <- data.frame(B = i,
-                                       k = as.numeric(ks[j]),
-                                       total_gini = gini$wgi)
+      total_o[[counter]] <- base::data.frame(B = i,
+                                             k = as.numeric(ks[j]),
+                                             total_gini = gini$wgi)
       # cluster
-      cluster_o[[counter]] <- data.frame(B = i,
-                                         k = as.numeric(ks[j]),
-                                         cluster = base::names(gini$gi),
-                                         gini = gini$gi)
+      cluster_o[[counter]] <- base::data.frame(B = i,
+                                               k = as.numeric(ks[j]),
+                                               cluster = base::names(gini$gi),
+                                               gini = gini$gi)
       counter <- counter + 1
     }
   }
-  cluster_o <- do.call(rbind, cluster_o)
-  total_o <- do.call(rbind, total_o)
+  cluster_o <- base::do.call(rbind, cluster_o)
+  total_o <- base::do.call(rbind, total_o)
 
 
   # next: compute summary from B values for each metric
@@ -1500,7 +1534,7 @@ get_gini_k <- function(labels, k_obj) {
     x = stats::aggregate(wgi~k, data = total_o, FUN = base::mean),
     y = stats::aggregate(wgi~k, data = total_o, FUN = get_se),
     by = "k")
-  colnames(wgi_summary) <- c("k", "wgi_mean", "wgi_SE")
+  base::colnames(wgi_summary) <- c("k", "wgi_mean", "wgi_SE")
   wgi_summary$L95 <- wgi_summary$wgi_mean-wgi_summary$wgi_SE*1.96
   wgi_summary$H95 <- wgi_summary$wgi_mean+wgi_summary$wgi_SE*1.96
 
@@ -1509,12 +1543,12 @@ get_gini_k <- function(labels, k_obj) {
     x = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = base::mean),
     y = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = get_se),
     by = c("k", "cluster"))
-  colnames(gi_summary) <- c("k", "clusters", "gi_mean", "gi_SE")
+  base::colnames(gi_summary) <- c("k", "clusters", "gi_mean", "gi_SE")
   gi_summary$L95 <- gi_summary$gi_mean-gi_summary$gi_SE*1.96
   gi_summary$H95 <- gi_summary$gi_mean+gi_summary$gi_SE*1.96
 
 
-  return(list(wgi_summary = wgi_summary,
+  return(base::list(wgi_summary = wgi_summary,
               gi_summary = gi_summary,
               wgi = total_o,
               gi = cluster_o))
