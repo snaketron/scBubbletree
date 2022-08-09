@@ -1,7 +1,7 @@
 Package: scBubbletree
 Type: Package
 Title: Transparent and quantiative exploration of scRNA-seq data
-Version: 0.1.27
+Version: 0.1.28
 Author: Simo Kitanovski
 Maintainer: Simo Kitanovski <simo.kitanovski@uni-due.de>
 Description: Effective visual exploration of scRNA-seq data is essential for 
