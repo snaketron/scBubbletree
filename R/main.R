@@ -1357,6 +1357,10 @@ get_gini <- function(labels, clusters) {
     if(base::length(labels)<=1) {
       stop("labels must be a vector with more than one element")
     }
+    if(base::is.character(labels)==FALSE&
+       base::is.numeric(labels)==FALSE) {
+      stop("labels can only contain characters or numbers")
+    }
     if(base::is.vector(labels)==F) {
       stop("labels must be a vector")
     }
@@ -1369,11 +1373,6 @@ get_gini <- function(labels, clusters) {
     if(base::any(base::is.null(labels))==TRUE) {
       stop("labels cannot have INF/NA/NULL values")
     }
-    if(base::is.character(labels)==FALSE&
-       base::is.factor(labels)==FALSE&
-       base::is.numeric(labels)==FALSE) {
-      stop("labels can only contain characters, factors or numbers")
-    }
 
 
     # check clusters
@@ -1383,22 +1382,21 @@ get_gini <- function(labels, clusters) {
     if(base::length(clusters)<=1) {
       stop("clusters must be a vector with more than one element")
     }
+    if(base::is.character(clusters)==FALSE&
+       base::is.numeric(clusters)==FALSE) {
+      stop("clusters can only contain characters or numbers")
+    }
     if(base::is.vector(clusters)==F) {
       stop("clusters must be a vector")
     }
     if(base::any(base::is.infinite(clusters))==TRUE) {
-      stop("clusters must be a vector")
+      stop("clusters cannot have INF/NA/NULL values")
     }
     if(base::any(base::is.na(clusters))==TRUE) {
-      stop("clusters must be a vector")
+      stop("clusters cannot have INF/NA/NULL values")
     }
     if(base::any(base::is.null(clusters))==TRUE) {
-      stop("clusters must be a vector")
-    }
-    if(base::is.character(clusters)==FALSE&
-       base::is.factor(clusters)==FALSE&
-       base::is.numeric(clusters)==FALSE) {
-      stop("clusters can only contain characters, factors or numbers")
+      stop("clusters cannot have INF/NA/NULL values")
     }
 
     if(base::length(labels)!=base::length(clusters)) {
