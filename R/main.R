@@ -1361,13 +1361,18 @@ get_gini <- function(labels, clusters) {
       stop("labels must be a vector")
     }
     if(base::any(base::is.infinite(labels))==TRUE) {
-      stop("labels must be a vector")
+      stop("labels cannot have INF/NA/NULL values")
     }
     if(base::any(base::is.na(labels))==TRUE) {
-      stop("labels must be a vector")
+      stop("labels cannot have INF/NA/NULL values")
     }
     if(base::any(base::is.null(labels))==TRUE) {
-      stop("labels must be a vector")
+      stop("labels cannot have INF/NA/NULL values")
+    }
+    if(base::is.character(labels)==FALSE&
+       base::is.factor(labels)==FALSE&
+       base::is.numeric(labels)==FALSE) {
+      stop("labels can only contain characters, factors or numbers")
     }
 
 
@@ -1389,6 +1394,11 @@ get_gini <- function(labels, clusters) {
     }
     if(base::any(base::is.null(clusters))==TRUE) {
       stop("clusters must be a vector")
+    }
+    if(base::is.character(clusters)==FALSE&
+       base::is.factor(clusters)==FALSE&
+       base::is.numeric(clusters)==FALSE) {
+      stop("clusters can only contain characters, factors or numbers")
     }
 
     if(base::length(labels)!=base::length(clusters)) {
@@ -1429,13 +1439,14 @@ get_gini <- function(labels, clusters) {
     gi[i] <- 1-get_gi(c = clusters[j], l = labels[j])
   }
 
+  # compute WGI
+  wgi = base::sum(gi*wgi)
+
   # convert to data.frame for better plotting
   gi <- base::data.frame(cluster = names(gi),
                          GI = as.numeric(gi))
 
-  wgi = base::sum(gi*wgi)
-  return(base::list(gi = gi,
-                    wgi = wgi))
+  return(base::list(gi = gi, wgi = wgi))
 }
 
 
