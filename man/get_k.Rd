@@ -24,33 +24,25 @@ computes the Gap statistic and WCSS for a number of clusters \eqn{ks}.
 
 \usage{
 get_k(x,
-      B = 10,
-      B_gap = 5,
-      cv_prop = 1,
+      B_gap = 10,
       ks,
       n_start = 100,
       iter_max = 200,
       kmeans_algorithm = "MacQueen",
-      cores = 1,
-      mini_output = F)
+      cores = 1)
 }
 
 
 \arguments{
-\item{x}{numeric matrix (\eqn{A^{n\times f}} with \eqn{n} cells, and \eqn{f}
+\item{x}{numeric matrix (\eqn{A^{n x f}} with \eqn{n} cells, and \eqn{f}
 low-dimensional projections)}
-\item{B}{integer, number of bootstrap iterations}
 \item{B_gap}{integer, number of Monte Carlo ("bootstrap") samples taken when
 computing the Gap statistic (see documentation of function clusGap, R-package
 cluster)}
-\item{cv_prot}{number between 0 and 1, proportion of rows from the input matrix
-to be drawn at random and used during each bootstrap iteration}
 \item{ks}{integer vector, \eqn{k} values to consider}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function k-means, R-package stats}
 \item{cores}{integer, number of PC cores for parallel execution}
-\item{mini_output}{logical, if mini_output=F (default) provide full output,
-else keep only summaries and discard raw output from each bootstrap iteration}
 }
 
 
@@ -62,9 +54,8 @@ additional information see the respective documentations.
 }
 
 \value{
-\item{boot_obj}{raw results; for each combination of a bootstrap
-iteration \eqn{b} and clustering with \eqn{k} clusters. The results include the
-k-means clustering solutions, the Gap statistic and WCSS estimates.}
+\item{boot_obj}{The results: k-means clustering solutions, the Gap statistic
+and WCSS}
 \item{gap_stats_summary, wcss_stats_summary}{main results; Gap statistic
 and WCSS estimates. Means, standard errors and 95\% confidence intervals are
 provided for each \eqn{k}}

@@ -45,10 +45,10 @@ To measure the homogeneity of a cluster (or bubble) \eqn{i} of cells in terms of
 with \eqn{\pi_{ij}} as the relative frequency of cell type \eqn{j} in cluster
 \eqn{i}. In homogeneous (`pure`) clusters most \eqn{\pi}'s are close to either
 1 or 0, and the Gini index takes on a small value close to zero. In clusters
-with heterogenous (`impure') composition most $\pi$ are far from either 1 or 0,
-and the Gini index approaches its maximum value close to 1. To compute the Gini
-impurity of a bubbletree with $k$ bubbles we compute the weighted Gini impurity
-(WGI):
+with heterogenous (`impure') composition most \eqn{\pi} are far from either 1
+or 0, and the Gini index approaches its maximum value close to 1. To compute
+the Gini impurity of a bubbletree with \eqn{k} bubbles we compute the weighted
+Gini impurity (WGI):
 
 \eqn{WGI=\sum_{i=1}^{k} G_i * n_i/n}
 
