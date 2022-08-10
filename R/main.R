@@ -2,26 +2,20 @@
 
 get_k <- function(x,
                   ks,
-                  B = 10,
-                  B_gap = 5,
-                  cv_prop = 1,
+                  B_gap = 20,
                   n_start = 100,
                   iter_max = 200,
                   kmeans_algorithm = "MacQueen",
-                  mini_output = F,
                   cores = 1) {
 
 
   # check input param
-  check_input <- function(B,
-                          B_gap,
-                          cv_prop,
+  check_input <- function(B_gap,
                           ks,
                           x,
                           n_start,
                           iter_max,
                           cores,
-                          mini_output,
                           kmeans_algorithm) {
 
     # check x
@@ -50,30 +44,6 @@ get_k <- function(x,
       warning("more columns (features) than rows (cells) in x")
     }
 
-
-
-    # check B
-    if(base::missing(B)==TRUE) {
-      stop("B input not found")
-    }
-    if(base::is.numeric(B)==FALSE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::length(B)!=1) {
-      stop("B must be a positive integer > 0")
-    }
-    if(B<1) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::is.infinite(B)==TRUE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::is.na(B)==TRUE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(B%%1!=0) {
-      stop("B must be a positive integer > 0")
-    }
 
 
 
@@ -144,26 +114,6 @@ get_k <- function(x,
     }
 
 
-    # check cv_prop
-    if(base::missing(cv_prop)==TRUE) {
-      stop("cv_prop input not found")
-    }
-    if(base::is.numeric(cv_prop) == FALSE) {
-      stop("cv_prop is a number between 0 (excluding) and 1")
-    }
-    if(base::length(cv_prop)!=1) {
-      stop("cv_prop is a number between 0 (excluding) and 1")
-    }
-    if(base::is.infinite(cv_prop)==TRUE) {
-      stop("cv_prop is a number between 0 (excluding) and 1")
-    }
-    if(base::is.na(cv_prop)==TRUE) {
-      stop("cv_prop is a number between 0 (excluding) and 1")
-    }
-    if(cv_prop<=0|cv_prop>1) {
-      stop("cv_prop is a number between 0 (excluding) and 1")
-    }
-
 
     # check cores
     if(base::missing(cores)==TRUE) {
@@ -186,21 +136,6 @@ get_k <- function(x,
     }
     if(cores%%1!=0) {
       stop("cores must be a positive integer")
-    }
-
-
-    # mini_output
-    if(base::missing(mini_output)==TRUE) {
-      stop("mini_output input not found")
-    }
-    if(base::is.logical(mini_output)==FALSE) {
-      stop("mini_output is a logical parameter (TRUE or FALSE)")
-    }
-    if(base::length(mini_output)!=1) {
-      stop("mini_output is a logical parameter (TRUE or FALSE)")
-    }
-    if(base::is.na(mini_output)==TRUE) {
-      stop("mini_output is a logical parameter (TRUE or FALSE)")
     }
 
 
@@ -281,35 +216,19 @@ get_k <- function(x,
 
 
 
-
   # compute gap statistics
-  get_gap <- function (km,
-                       x,
-                       d.power = 1,
-                       B_gap,
-                       n_start,
-                       iter_max,
-                       spaceH0 = "original",
-                       kmeans_algorithm) {
+  get_gap_k <- function (km,
+                         x,
+                         B_gap,
+                         n_start,
+                         iter_max,
+                         kmeans_algorithm) {
 
-
+    spaceH0 = "original"
     cs <- km$cluster
     n <- base::nrow(x)
     ii <- base::seq_len(n)
     kk <- base::length(base::unique(cs))
-
-    W.k <- function(X, kk) {
-      clus <- stats::kmeans(x = X,
-                            centers = kk,
-                            algorithm = kmeans_algorithm,
-                            iter.max = iter_max,
-                            nstart = n_start)$cluster
-
-      0.5 * base::sum(base::vapply(base::split(ii, clus), function(I) {
-        xs <- X[I, , drop = FALSE]
-        base::sum(stats::dist(xs)^d.power/base::nrow(xs))
-      }, 0))
-    }
 
     get_Wk <- function(X, kk) {
       clus <- stats::kmeans(x = X,
@@ -322,22 +241,12 @@ get_k <- function(x,
       return(log_Wk)
     }
 
-    get_logW <- function(X, cs) {
-      0.5 * base::sum(base::vapply(base::split(ii, cs), function(I) {
-        xs <- X[I, , drop = FALSE]
-        base::sum(stats::dist(xs)^d.power/base::nrow(xs))
-      }, 0))
-    }
-
     logW <- base::numeric(1)
     E.logW <- base::numeric(1)
     SE.sim <- base::numeric(1)
 
-    # original
-    # logW <- base::log(get_logW(x, cs=cs))
-    # simpler
-    logW <- base::log(base::sum(km$withinss)*0.5)
 
+    logW <- base::log(base::sum(km$withinss)*0.5)
     xs <- base::scale(x, center = TRUE, scale = FALSE)
     m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
     rng.x1 <- base::apply(xs, 2L, base::range)
@@ -347,12 +256,8 @@ get_k <- function(x,
         nn, min = M[1], max = M[2]), nn = n)
       z <- z1 + m.x
 
-      # original
-      # logWks[b, 1] <- base::log(W.k(z, kk = kk))
-
       # simpler
-      logWks[b, 1] <- get_Wk(X = z,
-                             kk = kk)
+      logWks[b, 1] <- get_Wk(X = z, kk = kk)
     }
     E.logW <- base::colMeans(logWks)
     SE.sim <- base::sqrt((1 + 1/B_gap) * base::apply(logWks, 2, stats::var))
@@ -365,17 +270,13 @@ get_k <- function(x,
 
 
 
-
   # check input parameters
-  check_input(B = B,
-              B_gap = B_gap,
-              cv_prop = cv_prop,
+  check_input(B_gap = B_gap,
               ks = ks,
               x = x,
               n_start = n_start,
               iter_max = iter_max,
               cores = cores,
-              mini_output = mini_output,
               kmeans_algorithm = kmeans_algorithm)
 
 
@@ -385,126 +286,75 @@ get_k <- function(x,
 
 
 
-  boot_obj <- base::vector(mode = "list", length = B)
-  for(b in 1:B) {
-    base::cat("boot:", b, " : ")
-
-
-    # draw sample of cells
-    if(cv_prop==1) {
-      js <- 1:base::nrow(x)
-    } else {
-      js <- base::sample(x = 1:nrow(x),
-                         size = base::ceiling(nrow(x)*cv_prop),
-                         replace = F)
-    }
-
-    # clustering
-    base::cat("1) clustering, ")
-    kmeans_obj <- parallel::mclapply(X = ks,
-                                     FUN = stats::kmeans,
-                                     x = x[js, ],
-                                     nstart = n_start,
-                                     iter.max = iter_max,
-                                     mc.cores = cores,
-                                     algorithm = kmeans_algorithm)
-    base::names(kmeans_obj) <- ks
-    boot_obj[[b]] <- kmeans_obj
+  # clustering
+  base::cat("1) clustering \n")
+  kmeans_obj <- parallel::mclapply(X = ks,
+                                   FUN = stats::kmeans,
+                                   x = x,
+                                   nstart = n_start,
+                                   iter.max = iter_max,
+                                   mc.cores = cores,
+                                   algorithm = kmeans_algorithm)
+  base::names(kmeans_obj) <- ks
 
 
 
+  cat("2) gap-stat \n")
+  gap_stats <- parallel::mclapply(X = kmeans_obj,
+                                  FUN = get_gap_k,
+                                  x = x,
+                                  B_gap = B_gap,
+                                  mc.cores = cores,
+                                  mc.cleanup = TRUE,
+                                  n_start = n_start,
+                                  iter_max = iter_max,
+                                  kmeans_algorithm = kmeans_algorithm)
 
 
-
-    cat("2) gap-stat, ")
-    gap_stats <- parallel::mclapply(X = kmeans_obj,
-                                    FUN = get_gap,
-                                    x = x[js, ],
-                                    B_gap = B_gap,
-                                    d.power = 1,
-                                    mc.cores = cores,
-                                    mc.cleanup = T,
-                                    n_start = n_start,
-                                    iter_max = iter_max,
-                                    kmeans_algorithm = kmeans_algorithm)
-
-    # within cluster sum of squares
-    cat("3) WCSS. \n")
-    # extract WCSS
-    wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
-      return(x$tot.withinss)
-    })
+  # within cluster sum of squares
+  cat("3) WCSS \n")
+  wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
+    return(x$tot.withinss)
+  })
 
 
-    # extract CH: Calinski-Harabasz Index
-    ch_data <- lapply(X = kmeans_obj, FUN = function(x) {
-      k <- base::nrow(x$centers)
-      return((x$betweenss/x$tot.withinss)*
-               ((base::sum(x$size)-k)/
-                  (k-1)))
-    })
+  boot_obj <- list(obj = kmeans_obj,
+                   wcss = wcss_data,
+                   gap = gap_stats)
 
 
-    boot_obj[[b]] <- list(obj = kmeans_obj,
-                          wcss = wcss_data,
-                          ch = ch_data,
-                          gap = gap_stats,
-                          cell_i = js)
-
-  }
-  base::names(boot_obj) <- 1:B
-
-
-
-  # collect clustering data
-  gap_stats <- base::vector(mode = "list", length = base::length(boot_obj))
-  wcss_stats <- base::vector(mode = "list", length = base::length(boot_obj))
-  ch_stats <- base::vector(mode = "list", length = base::length(boot_obj))
 
   # raw gap stats
-  gap_matrix <- base::matrix(data = 0, nrow = B*B_gap, ncol = base::length(ks))
-  wcss_matrix <- base::matrix(data = 0, nrow = B, ncol = base::length(ks))
-  ch_matrix <- base::matrix(data = 0, nrow = B, ncol = base::length(ks))
+  gap_matrix <- base::matrix(data = 0, nrow = B_gap, ncol = base::length(ks))
+  wcss_matrix <- base::matrix(data = 0, nrow = 1, ncol = base::length(ks))
 
 
   # loop over top-bootstrap iterations B
-  for(i in 1:base::length(boot_obj)) {
+  gap_vec <- base::numeric(length = base::length(ks))
+  wcss_vec <- base::numeric(length = base::length(ks))
 
-    gap_vec <- base::numeric(length = base::length(ks))
-    wcss_vec <- base::numeric(length = base::length(ks))
-    ch_vec <- base::numeric(length = base::length(ks))
-
-    # loop over ks
-    for(j in 1:base::length(ks)) {
-      gap_vec[j] <- boot_obj[[i]]$gap[[j]]$gap
-      wcss_vec[j] <- boot_obj[[i]]$wcss[[j]]
-      ch_vec[j] <- boot_obj[[i]]$ch[[j]]
-
-      gap_matrix[((i-1)*B_gap+1):((i-1)*B_gap+B_gap), j] <-
-        boot_obj[[i]]$gap[[j]]$logWks-boot_obj[[i]]$gap[[j]]$logW
-      wcss_matrix[,j] <- boot_obj[[i]]$wcss[[j]]
-      ch_matrix[,j] <- boot_obj[[i]]$ch[[j]]
-
-    }
-
-    gap_stats[[i]] <- base::data.frame(boot = i, gap = gap_vec, k = ks)
-    wcss_stats[[i]] <- base::data.frame(boot = i, wcss = wcss_vec, k = ks)
-    ch_stats[[i]] <- base::data.frame(boot = i, wcss = ch_vec, k = ks)
-
+  # loop over ks
+  for(j in 1:base::length(ks)) {
+    gap_vec[j] <- boot_obj$gap[[j]]$gap
+    wcss_vec[j] <- boot_obj$wcss[[j]]
+    gap_matrix[,j] <- boot_obj$gap[[j]]$logWks-boot_obj$gap[[j]]$logW
+    wcss_matrix[,j] <- boot_obj$wcss[[j]]
   }
+  gap_stats <- base::data.frame(gap = gap_vec, k = ks)
+  wcss_stats <- base::data.frame(wcss = wcss_vec, k = ks)
+
+
 
   # collect DFs
   gap_stats <- base::do.call(base::rbind, gap_stats)
   wcss_stats <- base::do.call(base::rbind, wcss_stats)
-  ch_stats <- base::do.call(base::rbind, ch_stats)
 
   # compute gap summary
   gap_mean <- base::apply(X = gap_matrix,
                           MARGIN = 2,
                           FUN = base::mean)
-  gap_se <- base::sqrt((1/(B*B_gap) + 1)*base::apply(X = gap_matrix,
-                                                     MARGIN = 2,
-                                                     FUN = stats::var))
+  gap_se <- base::sqrt((1/(B_gap) + 1)*base::apply(
+    X = gap_matrix, MARGIN = 2, FUN = stats::var))
   gap_stats_summary <- base::data.frame(gap_mean = gap_mean,
                                         k = ks,
                                         gap_SE = gap_se,
@@ -516,51 +366,311 @@ get_k <- function(x,
   wcss_mean <- base::apply(X = wcss_matrix,
                            MARGIN = 2,
                            FUN = base::mean)
-  wcss_se <- base::sqrt((1/B + 1)*base::apply(X = wcss_matrix,
-                                              MARGIN = 2,
-                                              FUN = stats::var))
   wcss_stats_summary <- base::data.frame(wcss_mean = wcss_mean,
-                                         k = ks,
-                                         wcss_SE = wcss_se,
-                                         L95 = wcss_mean-wcss_se*1.96,
-                                         H95 = wcss_mean+wcss_se*1.96)
+                                         k = ks)
 
-
-  # compute ch summary
-  ch_mean <- base::apply(X = ch_matrix,
-                         MARGIN = 2,
-                         FUN = base::mean)
-  ch_se <- base::sqrt((1/B + 1)*base::apply(X = ch_matrix,
-                                            MARGIN = 2,
-                                            FUN = stats::var))
-  ch_stats_summary <- base::data.frame(ch_mean = ch_mean,
-                                       k = ks,
-                                       ch_SE = ch_se,
-                                       L95 = ch_mean-ch_se*1.96,
-                                       H95 = ch_mean+ch_se*1.96)
-
-
-  if(mini_output) {
-    return(base::structure(class = "boot_k",
-                           base::list(boot_obj = NA,
-                                      wcss_stats_summary = wcss_stats_summary,
-                                      gap_stats_summary = gap_stats_summary,
-                                      ch_stats_summary = ch_stats_summary,
-                                      wcss_stats = wcss_stats,
-                                      gap_stats = gap_stats,
-                                      ch_stats = ch_stats)))
-
-  }
 
   return(base::structure(class = "boot_k",
                          base::list(boot_obj = boot_obj,
                                     wcss_stats_summary = wcss_stats_summary,
                                     gap_stats_summary = gap_stats_summary,
-                                    ch_stats_summary = ch_stats_summary,
                                     wcss_stats = wcss_stats,
-                                    gap_stats = gap_stats,
-                                    ch_stats = ch_stats)))
+                                    gap_stats = gap_stats)))
 }
+
+
+
+get_r <- function(x,
+                  rs,
+                  B_gap = 20,
+                  n_start = 10,
+                  iter_max = 100,
+                  louvain_algorithm = "original",
+                  cores = 1) {
+
+
+
+  get_wcss <- function(x, l) {
+    c <- l[,1]
+
+    get_euc <- function(x,y) {
+      return(base::sqrt(base::outer(base::rowSums(x^2),
+                                    base::rowSums(y^2), '+') -
+                          base::tcrossprod(x, 2 * y)))
+    }
+
+    wcss <- 0
+    cs <- base::unique(c)
+    for(i in 1:base::length(cs)) {
+      j <- base::which(c == cs[i])
+
+      mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
+      mu <- base::matrix(data = mu, nrow = 1)
+      wcss <- wcss+base::sum(get_euc(x = x[j,], y = mu))
+    }
+    return(wcss)
+  }
+
+
+  get_wcss_2 <- function(x, c) {
+    get_euc <- function(x,y) {
+      return(base::sqrt(base::outer(base::rowSums(x^2),
+                                    base::rowSums(y^2), '+') -
+                          base::tcrossprod(x, 2 * y)))
+    }
+
+    wcss <- 0
+    cs <- base::unique(c)
+    for(i in 1:base::length(cs)) {
+      j <- base::which(c == cs[i])
+
+      mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
+      mu <- base::matrix(data = mu, nrow = 1)
+      wcss <- wcss+base::sum(get_euc(x = x[j,], y = mu))
+    }
+    return(wcss)
+  }
+
+
+  get_ks <- function(l) {
+    return(base::length(base::unique(l[, 1])))
+  }
+
+
+  get_gap_r_k1 <- function(x, B_gap) {
+
+    spaceH0 = "original"
+    n <- base::nrow(x)
+    ii <- base::seq_len(n)
+
+
+    get_Wk <- function(X) {
+      return(base::log(get_wcss_2(x = X, c = base::rep(
+        1, times = base::nrow(X)))))
+    }
+
+
+    logW <- base::log(get_wcss_2(c = base::rep(1, times = base::nrow(x)), x=x))
+    k <- 1
+
+    E.logW <- base::numeric(1)
+    SE.sim <- base::numeric(1)
+
+
+    xs <- base::scale(x, center = TRUE, scale = FALSE)
+    m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
+    rng.x1 <- base::apply(xs, 2L, base::range)
+    logWks <- base::matrix(0, B_gap, 1)
+    for (b in 1:B_gap) {
+      z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
+        nn, min = M[1], max = M[2]), nn = n)
+      z <- z1 + m.x
+      base::rownames(z) <- base::paste0("z_", 1:base::nrow(z))
+
+      # simpler
+      logWks[b, 1] <- get_Wk(X = z)
+    }
+    E.logW <- base::colMeans(logWks)
+    SE.sim <- base::sqrt((1 + 1/B_gap)*base::apply(logWks, 2, stats::var))
+    return(list(gap = E.logW - logW,
+                SE.sim = SE.sim,
+                logW = logW,
+                logWks = logWks,
+                E.logW = E.logW,
+                k = k))
+  }
+
+
+  # compute gap statistics
+  get_gap_r <- function(l,
+                        x,
+                        B_gap,
+                        n_start,
+                        iter_max,
+                        louvain_algorithm) {
+
+    spaceH0 = "original"
+    n <- base::nrow(x)
+    ii <- base::seq_len(n)
+
+
+    get_Wk <- function(X, r) {
+
+      # create Knn graph
+      knn <- Seurat::FindNeighbors(object = X,
+                                   k.param = 50,
+                                   verbose = FALSE)
+
+      clus <- Seurat::FindClusters(object = knn$snn,
+                                   resolution = r,
+                                   n.start = n_start,
+                                   n.iter = iter_max,
+                                   algorithm = louvain_algorithm,
+                                   verbose = FALSE)
+
+      wcss <- get_wcss(x = X, l = clus)
+      return(base::log(wcss))
+    }
+
+
+    logW <- base::log(get_wcss(l = l, x = x))
+    r <- base::as.numeric(base::gsub(pattern = "res\\.",
+                                     replacement = '',
+                                     x = base::names(l)))
+
+    k <- base::length(base::unique(l[, 1]))
+
+    E.logW <- base::numeric(1)
+    SE.sim <- base::numeric(1)
+
+
+    xs <- base::scale(x, center = TRUE, scale = FALSE)
+    m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
+    rng.x1 <- base::apply(xs, 2L, base::range)
+    logWks <- base::matrix(0, B_gap, 1)
+    for (b in 1:B_gap) {
+      z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
+        nn, min = M[1], max = M[2]), nn = n)
+      z <- z1 + m.x
+      base::rownames(z) <- base::paste0("z_", 1:nrow(z))
+
+      # simpler
+      logWks[b, 1] <- get_Wk(X = z, r = r)
+    }
+    E.logW <- base::colMeans(logWks)
+    SE.sim <- base::sqrt((1 + 1/B_gap) * base::apply(logWks, 2, stats::var))
+    return(list(gap = E.logW - logW,
+                SE.sim = SE.sim,
+                logW = logW,
+                logWks = logWks,
+                E.logW = E.logW,
+                k = k))
+  }
+
+
+
+  if(louvain_algorithm=="original") {
+    louvain_algorithm <- 1
+  }
+  browser()
+
+  # sort rs, smallest r first, largest r last
+  rs <- base::sort(rs, decreasing = F)
+  # rs <- 10^(seq(from = -3, to = 1, by = 0.2))
+
+  # create Knn graph
+  knn <- Seurat::FindNeighbors(object = x,
+                               k.param = 50)
+
+
+
+
+  # clustering
+  base::cat("1) clustering: \n")
+  louvain_obj <- parallel::mclapply(X = rs,
+                                    FUN = Seurat::FindClusters,
+                                    object = knn$snn,
+                                    n.start = n_start,
+                                    n.iter = iter_max,
+                                    mc.cores = cores,
+                                    algorithm = louvain_algorithm,
+                                    modularity.fxn = 1,
+                                    initial.membership = NULL,
+                                    node.sizes = NULL,
+                                    verbose = FALSE)
+  base::names(louvain_obj) <- rs
+
+
+
+
+  # Gap stats
+  base::cat("2) Gap statistic: \n")
+  q <- parallel::mclapply(X = louvain_obj,
+                          FUN = get_gap_r,
+                          x = x,
+                          B_gap = B_gap,
+                          n_start = n_start,
+                          iter_max = iter_max,
+                          louvain_algorithm = louvain_algorithm,
+                          mc.cores = cores)
+
+  # if k = 1 not present do
+  q0 <- vector(mode = "list", length = 1)
+  q0[[1]] <- get_gap_r_k1(x = x, B_gap = B_gap)
+  gap_stats <- append(q, q0)
+  rm(q, q0)
+
+
+
+
+  # within cluster sum of squares
+  cat("3) WCSS \n")
+  browser()
+  wcss_data <- lapply(X = louvain_obj,
+                      FUN =  get_wcss,
+                      x = x)
+
+
+  boot_obj <- list(obj = kmeans_obj,
+                   wcss = wcss_data,
+                   gap = gap_stats)
+
+
+
+  # raw gap stats
+  gap_matrix <- base::matrix(data = 0, nrow = B_gap, ncol = base::length(rs))
+  wcss_matrix <- base::matrix(data = 0, nrow = 1, ncol = base::length(rs))
+
+
+  # loop over top-bootstrap iterations B
+  gap_vec <- base::numeric(length = base::length(rs))
+  wcss_vec <- base::numeric(length = base::length(rs))
+
+  # loop over rs
+  for(j in 1:base::length(rs)) {
+    gap_vec[j] <- boot_obj$gap[[j]]$gap
+    wcss_vec[j] <- boot_obj$wcss[[j]]
+    gap_matrix[,j] <- boot_obj$gap[[j]]$logWks-boot_obj$gap[[j]]$logW
+    wcss_matrix[,j] <- boot_obj$wcss[[j]]
+  }
+  gap_stats <- base::data.frame(gap = gap_vec, r = rs)
+  wcss_stats <- base::data.frame(wcss = wcss_vec, r = rs)
+
+
+
+  # collect DFs
+  gap_stats <- base::do.call(base::rbind, gap_stats)
+  wcss_stats <- base::do.call(base::rbind, wcss_stats)
+
+  # compute gap summary
+  gap_mean <- base::apply(X = gap_matrix,
+                          MARGIN = 2,
+                          FUN = base::mean)
+  gap_se <- base::sqrt((1/(B_gap) + 1)*base::apply(
+    X = gap_matrix, MARGIN = 2, FUN = stats::var))
+  gap_stats_summary <- base::data.frame(gap_mean = gap_mean,
+                                        r = rs,
+                                        gap_SE = gap_se,
+                                        L95 = gap_mean-gap_se*1.96,
+                                        H95 = gap_mean+gap_se*1.96)
+
+
+  # compute wcss summary
+  wcss_mean <- base::apply(X = wcss_matrix,
+                           MARGIN = 2,
+                           FUN = base::mean)
+  wcss_stats_summary <- base::data.frame(wcss_mean = wcss_mean,
+                                         r = rs)
+
+
+  return(base::structure(class = "boot_r",
+                         base::list(boot_obj = boot_obj,
+                                    wcss_stats_summary = wcss_stats_summary,
+                                    gap_stats_summary = gap_stats_summary,
+                                    wcss_stats = wcss_stats,
+                                    gap_stats = gap_stats)))
+}
+
 
 
 
