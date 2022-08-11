@@ -562,3 +562,20 @@ get_weighted_feature_dist <- function(main_ph, w, value_var) {
 
 }
 
+
+# Maps input louvain_algorithm to Seurat accepted names
+map_louvain_algname <- function(x) {
+  if(x=="original") {
+    return(1)
+  }
+  if(x=="LMR") {
+    return(2)
+  }
+  if(x=="SLM") {
+    return(3)
+  }
+  if(x=="Leiden") {
+    return(4)
+  }
+}
+
