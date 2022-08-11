@@ -383,7 +383,7 @@ get_k <- function(x,
 get_r <- function(x,
                   rs,
                   B_gap = 20,
-                  n_start = 10,
+                  n_start = 20,
                   iter_max = 100,
                   louvain_algorithm = "original",
                   cores = 1) {
@@ -393,10 +393,11 @@ get_r <- function(x,
   get_wcss <- function(x, l) {
     c <- l[,1]
 
-    get_euc <- function(x,y) {
-      return(base::sqrt(base::outer(base::rowSums(x^2),
-                                    base::rowSums(y^2), '+') -
-                          base::tcrossprod(x, 2 * y)))
+
+    get_sum_squares <- function(x,y) {
+      return(base::outer(base::rowSums(x^2),
+                         base::rowSums(y^2), '+') -
+               base::tcrossprod(x, 2 * y))
     }
 
     wcss <- 0
@@ -406,18 +407,20 @@ get_r <- function(x,
 
       mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
       mu <- base::matrix(data = mu, nrow = 1)
-      wcss <- wcss+base::sum(get_euc(x = x[j,], y = mu))
+      wcss <- wcss+base::sum(get_sum_squares(x = x[j,], y = mu))
     }
     return(wcss)
   }
 
 
   get_wcss_2 <- function(x, c) {
-    get_euc <- function(x,y) {
-      return(base::sqrt(base::outer(base::rowSums(x^2),
-                                    base::rowSums(y^2), '+') -
-                          base::tcrossprod(x, 2 * y)))
+
+    get_sum_squares <- function(x,y) {
+      return(base::outer(base::rowSums(x^2),
+                         base::rowSums(y^2), '+') -
+               base::tcrossprod(x, 2 * y))
     }
+
 
     wcss <- 0
     cs <- base::unique(c)
@@ -426,7 +429,7 @@ get_r <- function(x,
 
       mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
       mu <- base::matrix(data = mu, nrow = 1)
-      wcss <- wcss+base::sum(get_euc(x = x[j,], y = mu))
+      wcss <- wcss+base::sum(get_sum_squares(x = x[j,], y = mu))
     }
     return(wcss)
   }
@@ -497,18 +500,21 @@ get_r <- function(x,
     get_Wk <- function(X, r) {
 
       # create Knn graph
-      knn <- Seurat::FindNeighbors(object = X,
-                                   k.param = 50,
-                                   verbose = FALSE)
+      knn <- Seurat::FindNeighbors(
+        object = X,
+        k.param = 50,
+        verbose = FALSE)
 
-      clus <- Seurat::FindClusters(object = knn$snn,
-                                   resolution = r,
-                                   n.start = n_start,
-                                   n.iter = iter_max,
-                                   algorithm = louvain_algorithm,
-                                   verbose = FALSE)
 
-      wcss <- get_wcss(x = X, l = clus)
+      lc <- Seurat::FindClusters(
+        object = knn$snn,
+        resolution = r,
+        n.start = n_start,
+        n.iter = iter_max,
+        algorithm = map_louvain_algname(louvain_algorithm),
+        verbose = FALSE)
+
+      wcss <- get_wcss(x = X, l = lc)
       return(base::log(wcss))
     }
 
@@ -548,43 +554,36 @@ get_r <- function(x,
   }
 
 
-
-  if(louvain_algorithm=="original") {
-    louvain_algorithm <- 1
-  }
-  browser()
-
   # sort rs, smallest r first, largest r last
   rs <- base::sort(rs, decreasing = F)
-  # rs <- 10^(seq(from = -3, to = 1, by = 0.2))
+
 
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
                                k.param = 50)
 
 
-
-
   # clustering
-  base::cat("1) clustering: \n")
-  louvain_obj <- parallel::mclapply(X = rs,
-                                    FUN = Seurat::FindClusters,
-                                    object = knn$snn,
-                                    n.start = n_start,
-                                    n.iter = iter_max,
-                                    mc.cores = cores,
-                                    algorithm = louvain_algorithm,
-                                    modularity.fxn = 1,
-                                    initial.membership = NULL,
-                                    node.sizes = NULL,
-                                    verbose = FALSE)
+  base::cat("1) clustering \n")
+  louvain_obj <- parallel::mclapply(
+    X = rs,
+    FUN = Seurat::FindClusters,
+    object = knn$snn,
+    n.start = n_start,
+    n.iter = iter_max,
+    mc.cores = cores,
+    algorithm = map_louvain_algname(louvain_algorithm),
+    modularity.fxn = 1,
+    initial.membership = NULL,
+    node.sizes = NULL,
+    verbose = FALSE)
   base::names(louvain_obj) <- rs
 
 
 
 
   # Gap stats
-  base::cat("2) Gap statistic: \n")
+  base::cat("2) gap statistic \n")
   q <- parallel::mclapply(X = louvain_obj,
                           FUN = get_gap_r,
                           x = x,
@@ -601,20 +600,20 @@ get_r <- function(x,
   rm(q, q0)
 
 
+  # get k for each louvain obj
+  ks <- base::unlist(base::lapply(X = louvain_obj, FUN = get_ks))
 
 
   # within cluster sum of squares
   cat("3) WCSS \n")
-  browser()
   wcss_data <- lapply(X = louvain_obj,
                       FUN =  get_wcss,
                       x = x)
 
 
-  boot_obj <- list(obj = kmeans_obj,
+  boot_obj <- list(obj = louvain_obj,
                    wcss = wcss_data,
                    gap = gap_stats)
-
 
 
   # raw gap stats
@@ -650,6 +649,7 @@ get_r <- function(x,
     X = gap_matrix, MARGIN = 2, FUN = stats::var))
   gap_stats_summary <- base::data.frame(gap_mean = gap_mean,
                                         r = rs,
+                                        k = ks,
                                         gap_SE = gap_se,
                                         L95 = gap_mean-gap_se*1.96,
                                         H95 = gap_mean+gap_se*1.96)
@@ -660,7 +660,8 @@ get_r <- function(x,
                            MARGIN = 2,
                            FUN = base::mean)
   wcss_stats_summary <- base::data.frame(wcss_mean = wcss_mean,
-                                         r = rs)
+                                         r = rs,
+                                         k = ks)
 
 
   return(base::structure(class = "boot_r",
@@ -675,17 +676,17 @@ get_r <- function(x,
 
 
 
-get_bubbletree <- function(x,
-                           k,
-                           B = 100,
-                           N_eff = 100,
-                           n_start = 1000,
-                           iter_max = 300,
-                           kmeans_algorithm = "MacQueen",
-                           cores = 1,
-                           seed = NULL,
-                           round_digits = 2,
-                           show_simple_count = F) {
+get_bubbletree_kmeans <- function(x,
+                                  k,
+                                  B = 100,
+                                  N_eff = 200,
+                                  n_start = 1000,
+                                  iter_max = 300,
+                                  kmeans_algorithm = "MacQueen",
+                                  cores = 1,
+                                  seed = NULL,
+                                  round_digits = 2,
+                                  show_simple_count = F) {
 
   # check input param
   check_input <- function(x,
@@ -1079,6 +1080,415 @@ get_bubbletree <- function(x,
 
 
 
+
+
+get_bubbletree_louvain <- function(x,
+                                   r,
+                                   B = 100,
+                                   N_eff = 200,
+                                   n_start = 20,
+                                   iter_max = 100,
+                                   louvain_algorithm = "original",
+                                   cores = 1,
+                                   seed = NULL,
+                                   round_digits = 2,
+                                   show_simple_count = F) {
+
+  # check input param
+  check_input <- function(x,
+                          r,
+                          n_start,
+                          iter_max,
+                          B,
+                          N_eff,
+                          cores,
+                          seed,
+                          round_digits,
+                          show_simple_count,
+                          louvain_algorithm) {
+
+
+    # check x
+    if(base::missing(x)==TRUE) {
+      stop("x input not found")
+    }
+    if(base::is.numeric(x)==FALSE) {
+      stop("x must be numeric matrix")
+    }
+    if(base::is.matrix(x)==FALSE) {
+      stop("x must be numeric matrix")
+    }
+    if(base::any(base::is.infinite(x))==TRUE) {
+      stop("x must be numeric matrix, infinite values not allowed")
+    }
+    if(base::any(base::is.na(x))==TRUE) {
+      stop("x must be numeric matrix, NAs not allowed")
+    }
+    if(base::any(base::is.null(x))==TRUE) {
+      stop("x must be numeric matrix, NULLs not allowed")
+    }
+    if(base::all(x == x[1,1])==TRUE) {
+      stop("all elements in x are identical")
+    }
+    if(base::ncol(x)>base::nrow(x)) {
+      warning("more columns (features) than rows (cells) in x")
+    }
+
+
+
+    # check B
+    if(base::missing(B)==TRUE) {
+      stop("B input not found")
+    }
+    if(base::is.numeric(B)==FALSE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::length(B)!=1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B<1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.infinite(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.na(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B%%1!=0) {
+      stop("B must be a positive integer > 0")
+    }
+
+
+
+    # check r
+    if(base::missing(r)==TRUE) {
+      stop("r input not found")
+    }
+    if(is.numeric(r)==F) {
+      stop("r must be a positive number (r>0) to build a bubbletree")
+    }
+    if(length(r)!=1) {
+      stop("r must be a positive number (r>0) to build a bubbletree")
+    }
+    if(r<=0) {
+      stop("r must be a positive number (r>0) to build a bubbletree")
+    }
+    if(is.infinite(r)==TRUE) {
+      stop("r must be a positive number (r>0) to build a bubbletree")
+    }
+
+
+
+
+    # check cores
+    if(base::missing(cores)==TRUE) {
+      stop("cores input not found")
+    }
+    if(base::is.numeric(cores)==FALSE) {
+      stop("cores must be a positive integer")
+    }
+    if(base::length(cores)!=1) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.infinite(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.na(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<1) {
+      stop("cores must be a positive integer")
+    }
+    if(cores%%1!=0) {
+      stop("cores must be a positive integer")
+    }
+
+
+
+
+    # n_start
+    if(base::missing(n_start)==TRUE) {
+      stop("n_start input not found")
+    }
+    if(base::is.numeric(n_start)==FALSE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::length(n_start) != 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start < 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.infinite(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.na(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.null(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start%%1!=0) {
+      stop("n_start must be a positive integer")
+    }
+
+
+
+    # iter_max
+    if(base::missing(iter_max)==TRUE) {
+      stop("iter_max input not found")
+    }
+    if(base::is.numeric(iter_max)==FALSE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::length(iter_max)!=1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max<1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.infinite(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.na(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.null(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max%%1!=0) {
+      stop("iter_max must be a positive integer")
+    }
+
+
+
+
+    # louvain_algorithm
+    if(base::missing(louvain_algorithm)==TRUE) {
+      stop("louvain_algorithm input not found")
+    }
+    if(base::length(louvain_algorithm)!=1) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+    if(base::is.character(louvain_algorithm)==FALSE) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+    if(louvain_algorithm %in% c("original", "LMR", "SLM", "Leiden")==FALSE) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+
+
+
+
+
+    # check N_eff
+    if(base::missing(N_eff)==TRUE) {
+      stop("N_eff input not found")
+    }
+    if(base::is.numeric(N_eff)==FALSE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::length(N_eff)!=1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff<1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.infinite(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.na(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.null(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff%%1!=0) {
+      stop("N_eff must be a positive integer")
+    }
+
+
+
+    # check seed
+    if(base::is.null(seed)==FALSE) {
+      if(base::is.numeric(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(base::length(seed)!=1) {
+        stop("seed must be a positive integer")
+      }
+      if(seed<=0) {
+        stop("seed must be a positive integer")
+      }
+      if(base::is.finite(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(seed%%1!=0) {
+        stop("seed must be a positive integer")
+      }
+    }
+
+
+
+    # check round_digits
+    if(base::missing(round_digits)==TRUE) {
+      stop("round_digits input not found")
+    }
+    if(base::is.numeric(round_digits)==F) {
+      stop("round_digits must be a positive integer")
+    }
+    if(base::length(round_digits)!=1) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits<0) {
+      stop("round_digits must be a positive integer")
+    }
+    if(base::is.finite(round_digits)==FALSE) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits%%1!=0) {
+      stop("round_digits must be a positive integer")
+    }
+
+
+
+    # show_simple_count
+    if(base::missing(show_simple_count)==TRUE) {
+      stop("show_simple_count input not found")
+    }
+    if(length(show_simple_count)!=1) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+    if(is.logical(show_simple_count)==F) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(show_simple_count)==TRUE) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+
+
+  }
+
+  # check inputs
+  check_input(x = x,
+              r = r,
+              n_start = n_start,
+              iter_max = iter_max,
+              B = B,
+              N_eff = N_eff,
+              cores = cores,
+              seed = seed,
+              round_digits = round_digits,
+              show_simple_count = show_simple_count,
+              louvain_algorithm = louvain_algorithm)
+
+
+  # set seed for reproducibility
+  if(base::is.null(seed)==FALSE) {
+    base::set.seed(seed = seed)
+  }
+  else {
+    seed <- base::sample(x = 1:10^6, size = 1)
+    base::set.seed(seed = seed)
+  }
+
+
+
+  # perform clustering
+  cat("Clustering ... \n")
+
+  # create Knn graph
+  knn <- Seurat::FindNeighbors(object = x,
+                               k.param = 50)
+
+  # clustering
+  lc <- Seurat::FindClusters(object = knn$snn,
+                             resolution = r,
+                             n.start = n_start,
+                             n.iter = iter_max,
+                             algorithm = map_louvain_algname(louvain_algorithm),
+                             verbose = FALSE)
+
+  # clusters
+  cs <- as.character(lc[,1])
+
+
+
+  # pairwise distances
+  cat("Bubbletree construction ... \n")
+  pair_dist <- get_dist(B = B,
+                        m = x,
+                        c = cs,
+                        N_eff = N_eff,
+                        cores = cores)
+
+
+
+  # compute hierarchical clustering dendrogram
+  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
+                       formula = c_i~c_j,
+                       value.var = "M")
+  d <- stats::as.dist(d)
+  hc <- stats::hclust(d, method = "average")
+  ph <- ape::as.phylo(x = hc)
+
+  if(length(unique(cs)) <= 2) {
+
+    t <- get_dendrogram(ph = ph,
+                        cluster = cs,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+
+  }
+  else {
+
+    ph <- ape::unroot(phy = ph)
+
+    # get branch support
+    ph <- get_ph_support(main_ph = ph,
+                         x = pair_dist$raw_pair_dist)
+
+    # build bubbletree
+    t <- get_dendrogram(ph = ph$main_ph,
+                        cluster = cs,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+
+  }
+
+
+
+
+  # collect input parameters: can be used for automated update
+  input_par <- list(n_start = n_start,
+                    iter_max = iter_max,
+                    N_eff = N_eff,
+                    B = B,
+                    seed = seed,
+                    round_digits = round_digits,
+                    show_simple_count = show_simple_count,
+                    louvain_algorithm = louvain_algorithm,
+                    update_iteration = 0)
+
+
+  return(base::structure(class = "bubbletree_louvain",
+                         list(A = x,
+                              r = r,
+                              ph = ph,
+                              pair_dist = pair_dist,
+                              cluster = cs,
+                              input_par = input_par,
+                              tree = t$tree,
+                              tree_meta = t$tree_meta)))
+
+}
+
+
+
 # Not exported at the moment.
 update_bubbletree <- function(btd,
                               updated_bubbles,
@@ -1262,7 +1672,7 @@ update_bubbletree <- function(btd,
 
 
 
-get_dummy_bubbletree <- function(x,
+get_bubbletree_dummy <- function(x,
                                  cs,
                                  B = 100,
                                  N_eff = 100,
@@ -1613,64 +2023,30 @@ get_gini_k <- function(labels, k_obj) {
               k_obj = k_obj)
 
 
-  if(base::length(k_obj$boot_obj)==1&&
-     base::is.na(k_obj$boot_obj)) {
-    stop("You have to run 'get_k' with mini_output=FALSE. \n")
-  }
+  ks <- base::names(k_obj$boot_obj$obj)
 
-  B <- base::length(k_obj$boot_obj)
-  ks <- base::names(k_obj$boot_obj[[1]]$obj)
-
-  total_o <- base::vector(mode = "list", length = B*base::length(ks))
-  cluster_o <- base::vector(mode = "list", length = B*base::length(ks))
+  total_o <- base::vector(mode = "list", length = base::length(ks))
+  cluster_o <- base::vector(mode = "list", length = base::length(ks))
   counter <- 1
-  for(i in 1:B) {
-    for(j in 1:length(ks)) {
-      cell_id <- k_obj$boot_obj[[i]]$cell_i
-      gini <- get_gini(clusters = k_obj$boot_obj[[i]]$obj[[ks[j]]]$cluster,
-                       labels = labels[cell_id])
+  for(j in 1:length(ks)) {
+    gini <- get_gini(clusters = k_obj$boot_obj$obj[[ks[j]]]$cluster,
+                     labels = labels)
 
-      # collect total gini and cluster specific gini scores
-      # total
-      total_o[[counter]] <- base::data.frame(B = i,
-                                             k = as.numeric(ks[j]),
-                                             total_gini = gini$wgi)
-      # cluster
-      cluster_o[[counter]] <- base::data.frame(B = i,
-                                               k = as.numeric(ks[j]),
-                                               cluster = base::names(gini$gi),
-                                               gini = gini$gi)
-      counter <- counter + 1
-    }
+    # total
+    total_o[[counter]] <- base::data.frame(k = as.numeric(ks[j]),
+                                           wgi = gini$wgi)
+    # cluster
+    gini$gi
+    cluster_o[[counter]] <- gini$gi
+    cluster_o[[counter]]$k <- as.numeric(ks[j])
+
+    counter <- counter + 1
   }
-  cluster_o <- base::do.call(rbind, cluster_o)
-  total_o <- base::do.call(rbind, total_o)
-
-
-  # next: compute summary from B values for each metric
-  # total
-  wgi_summary <- base::merge(
-    x = stats::aggregate(wgi~k, data = total_o, FUN = base::mean),
-    y = stats::aggregate(wgi~k, data = total_o, FUN = get_se),
-    by = "k")
-  base::colnames(wgi_summary) <- c("k", "wgi_mean", "wgi_SE")
-  wgi_summary$L95 <- wgi_summary$wgi_mean-wgi_summary$wgi_SE*1.96
-  wgi_summary$H95 <- wgi_summary$wgi_mean+wgi_summary$wgi_SE*1.96
-
-  # cluster
-  gi_summary <- base::merge(
-    x = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = base::mean),
-    y = stats::aggregate(gi~k+cluster, data = cluster_o, FUN = get_se),
-    by = c("k", "cluster"))
-  base::colnames(gi_summary) <- c("k", "clusters", "gi_mean", "gi_SE")
-  gi_summary$L95 <- gi_summary$gi_mean-gi_summary$gi_SE*1.96
-  gi_summary$H95 <- gi_summary$gi_mean+gi_summary$gi_SE*1.96
-
+  gi_summary <- base::do.call(rbind, cluster_o)
+  wgi_summary <- base::do.call(rbind, total_o)
 
   return(base::list(wgi_summary = wgi_summary,
-              gi_summary = gi_summary,
-              wgi = total_o,
-              gi = cluster_o))
+                    gi_summary = gi_summary))
 }
 
 
