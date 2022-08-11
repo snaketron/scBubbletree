@@ -36,6 +36,10 @@ library(ggrepel)
 library(scBubbletree)
 library(Seurat, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)
+library(reprex, lib.loc = lib.loc)
+library(tidyverse, lib.loc = lib.loc)
+# devtools::install_github("PaulingLiu/ROGUE")
+library(ROGUE, lib.loc = lib.loc)
 ```
 
 
@@ -170,7 +174,7 @@ on the Gap statistic and the within-cluster sum of squares (WCSS).
 Lets run `get_k` now:
 
 ```{r, echo = T, eval = T}
-b <- get_k(B = 5, # number of bootstrap iterations  
+b <- get_k(B = 3, # number of bootstrap iterations  
            cv_prop = 1, # use 100% of the rows (cells) in A in each iteration
            ks = seq(from = 1, to = 40, by = 2), # ks to test
            x = A, # main input A
@@ -520,7 +524,46 @@ g_pairs_umap_tsne
 
 
 
+# ROGUE bubble purity
+
+```{r, echo=T, fig.width=5, fig.height=4, fig.align='center'}
+se <- ROGUE::SE_fun(expr = pbmc@assays$RNA@counts)
+ROGUE::SEplot(.x = se)
+```
 
 
-[^1]: https://cf.10xgenomics.com/samples/cell/pbmc3k/pbmc3k_filtered_gene_bc_matrices.tar.gz
+```{r, echo=T}
+rogue_value <- ROGUE::CalculateRogue(se, platform = "UMI")
+rogue_value
+```
+
+```{r, echo=T, fig.width=6, fig.height=4, fig.align='center'}
+pbmc@meta.data$sample <- "S"
+rogue_res <- ROGUE::rogue(expr = pbmc@assays$RNA@counts,
+                          labels = pbmc@meta.data$bubble,
+                          samples = pbmc@meta.data$sample,
+                          platform = "UMI",
+                          span = 0.6,
+                          min.cell.n = 5)
+
+ROGUE::rogue.boxplot(rogue_res)
+```
+
+
+# Playing around with methods to find optimal $k$
+
+```{r}
+require(NbClust, lib.loc)
+nbclust_out <- NbClust(data = A, distance = "euclidean", method = "kmeans",
+                       min.nc = 2, max.nc = 30, index = "all", 
+                       alphaBeale = 0.1)
+
+nbclust_out_gap <- NbClust(data = A, distance = "euclidean", method = "kmeans",
+                       min.nc = 2, max.nc = 30, index = "gap", alphaBeale = 0.1)
+```
+
+
+
+
+
 [^2]: https://www.proteinatlas.org/humanproteome/immune+cell
