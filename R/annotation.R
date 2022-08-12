@@ -36,7 +36,9 @@ get_cat_tiles <- function(btd,
        base::is.null(btd)||
        base::any(base::is.na(base::class(btd)))||
        base::is.null(base::class(btd))||
-       !base::class(btd)%in%c("bubbletree", "dummy_bubbletree")) {
+       !base::class(btd)%in%c("bubbletree_kmeans",
+                              "bubbletree_dummy",
+                              "bubbletree_louvain")) {
       stop("NA/NULL elements or wrong class detected in the bubbletree")
     }
     if(base::is.vector(btd$cluster)==FALSE||
@@ -414,16 +416,21 @@ get_num_tiles <- function(btd,
                           x_axis_name,
                           rotate_x_axis_labels) {
 
+
     # check btd
-    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
-       is.null(class(btd))||!class(btd)%in%
-       c("bubbletree", "dummy_bubbletree")) {
+    if(base::any(base::is.na(btd))||
+       base::is.null(btd)||
+       base::any(base::is.na(base::class(btd)))||
+       base::is.null(base::class(btd))||
+       !base::class(btd)%in%c("bubbletree_kmeans",
+                              "bubbletree_dummy",
+                              "bubbletree_louvain")) {
       stop("problem with the input bubbletree")
     }
 
-    if(is.vector(btd$cluster)==F||
-       is.na(is.vector(btd$cluster))||
-       is.null(is.vector(btd$cluster))) {
+    if(base::is.vector(btd$cluster)==FALSE||
+       base::is.na(base::is.vector(btd$cluster))||
+       base::is.null(base::is.vector(btd$cluster))) {
       stop("no clustering results in bubbletree")
     }
 
@@ -695,9 +702,13 @@ get_num_violins <- function(btd,
                           rotate_x_axis_labels) {
 
     # check btd
-    if(any(is.na(btd))||is.null(btd)||any(is.na(class(btd)))||
-       is.null(class(btd))||!class(btd)%in%
-       c("bubbletree", "dummy_bubbletree")) {
+    if(base::any(base::is.na(btd))||
+       base::is.null(btd)||
+       base::any(base::is.na(base::class(btd)))||
+       base::is.null(base::class(btd))||
+       !base::class(btd)%in%c("bubbletree_kmeans",
+                              "bubbletree_dummy",
+                              "bubbletree_louvain")) {
       stop("problem with the input bubbletree")
     }
 

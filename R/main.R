@@ -318,6 +318,14 @@ get_k <- function(x,
   })
 
 
+
+  # convert result to vectors as opposed to kmeans objects
+  kmeans_obj <- lapply(X = kmeans_obj, FUN = km2vec <- function(x) {
+    c <- as.character(x$cluster)
+    return(c)
+  })
+
+
   boot_obj <- list(obj = kmeans_obj,
                    wcss = wcss_data,
                    gap = gap_stats)
@@ -391,7 +399,7 @@ get_r <- function(x,
 
 
   get_wcss <- function(x, l) {
-    c <- l[,1]
+    c <- l
 
 
     get_sum_squares <- function(x,y) {
@@ -399,28 +407,6 @@ get_r <- function(x,
                          base::rowSums(y^2), '+') -
                base::tcrossprod(x, 2 * y))
     }
-
-    wcss <- 0
-    cs <- base::unique(c)
-    for(i in 1:base::length(cs)) {
-      j <- base::which(c == cs[i])
-
-      mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
-      mu <- base::matrix(data = mu, nrow = 1)
-      wcss <- wcss+base::sum(get_sum_squares(x = x[j,], y = mu))
-    }
-    return(wcss)
-  }
-
-
-  get_wcss_2 <- function(x, c) {
-
-    get_sum_squares <- function(x,y) {
-      return(base::outer(base::rowSums(x^2),
-                         base::rowSums(y^2), '+') -
-               base::tcrossprod(x, 2 * y))
-    }
-
 
     wcss <- 0
     cs <- base::unique(c)
@@ -436,7 +422,7 @@ get_r <- function(x,
 
 
   get_ks <- function(l) {
-    return(base::length(base::unique(l[, 1])))
+    return(base::length(base::unique(l)))
   }
 
 
@@ -448,12 +434,12 @@ get_r <- function(x,
 
 
     get_Wk <- function(X) {
-      return(base::log(get_wcss_2(x = X, c = base::rep(
+      return(base::log(get_wcss(x = X, l = base::rep(
         1, times = base::nrow(X)))))
     }
 
 
-    logW <- base::log(get_wcss_2(c = base::rep(1, times = base::nrow(x)), x=x))
+    logW <- base::log(get_wcss(l = base::rep(1, times = base::nrow(x)), x=x))
     k <- 1
 
     E.logW <- base::numeric(1)
@@ -484,8 +470,10 @@ get_r <- function(x,
   }
 
 
+
   # compute gap statistics
-  get_gap_r <- function(l,
+  get_gap_r <- function(i,
+                        l,
                         x,
                         B_gap,
                         n_start,
@@ -514,17 +502,15 @@ get_r <- function(x,
         algorithm = map_louvain_algname(louvain_algorithm),
         verbose = FALSE)
 
-      wcss <- get_wcss(x = X, l = lc)
+      wcss <- get_wcss(x = X, l = lc[,1])
       return(base::log(wcss))
     }
 
 
+    r <- base::as.numeric(base::names(l)[i])
+    l <- l[[i]]
     logW <- base::log(get_wcss(l = l, x = x))
-    r <- base::as.numeric(base::gsub(pattern = "res\\.",
-                                     replacement = '',
-                                     x = base::names(l)))
-
-    k <- base::length(base::unique(l[, 1]))
+    k <- base::length(base::unique(l))
 
     E.logW <- base::numeric(1)
     SE.sim <- base::numeric(1)
@@ -554,6 +540,7 @@ get_r <- function(x,
   }
 
 
+
   # sort rs, smallest r first, largest r last
   rs <- base::sort(rs, decreasing = F)
 
@@ -580,18 +567,31 @@ get_r <- function(x,
   base::names(louvain_obj) <- rs
 
 
+  # convert result to vectors as opposed to data.frames
+  louvain_obj <- lapply(X = louvain_obj, FUN = df2vec <- function(x) {
+    res <- names(x)
+    res <- gsub(pattern = "res\\.", replacement = '', x = res)
+    c <- as.character(x[, 1])
+    return(c)
+  })
+
+  # browser()
 
 
   # Gap stats
   base::cat("2) gap statistic \n")
-  q <- parallel::mclapply(X = louvain_obj,
+  q <- parallel::mclapply(X = 1:length(louvain_obj),
                           FUN = get_gap_r,
+                          l = louvain_obj,
                           x = x,
                           B_gap = B_gap,
                           n_start = n_start,
                           iter_max = iter_max,
                           louvain_algorithm = louvain_algorithm,
                           mc.cores = cores)
+
+  # browser()
+
 
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
@@ -601,13 +601,14 @@ get_r <- function(x,
 
 
   # get k for each louvain obj
-  ks <- base::unlist(base::lapply(X = louvain_obj, FUN = get_ks))
+  ks <- base::unlist(base::lapply(X = louvain_obj,
+                                  FUN = get_ks))
 
 
   # within cluster sum of squares
   cat("3) WCSS \n")
   wcss_data <- lapply(X = louvain_obj,
-                      FUN =  get_wcss,
+                      FUN = get_wcss,
                       x = x)
 
 
@@ -625,6 +626,7 @@ get_r <- function(x,
   gap_vec <- base::numeric(length = base::length(rs))
   wcss_vec <- base::numeric(length = base::length(rs))
 
+
   # loop over rs
   for(j in 1:base::length(rs)) {
     gap_vec[j] <- boot_obj$gap[[j]]$gap
@@ -640,6 +642,7 @@ get_r <- function(x,
   # collect DFs
   gap_stats <- base::do.call(base::rbind, gap_stats)
   wcss_stats <- base::do.call(base::rbind, wcss_stats)
+
 
   # compute gap summary
   gap_mean <- base::apply(X = gap_matrix,
@@ -1026,7 +1029,6 @@ get_bubbletree_kmeans <- function(x,
 
   if(k<=2) {
 
-    # browser()
     # build treetree
     t <- get_dendrogram(ph = ph,
                         cluster = km$cluster,
@@ -1065,7 +1067,7 @@ get_bubbletree_kmeans <- function(x,
                     update_iteration = 0)
 
 
-  return(base::structure(class = "bubbletree",
+  return(base::structure(class = "bubbletree_kmeans",
                          list(A = x,
                               k = k,
                               km = km,
@@ -1387,6 +1389,8 @@ get_bubbletree_louvain <- function(x,
               louvain_algorithm = louvain_algorithm)
 
 
+
+
   # set seed for reproducibility
   if(base::is.null(seed)==FALSE) {
     base::set.seed(seed = seed)
@@ -1477,6 +1481,7 @@ get_bubbletree_louvain <- function(x,
 
   return(base::structure(class = "bubbletree_louvain",
                          list(A = x,
+                              k = length(unique(cs)),
                               r = r,
                               ph = ph,
                               pair_dist = pair_dist,
@@ -1486,6 +1491,306 @@ get_bubbletree_louvain <- function(x,
                               tree_meta = t$tree_meta)))
 
 }
+
+
+
+get_bubbletree_dummy <- function(x,
+                                 cs,
+                                 B = 100,
+                                 N_eff = 100,
+                                 cores = 1,
+                                 seed = NA,
+                                 round_digits = 2,
+                                 show_simple_count = F) {
+
+
+  # check input param
+  check_input <- function(x,
+                          cs,
+                          B,
+                          N_eff,
+                          cores,
+                          seed,
+                          round_digits,
+                          show_simple_count) {
+
+    # check x
+    if(is.numeric(x)==F) {
+      stop("x must be numeric matrix")
+    }
+    if(is.matrix(x)==F) {
+      stop("x must be numeric matrix")
+    }
+
+
+    # check cs
+    if(is.vector(cs)==F) {
+      stop("cs must be a vector")
+    }
+    if(length(cs)!=nrow(x)) {
+      stop("Error: length(cs) != nrow(x)")
+    }
+    if(length(unique(cs))<=1) {
+      stop("1 or 0 clusters found in vector cs")
+    }
+    if(any(is.na(cs)|is.null(cs))==T) {
+      stop("NA or NULL elements are found in cs")
+    }
+    if(any(is.na(cs)|is.null(cs))==T) {
+      stop("NA or NULL elements are found in cs")
+    }
+
+
+    # check B
+    if(is.numeric(B)==F) {
+      stop("B must be a positive integer")
+    }
+    if(length(B)!=1) {
+      stop("B must be a positive integer")
+    }
+    if(B<=0) {
+      stop("B must be a positive integer")
+    }
+
+
+    # check N_eff
+    if(is.numeric(N_eff)==F) {
+      stop("N_eff must be a positive integer")
+    }
+    if(length(N_eff) != 1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff<=0) {
+      stop("N_eff must be a positive integer")
+    }
+
+
+    # check cores
+    if(is.numeric(cores)==F) {
+      stop("cores must be a positive integer")
+    }
+    if(length(cores)!=1) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<=0) {
+      stop("cores must be a positive integer")
+    }
+
+
+    # check seed
+    if(is.numeric(seed)==F) {
+      stop("seed must be a positive integer")
+    }
+    if(length(seed)!=1) {
+      stop("seed must be a positive integer")
+    }
+    if(seed<=0) {
+      stop("seed must be a positive integer")
+    }
+
+
+
+    # check round_digits
+    if(is.numeric(round_digits)==F) {
+      stop("round_digits must be a positive integer")
+    }
+    if(length(round_digits)!=1) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits<0) {
+      stop("round_digits must be a positive integer")
+    }
+
+
+    # show_simple_count
+    if(length(show_simple_count)!=1) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+    if(is.logical(show_simple_count)==F) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+  }
+
+
+  # set seed for reproducibility
+  if(is.na(seed) == F) {
+    set.seed(seed = seed)
+  }
+  else {
+    seed <- base::sample(x = 1:10^6, size = 1)
+    set.seed(seed = seed)
+  }
+
+
+  # check inputs
+  check_input(x = x,
+              cs = cs,
+              B = B,
+              N_eff = N_eff,
+              cores = cores,
+              seed = seed,
+              round_digits = round_digits,
+              show_simple_count = show_simple_count)
+
+
+  # pairwise distances
+  cat("Generating bubbletree ... \n")
+  pair_dist <- get_dist(B = B,
+                        m = x,
+                        c = cs,
+                        N_eff = N_eff,
+                        cores = cores)
+
+  # compute hierarchical clustering dendrogram
+  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
+                       formula = c_i~c_j,
+                       value.var = "M")
+  d <- stats::as.dist(d)
+  hc <- stats::hclust(d, method = "average")
+  ph <- ape::as.phylo(x = hc)
+  ph <- ape::unroot(phy = ph)
+
+  # get branch support
+  ph <- get_ph_support(main_ph = ph,
+                       x = pair_dist$raw_pair_dist)
+
+  # build treetree
+  t <- get_dendrogram(ph = ph$main_ph,
+                      cluster = cs,
+                      round_digits = round_digits,
+                      show_simple_count = show_simple_count)
+
+  # collect input parameters: can be used for automated update
+  input_par <- list(n_start = NA,
+                    iter_max = NA,
+                    N_eff = N_eff,
+                    B = B,
+                    seed = seed,
+                    round_digits = round_digits,
+                    show_simple_count = show_simple_count,
+                    kmeans_algorithm = NA)
+
+
+  return(base::structure(class = "bubbletree_dummy",
+                         list(A = x,
+                              k = length(unique(cs)),
+                              km = NULL,
+                              ph = ph,
+                              pair_dist = pair_dist,
+                              cluster = cs,
+                              input_par = input_par,
+                              tree = t$tree,
+                              tree_meta = t$tree_meta)))
+}
+
+
+
+
+get_gini <- function(labels, clusters) {
+
+
+  # check input param
+  check_input <- function(labels, clusters) {
+
+    # check labels
+    if(base::missing(labels)==TRUE) {
+      stop("labels is missing")
+    }
+    if(base::length(labels)<=1) {
+      stop("labels must be a vector with more than one element")
+    }
+    if(base::is.character(labels)==FALSE&
+       base::is.numeric(labels)==FALSE) {
+      stop("labels can only contain characters or numbers")
+    }
+    if(base::is.vector(labels)==F) {
+      stop("labels must be a vector")
+    }
+    if(base::any(base::is.infinite(labels))==TRUE) {
+      stop("labels cannot have INF/NA/NULL values")
+    }
+    if(base::any(base::is.na(labels))==TRUE) {
+      stop("labels cannot have INF/NA/NULL values")
+    }
+    if(base::any(base::is.null(labels))==TRUE) {
+      stop("labels cannot have INF/NA/NULL values")
+    }
+
+
+    # check clusters
+    if(base::missing(clusters)==TRUE) {
+      stop("clusters is missing")
+    }
+    if(base::length(clusters)<=1) {
+      stop("clusters must be a vector with more than one element")
+    }
+    if(base::is.character(clusters)==FALSE&
+       base::is.numeric(clusters)==FALSE) {
+      stop("clusters can only contain characters or numbers")
+    }
+    if(base::is.vector(clusters)==F) {
+      stop("clusters must be a vector")
+    }
+    if(base::any(base::is.infinite(clusters))==TRUE) {
+      stop("clusters cannot have INF/NA/NULL values")
+    }
+    if(base::any(base::is.na(clusters))==TRUE) {
+      stop("clusters cannot have INF/NA/NULL values")
+    }
+    if(base::any(base::is.null(clusters))==TRUE) {
+      stop("clusters cannot have INF/NA/NULL values")
+    }
+
+    if(base::length(labels)!=base::length(clusters)) {
+      stop("labels and clusters must be equal-length vectors")
+    }
+  }
+
+
+  get_gi <- function(c, l) {
+    ls <- base::unique(l)
+    l_len <- base::length(l)
+    s <- 0
+    for(i in 1:base::length(ls)) {
+      s <- s + (base::sum(l == ls[i])/l_len)^2
+    }
+    return(s)
+  }
+
+
+  # check inputs
+  check_input(labels = labels,
+              clusters = clusters)
+
+
+  cs <- base::unique(clusters)
+
+  # for each cluster we get gini-index
+  gi <- base::numeric(length = base::length(cs))
+  base::names(gi) <- cs
+
+  # cluster weights used to compute total gini
+  wgi <- base::numeric(length = base::length(cs))
+  base::names(wgi) <- cs
+
+  for(i in 1:base::length(cs)) {
+    j <- base::which(clusters == cs[i])
+    wgi[i] <- base::length(j)/base::length(clusters)
+    gi[i] <- 1-get_gi(c = clusters[j], l = labels[j])
+  }
+
+  # compute WGI
+  wgi = base::sum(gi*wgi)
+
+  # convert to data.frame for better plotting
+  gi <- base::data.frame(cluster = names(gi),
+                         GI = as.numeric(gi))
+
+  return(base::list(gi = gi, wgi = wgi))
+}
+
+
+
 
 
 
@@ -1672,300 +1977,6 @@ update_bubbletree <- function(btd,
 
 
 
-get_bubbletree_dummy <- function(x,
-                                 cs,
-                                 B = 100,
-                                 N_eff = 100,
-                                 cores = 1,
-                                 seed = NA,
-                                 round_digits = 2,
-                                 show_simple_count = F) {
-
-
-  # check input param
-  check_input <- function(x,
-                          cs,
-                          B,
-                          N_eff,
-                          cores,
-                          seed,
-                          round_digits,
-                          show_simple_count) {
-
-    # check x
-    if(is.numeric(x)==F) {
-      stop("x must be numeric matrix")
-    }
-    if(is.matrix(x)==F) {
-      stop("x must be numeric matrix")
-    }
-
-
-    # check cs
-    if(is.vector(cs)==F) {
-      stop("cs must be a vector")
-    }
-    if(length(cs)!=nrow(x)) {
-      stop("Error: length(cs) != nrow(x)")
-    }
-    if(length(unique(cs))<=1) {
-      stop("1 or 0 clusters found in vector cs")
-    }
-    if(any(is.na(cs)|is.null(cs))==T) {
-      stop("NA or NULL elements are found in cs")
-    }
-    if(any(is.na(cs)|is.null(cs))==T) {
-      stop("NA or NULL elements are found in cs")
-    }
-
-
-    # check B
-    if(is.numeric(B)==F) {
-      stop("B must be a positive integer")
-    }
-    if(length(B)!=1) {
-      stop("B must be a positive integer")
-    }
-    if(B<=0) {
-      stop("B must be a positive integer")
-    }
-
-
-    # check N_eff
-    if(is.numeric(N_eff)==F) {
-      stop("N_eff must be a positive integer")
-    }
-    if(length(N_eff) != 1) {
-      stop("N_eff must be a positive integer")
-    }
-    if(N_eff<=0) {
-      stop("N_eff must be a positive integer")
-    }
-
-
-    # check cores
-    if(is.numeric(cores)==F) {
-      stop("cores must be a positive integer")
-    }
-    if(length(cores)!=1) {
-      stop("cores must be a positive integer")
-    }
-    if(cores<=0) {
-      stop("cores must be a positive integer")
-    }
-
-
-    # check seed
-    if(is.numeric(seed)==F) {
-      stop("seed must be a positive integer")
-    }
-    if(length(seed)!=1) {
-      stop("seed must be a positive integer")
-    }
-    if(seed<=0) {
-      stop("seed must be a positive integer")
-    }
-
-
-
-    # check round_digits
-    if(is.numeric(round_digits)==F) {
-      stop("round_digits must be a positive integer")
-    }
-    if(length(round_digits)!=1) {
-      stop("round_digits must be a positive integer")
-    }
-    if(round_digits<0) {
-      stop("round_digits must be a positive integer")
-    }
-
-
-    # show_simple_count
-    if(length(show_simple_count)!=1) {
-      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
-    }
-    if(is.logical(show_simple_count)==F) {
-      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
-    }
-  }
-
-
-  # set seed for reproducibility
-  if(is.na(seed) == F) {
-    set.seed(seed = seed)
-  }
-  else {
-    seed <- base::sample(x = 1:10^6, size = 1)
-    set.seed(seed = seed)
-  }
-
-
-  # check inputs
-  check_input(x = x,
-              cs = cs,
-              B = B,
-              N_eff = N_eff,
-              cores = cores,
-              seed = seed,
-              round_digits = round_digits,
-              show_simple_count = show_simple_count)
-
-
-  # pairwise distances
-  cat("Generating bubbletree ... \n")
-  pair_dist <- get_dist(B = B,
-                        m = x,
-                        c = cs,
-                        N_eff = N_eff,
-                        cores = cores)
-
-  # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
-                       formula = c_i~c_j,
-                       value.var = "M")
-  d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = "average")
-  ph <- ape::as.phylo(x = hc)
-  ph <- ape::unroot(phy = ph)
-
-  # get branch support
-  ph <- get_ph_support(main_ph = ph,
-                       x = pair_dist$raw_pair_dist)
-
-  # build treetree
-  t <- get_dendrogram(ph = ph$main_ph,
-                      cluster = cs,
-                      round_digits = round_digits,
-                      show_simple_count = show_simple_count)
-
-  # collect input parameters: can be used for automated update
-  input_par <- list(n_start = NA,
-                    iter_max = NA,
-                    N_eff = N_eff,
-                    B = B,
-                    seed = seed,
-                    round_digits = round_digits,
-                    show_simple_count = show_simple_count,
-                    kmeans_algorithm = NA)
-
-
-  return(base::structure(class = "dummy_bubbletree",
-                         list(A = x,
-                              k = length(unique(cs)),
-                              km = NULL,
-                              ph = ph,
-                              pair_dist = pair_dist,
-                              cluster = cs,
-                              input_par = input_par,
-                              tree = t$tree,
-                              tree_meta = t$tree_meta)))
-}
-
-
-
-
-get_gini <- function(labels, clusters) {
-
-
-  # check input param
-  check_input <- function(labels, clusters) {
-
-    # check labels
-    if(base::missing(labels)==TRUE) {
-      stop("labels is missing")
-    }
-    if(base::length(labels)<=1) {
-      stop("labels must be a vector with more than one element")
-    }
-    if(base::is.character(labels)==FALSE&
-       base::is.numeric(labels)==FALSE) {
-      stop("labels can only contain characters or numbers")
-    }
-    if(base::is.vector(labels)==F) {
-      stop("labels must be a vector")
-    }
-    if(base::any(base::is.infinite(labels))==TRUE) {
-      stop("labels cannot have INF/NA/NULL values")
-    }
-    if(base::any(base::is.na(labels))==TRUE) {
-      stop("labels cannot have INF/NA/NULL values")
-    }
-    if(base::any(base::is.null(labels))==TRUE) {
-      stop("labels cannot have INF/NA/NULL values")
-    }
-
-
-    # check clusters
-    if(base::missing(clusters)==TRUE) {
-      stop("clusters is missing")
-    }
-    if(base::length(clusters)<=1) {
-      stop("clusters must be a vector with more than one element")
-    }
-    if(base::is.character(clusters)==FALSE&
-       base::is.numeric(clusters)==FALSE) {
-      stop("clusters can only contain characters or numbers")
-    }
-    if(base::is.vector(clusters)==F) {
-      stop("clusters must be a vector")
-    }
-    if(base::any(base::is.infinite(clusters))==TRUE) {
-      stop("clusters cannot have INF/NA/NULL values")
-    }
-    if(base::any(base::is.na(clusters))==TRUE) {
-      stop("clusters cannot have INF/NA/NULL values")
-    }
-    if(base::any(base::is.null(clusters))==TRUE) {
-      stop("clusters cannot have INF/NA/NULL values")
-    }
-
-    if(base::length(labels)!=base::length(clusters)) {
-      stop("labels and clusters must be equal-length vectors")
-    }
-  }
-
-
-  get_gi <- function(c, l) {
-    ls <- base::unique(l)
-    l_len <- base::length(l)
-    s <- 0
-    for(i in 1:base::length(ls)) {
-      s <- s + (base::sum(l == ls[i])/l_len)^2
-    }
-    return(s)
-  }
-
-
-  # check inputs
-  check_input(labels = labels,
-              clusters = clusters)
-
-
-  cs <- base::unique(clusters)
-
-  # for each cluster we get gini-index
-  gi <- base::numeric(length = base::length(cs))
-  base::names(gi) <- cs
-
-  # cluster weights used to compute total gini
-  wgi <- base::numeric(length = base::length(cs))
-  base::names(wgi) <- cs
-
-  for(i in 1:base::length(cs)) {
-    j <- base::which(clusters == cs[i])
-    wgi[i] <- base::length(j)/base::length(clusters)
-    gi[i] <- 1-get_gi(c = clusters[j], l = labels[j])
-  }
-
-  # compute WGI
-  wgi = base::sum(gi*wgi)
-
-  # convert to data.frame for better plotting
-  gi <- base::data.frame(cluster = names(gi),
-                         GI = as.numeric(gi))
-
-  return(base::list(gi = gi, wgi = wgi))
-}
 
 
 
@@ -2005,7 +2016,7 @@ get_gini_k <- function(labels, k_obj) {
        base::is.null(k_obj)||
        base::is.na(class(k_obj))||
        base::is.null(class(k_obj))||
-       base::class(k_obj)!="boot_k") {
+       base::class(k_obj) %in% c("boot_k", "boot_r")==FALSE) {
       stop("problem with k_obj")
     }
 
@@ -2029,7 +2040,7 @@ get_gini_k <- function(labels, k_obj) {
   cluster_o <- base::vector(mode = "list", length = base::length(ks))
   counter <- 1
   for(j in 1:length(ks)) {
-    gini <- get_gini(clusters = k_obj$boot_obj$obj[[ks[j]]]$cluster,
+    gini <- get_gini(clusters = k_obj$boot_obj$obj[[ks[j]]],
                      labels = labels)
 
     # total
