@@ -2040,16 +2040,17 @@ get_gini_k <- function(labels, k_obj) {
   cluster_o <- base::vector(mode = "list", length = base::length(ks))
   counter <- 1
   for(j in 1:length(ks)) {
-    gini <- get_gini(clusters = k_obj$boot_obj$obj[[ks[j]]],
-                     labels = labels)
+    cs <- k_obj$boot_obj$obj[[ks[j]]]
+
+    gini <- get_gini(clusters = cs, labels = labels)
 
     # total
-    total_o[[counter]] <- base::data.frame(k = as.numeric(ks[j]),
+    total_o[[counter]] <- base::data.frame(k = length(unique(cs)),
                                            wgi = gini$wgi)
     # cluster
     gini$gi
     cluster_o[[counter]] <- gini$gi
-    cluster_o[[counter]]$k <- as.numeric(ks[j])
+    cluster_o[[counter]]$k <- length(unique(cs))
 
     counter <- counter + 1
   }
