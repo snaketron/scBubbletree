@@ -33,13 +33,13 @@ library(ggrepel)
 
 
 ```{r, echo = F, results='hide'}
-library(scBubbletree)
+library(scBubbletree, lib.loc = lib.loc)
 library(Seurat, lib.loc = lib.loc)
 library(ggrepel, lib.loc = lib.loc)
 library(reprex, lib.loc = lib.loc)
 library(tidyverse, lib.loc = lib.loc)
 # devtools::install_github("PaulingLiu/ROGUE")
-library(ROGUE, lib.loc = lib.loc)
+# library(ROGUE, lib.loc = lib.loc)
 ```
 
 
@@ -173,14 +173,26 @@ on the Gap statistic and the within-cluster sum of squares (WCSS).
   
 Lets run `get_k` now:
 
+
 ```{r, echo = T, eval = T}
-b <- get_k(B = 3, # number of bootstrap iterations  
-           cv_prop = 1, # use 100% of the rows (cells) in A in each iteration
-           ks = seq(from = 1, to = 40, by = 2), # ks to test
-           x = A, # main input A
-           n_start = 100,  # number of starts in k-means
-           iter_max = 200, # maximum number of iterations in k-means
-           kmeans_algorithm = "MacQueen",  # k-means variant
+b_k <- get_k(ks = 1:30,
+             x = A,
+             B_gap = 20,
+             kmeans_algorithm = "MacQueen",
+             n_start = 100,  # number of starts
+             iter_max = 200, # maximum number of iterations
+             cores = 20) # number of cores
+```
+
+and also `get_r`:
+
+```{r, echo = T, eval = T}
+b_r <- get_r(rs = 10^seq(from = -4, to = 1, by = 0.2), #rs to test
+           x = A,
+           B_gap = 20,
+           louvain_algorithm = "original",
+           n_start = 20,  # number of starts 
+           iter_max = 100, # maximum number of iterations
            cores = 20) # number of cores
 ```
 
@@ -190,16 +202,14 @@ Hence, $k$=11 appears to be reasonable first choice of $k$. Means and 95%
 confidence intervals are shown for the metrics (panels) at each $k$.
 
 ```{r, echo=T, eval=T}
-g0 <- ggplot(data = b$gap_stats_summary)+
+g0 <- ggplot(data = b_r$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
   ylab(label = "Gap")|
-ggplot(data = b$wcss_stats_summary)+
-  geom_point(aes(x = k, y = wcss_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = wcss_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ylab(label = "WCSS")+
-  scale_y_log10()+
-  annotation_logticks(base = 10, sides = "l")
+   ggplot(data = b_k$gap_stats_summary)+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  ylab(label = "Gap")
 ```
 
 
@@ -237,15 +247,18 @@ described quantitatively in the bubbletree as sums of branch lengths.
 Steps 2. and 3. are performed next
 
 ```{r, echo=T, eval=T}
-k11 <- get_bubbletree(x = A, # main input
-                       k = 11, # number of clusters
-                       seed = 1234, # seed for reproducible results
-                       cores = 1, # number of cores
-                       B = 200, # number of bootstraps
-                       N_eff = 200, # number of cells for distance comp.
-                       round_digits = 1, # rounding relative frequencies
-                       show_simple_count = F, # divide bubble counts by 1,000?
-                       kmeans_algorithm = "MacQueen") # k-means variant
+k6_louvain <- get_bubbletree_louvain(
+  x = A, # main input
+  r = 0.4,
+  n_start = 20,
+  iter_max = 100,
+  louvain_algorithm = "original",
+  B = 200,
+  N_eff = 200,
+  cores = 20,
+  seed = 1234,
+  round_digits = 2,
+  show_simple_count = F) 
 ```
 
 
@@ -254,7 +267,7 @@ k11 <- get_bubbletree(x = A, # main input
 ... and plot the bubbletree
 
 ```{r, fig.width=4, fig.height=4, fig.align='center', echo=T}
-k11$tree
+k6_louvain$tree
 ```
 
 
@@ -273,7 +286,7 @@ contain 7 (0.3%) and 13 (0.5%) of the sample cells, respectively.
 We can access the bubble data shown in the bubbletree
 
 ```{r, echo=T, results=T}
-knitr::kable(k11$tree_meta, digits = 2, row.names = F)
+knitr::kable(k6_louvain$tree_meta, digits = 2, row.names = F)
 ```
 
 **topology**: inter-bubble distances are represented by sums of the 
@@ -330,7 +343,7 @@ and DCs, and the outgroup bubbles (6 and 12) have high expression of PPBP
 (platelet marker). Bubble 3 expresses markers of proliferating lymphocytes.
 
 ```{r, fig.width=9, fig.height=4.5, fig.align='center', echo=T}
-w1 <- get_num_tiles(btd = k11,
+w1 <- get_num_tiles(btd = k6_louvain,
                     fs = fs,
                     summary_function = "mean",
                     show_hclust = F,
@@ -340,7 +353,7 @@ w1 <- get_num_tiles(btd = k11,
                     round_digits = 1,
                     tile_text_size = 2.75)
 
-(k11$tree|w1$plot)+
+(k6_louvain$tree|w1$plot)+
   patchwork::plot_layout(widths = c(1, 1))
 ```
 
@@ -348,12 +361,12 @@ Second, we can visualize the distributions of the numeric cell features in each
 bubble as violins with `get_num_violins`
 
 ```{r, fig.width=10, fig.height=4.5, fig.align='center', echo=T}
-w2 <- get_num_violins(btd = k11,
+w2 <- get_num_violins(btd = k6_louvain,
                       fs = fs,
                       x_axis_name = 'Gene expression',
                       rotate_x_axis_labels = T)
 
-(k11$tree|w2$plot)+
+(k6_louvain$tree|w2$plot)+
   patchwork::plot_layout(widths = c(1, 3))
 ```
 
@@ -362,23 +375,23 @@ w2 <- get_num_violins(btd = k11,
 What is the percent of UMIs coming from mitochondrial genes in each bubble? 
 
 ```{r, fig.width=10, fig.height=4.5, fig.align='center', echo=T}
-w_mt_dist <- get_num_violins(btd = k11,
+w_mt_dist <- get_num_violins(btd = k6_louvain,
                              fs = pbmc@meta.data$percent.mt,
                              x_axis_name = 'MT [%]',
                              rotate_x_axis_labels = T)
 
-w_umi_dist <- get_num_violins(btd = k11,
+w_umi_dist <- get_num_violins(btd = k6_louvain,
                               fs = pbmc@meta.data$nCount_RNA/1000,
                               x_axis_name = 'RNA count (in thousands)',
                               rotate_x_axis_labels = T)
 
-w_gene_dist <- get_num_violins(btd = k11,
+w_gene_dist <- get_num_violins(btd = k6_louvain,
                                fs = pbmc@meta.data$nFeature_RNA,
                                x_axis_name = 'Gene count',
                                rotate_x_axis_labels = T)
 
 
-(k11$tree|w_mt_dist$plot|w_umi_dist$plot|w_gene_dist$plot)+
+(k6_louvain$tree|w_mt_dist$plot|w_umi_dist$plot|w_gene_dist$plot)+
   patchwork::plot_layout(widths = c(1, 1, 1, 1))+
   patchwork::plot_annotation(tag_levels = 'A')
 ```
@@ -393,7 +406,7 @@ Generating 2D UMAP and t-SNE plots is a standard first step in scRNA-seq data
 analysis. Lets do this now:
 
 ```{r, fig.width=8, fig.height=3.25, fig.align='center', echo = T}
-pbmc@meta.data$bubble <- as.character(k11$cluster)
+pbmc@meta.data$bubble <- as.character(k6_louvain$cluster)
 
 umap_data <- cbind(pbmc@meta.data, pbmc@reductions$umap@cell.embeddings)
 umap_data$closest_cluster <- NA
@@ -524,43 +537,43 @@ g_pairs_umap_tsne
 
 
 
-# ROGUE bubble purity
+<!-- # ROGUE bubble purity -->
 
-```{r, echo=T, fig.width=5, fig.height=4, fig.align='center'}
-se <- ROGUE::SE_fun(expr = pbmc@assays$RNA@counts)
-ROGUE::SEplot(.x = se)
-```
-
-
-```{r, echo=T}
-rogue_value <- ROGUE::CalculateRogue(se, platform = "UMI")
-rogue_value
-```
-
-```{r, echo=T, fig.width=6, fig.height=4, fig.align='center'}
-pbmc@meta.data$sample <- "S"
-rogue_res <- ROGUE::rogue(expr = pbmc@assays$RNA@counts,
-                          labels = pbmc@meta.data$bubble,
-                          samples = pbmc@meta.data$sample,
-                          platform = "UMI",
-                          span = 0.6,
-                          min.cell.n = 5)
-
-ROGUE::rogue.boxplot(rogue_res)
-```
+<!-- ```{r, echo=T, fig.width=5, fig.height=4, fig.align='center'} -->
+<!-- se <- ROGUE::SE_fun(expr = pbmc@assays$RNA@counts) -->
+<!-- ROGUE::SEplot(.x = se) -->
+<!-- ``` -->
 
 
-# Playing around with methods to find optimal $k$
+<!-- ```{r, echo=T} -->
+<!-- rogue_value <- ROGUE::CalculateRogue(se, platform = "UMI") -->
+<!-- rogue_value -->
+<!-- ``` -->
 
-```{r}
-require(NbClust, lib.loc)
-nbclust_out <- NbClust(data = A, distance = "euclidean", method = "kmeans",
-                       min.nc = 2, max.nc = 30, index = "all", 
-                       alphaBeale = 0.1)
+<!-- ```{r, echo=T, fig.width=6, fig.height=4, fig.align='center'} -->
+<!-- pbmc@meta.data$sample <- "S" -->
+<!-- rogue_res <- ROGUE::rogue(expr = pbmc@assays$RNA@counts, -->
+<!--                           labels = pbmc@meta.data$bubble, -->
+<!--                           samples = pbmc@meta.data$sample, -->
+<!--                           platform = "UMI", -->
+<!--                           span = 0.6, -->
+<!--                           min.cell.n = 5) -->
 
-nbclust_out_gap <- NbClust(data = A, distance = "euclidean", method = "kmeans",
-                       min.nc = 2, max.nc = 30, index = "gap", alphaBeale = 0.1)
-```
+<!-- ROGUE::rogue.boxplot(rogue_res) -->
+<!-- ``` -->
+
+
+<!-- # Playing around with methods to find optimal $k$ -->
+
+<!-- ```{r} -->
+<!-- require(NbClust, lib.loc) -->
+<!-- nbclust_out <- NbClust(data = A, distance = "euclidean", method = "kmeans", -->
+<!--                        min.nc = 2, max.nc = 30, index = "all",  -->
+<!--                        alphaBeale = 0.1) -->
+
+<!-- nbclust_out_gap <- NbClust(data = A, distance = "euclidean", method = "kmeans", -->
+<!--                        min.nc = 2, max.nc = 30, index = "gap", alphaBeale = 0.1) -->
+<!-- ``` -->
 
 
 
