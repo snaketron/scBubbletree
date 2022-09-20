@@ -1,5 +1,6 @@
 
 
+
 get_k <- function(x,
                   ks,
                   B_gap = 20,
@@ -21,6 +22,9 @@ get_k <- function(x,
     # check x
     if(base::missing(x)==TRUE) {
       stop("x input not found")
+    }
+    if(base::class(x)=="SummarizedExperiment") {
+      x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
@@ -388,6 +392,7 @@ get_k <- function(x,
 
 
 
+
 get_r <- function(x,
                   rs,
                   B_gap = 20,
@@ -396,6 +401,208 @@ get_r <- function(x,
                   louvain_algorithm = "original",
                   cores = 1) {
 
+
+  # check input param
+  check_input <- function(B_gap,
+                          rs,
+                          x,
+                          n_start,
+                          iter_max,
+                          cores,
+                          louvain_algorithm) {
+
+    # check x
+    if(base::missing(x)==TRUE) {
+      stop("x input not found")
+    }
+    if(base::class(x)=="SummarizedExperiment") {
+      x <- x@assays@data@listData
+    }
+    if(base::is.numeric(x)==FALSE) {
+      stop("x must be numeric matrix")
+    }
+    if(base::is.matrix(x)==FALSE) {
+      stop("x must be numeric matrix")
+    }
+    if(base::any(base::is.infinite(x))==TRUE) {
+      stop("x must be numeric matrix, infinite values not allowed")
+    }
+    if(base::any(base::is.na(x))==TRUE) {
+      stop("x must be numeric matrix, NAs not allowed")
+    }
+    if(base::any(base::is.null(x))==TRUE) {
+      stop("x must be numeric matrix, NULLs not allowed")
+    }
+    if(base::all(x == x[1,1])==TRUE) {
+      stop("all elements in x are identical")
+    }
+    if(base::ncol(x)>base::nrow(x)) {
+      warning("more columns (features) than rows (cells) in x")
+    }
+
+
+
+
+    # check B_gap
+    if(base::missing(B_gap)==TRUE) {
+      stop("B_gap input not found")
+    }
+    if(base::is.numeric(B_gap)==FALSE) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(base::length(B_gap)!=1) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(B_gap<1) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(base::is.infinite(B_gap)==TRUE) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(base::is.na(B_gap)==TRUE) {
+      stop("B_gap must be a positive integer > 0")
+    }
+    if(B_gap%%1!=0) {
+      stop("B_gap must be a positive integer > 0")
+    }
+
+
+
+    # check rs
+    if(base::missing(rs)==TRUE) {
+      stop("rs input not found")
+    }
+    if(base::is.numeric(rs)==FALSE) {
+      stop("rs must be a positive integer or vector of positive numbers")
+    }
+    if(base::is.vector(x = rs)==FALSE) {
+      stop("rs must be a positive integer or vector of positive numbers")
+    }
+    if(base::length(rs)<=0) {
+      stop("rs must be a positive integer or vector of positive numbers")
+    }
+    if(base::any(base::is.infinite(rs))==TRUE) {
+      stop("rs must be a positive integer or vector of positive numbers,
+           no infinite values are allowed")
+    }
+    if(base::any(base::is.na(rs))==TRUE) {
+      stop("rs must be a positive integer or vector of positive numbers,
+           no NAs are allowed")
+    }
+    if(base::any(base::is.null(rs))==TRUE) {
+      stop("rs must be a positive integer or vector of positive numbers,
+           no NULLs are allowed")
+    }
+    if(base::any(rs<0)==TRUE) {
+      stop("rs must be a positive integer or vector of positive numbers")
+    }
+    if(base::any(base::duplicated(rs))==TRUE) {
+      stop("ks must be a positive integer or vector of positive numbers,
+           duplicate r values are not allowed")
+    }
+    if(base::length(rs)==1) {
+      stop("rs must be a positive number or vector of positive numbers")
+    }
+
+
+
+    # check cores
+    if(base::missing(cores)==TRUE) {
+      stop("cores input not found")
+    }
+    if(base::is.numeric(cores)==FALSE) {
+      stop("cores must be a positive integer")
+    }
+    if(base::length(cores)!=1) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.infinite(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(base::is.na(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<1) {
+      stop("cores must be a positive integer")
+    }
+    if(cores%%1!=0) {
+      stop("cores must be a positive integer")
+    }
+
+
+
+    # n_start
+    if(base::missing(n_start)==TRUE) {
+      stop("n_start input not found")
+    }
+    if(base::is.numeric(n_start)==FALSE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::length(n_start) != 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start < 1) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.infinite(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.na(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(base::is.null(n_start)==TRUE) {
+      stop("n_start must be a positive integer")
+    }
+    if(n_start%%1!=0) {
+      stop("n_start must be a positive integer")
+    }
+
+
+
+    # iter_max
+    if(base::missing(iter_max)==TRUE) {
+      stop("iter_max input not found")
+    }
+    if(base::is.numeric(iter_max)==FALSE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::length(iter_max)!=1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max<1) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.infinite(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.na(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(base::is.null(iter_max)==TRUE) {
+      stop("iter_max must be a positive integer")
+    }
+    if(iter_max%%1!=0) {
+      stop("iter_max must be a positive integer")
+    }
+
+
+    # louvain_algorithm
+    if(base::missing(louvain_algorithm)==TRUE) {
+      stop("louvain_algorithm input not found")
+    }
+    if(base::length(louvain_algorithm)!=1) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+    if(base::is.character(louvain_algorithm)==FALSE) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+    if(louvain_algorithm %in% c("original", "LMR", "SLM", "Leiden")==FALSE) {
+      stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
+    }
+  }
 
 
   get_wcss <- function(x, l) {
@@ -543,6 +750,18 @@ get_r <- function(x,
 
   # sort rs, smallest r first, largest r last
   rs <- base::sort(rs, decreasing = F)
+
+
+
+  # check input
+  check_input(B_gap = B_gap,
+              rs = rs,
+              x = x,
+              n_start = n_start,
+              iter_max = iter_max,
+              cores = cores,
+              louvain_algorithm = louvain_algorithm)
+
 
 
   # create Knn graph
@@ -708,6 +927,9 @@ get_bubbletree_kmeans <- function(x,
     # check x
     if(base::missing(x)==TRUE) {
       stop("x input not found")
+    }
+    if(base::class(x)=="SummarizedExperiment") {
+      x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
@@ -1114,6 +1336,9 @@ get_bubbletree_louvain <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
+    if(base::class(x)=="SummarizedExperiment") {
+      x <- x@assays@data@listData
+    }
     if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
     }
@@ -1494,6 +1719,7 @@ get_bubbletree_louvain <- function(x,
 
 
 
+
 get_bubbletree_dummy <- function(x,
                                  cs,
                                  B = 100,
@@ -1517,6 +1743,9 @@ get_bubbletree_dummy <- function(x,
     # check x
     if(is.numeric(x)==F) {
       stop("x must be numeric matrix")
+    }
+    if(base::class(x)=="SummarizedExperiment") {
+      x <- x@assays@data@listData
     }
     if(is.matrix(x)==F) {
       stop("x must be numeric matrix")
@@ -1686,6 +1915,7 @@ get_bubbletree_dummy <- function(x,
 
 
 
+
 get_gini <- function(labels, clusters) {
 
 
@@ -1789,191 +2019,6 @@ get_gini <- function(labels, clusters) {
   return(base::list(gi = gi, wgi = wgi))
 }
 
-
-
-
-
-
-# Not exported at the moment.
-update_bubbletree <- function(btd,
-                              updated_bubbles,
-                              k,
-                              cores = 1) {
-
-  # check input param
-  check_input <- function(btd,
-                          updated_bubbles,
-                          k,
-                          cores = 1) {
-
-    # check btd
-    if(is.na(btd)||is.null(btd)||is.na(class(btd))||
-       is.null(class(btd))||class(btd)!="bubbletree") {
-      stop("problem with the input bubbletree")
-    }
-
-    if(is.vector(btd$cluster)==F||
-       is.na(is.vector(btd$cluster))||
-       is.null(is.vector(btd$cluster))) {
-      stop("no clustering results in bubbletree")
-    }
-
-    # check k
-    if(is.numeric(k)==F) {
-      stop("k must be a positive integer")
-    }
-    if(length(k)!=1) {
-      stop("k must be a positive integer")
-    }
-    if(k<=0) {
-      stop("k must be a positive integer")
-    }
-
-
-    if(is.vector(updated_bubbles)==F & length(updated_bubbles)==0) {
-      stop("updated_bubbles should be a vector of positive integers")
-    }
-    if(length(updated_bubbles) >= k) {
-      stop("k must be larger than the number of updated_bubbles")
-    }
-
-
-    if(all(updated_bubbles %in% unique(btd$cluster))==F) {
-      stop(paste0("not all bubbles to be updated are found in bubbletree\n",
-                  "bubbles to be updated:", paste0(updated_bubbles, collapse = ','), "\n",
-                  "bubbles present:", paste0(unique(btd$cluster), collapse = ','), "\n"))
-    }
-
-
-    # check cores
-    if(is.numeric(cores)==F) {
-      stop("cores must be a positive integer")
-    }
-    if(length(cores)!=1) {
-      stop("cores must be a positive integer")
-    }
-    if(cores<=0) {
-      stop("cores must be a positive integer")
-    }
-
-
-    # kmeans_algorithm
-    if(length(kmeans_algorithm) != 1) {
-      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
-    }
-    if(kmeans_algorithm %in% c("Hartigan-Wong", "Lloyd", "Forgy",
-                               "MacQueen") == F) {
-      stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
-    }
-  }
-
-  update_bubbles <- function(A,
-                             k,
-                             n_start,
-                             iter_max,
-                             kmeans_algorithm) {
-
-    # perform k-means clustering
-    km <- stats::kmeans(x = A,
-                        centers = k,
-                        nstart = n_start,
-                        iter.max = iter_max,
-                        algorithm = kmeans_algorithm)
-
-    return(km)
-
-  }
-
-
-  # get input from previous bubbletree data
-  A <- btd$A
-  n_start <- btd$input_par$n_start
-  iter_max <- btd$input_par$iter_max
-  N_eff <- btd$input_par$N_eff
-  B <- btd$input_par$B
-  round_digits <- btd$input_par$round_digits
-  show_simple_count <- btd$input_par$show_simple_count
-  seed <- btd$input_par$seed
-  kmeans_algorithm <- btd$input_par$kmeans_algorithm
-  update_iteration <- btd$input_par$update_iteration
-
-
-  # set seed for reproducibility
-  if(is.na(seed) == F) {
-    set.seed(seed = seed)
-  }
-
-  # check input
-  check_input(btd = btd,
-              updated_bubbles = updated_bubbles,
-              k = k,
-              cores = cores)
-
-
-  # loop around updated_bubbles
-  cat("Updating bubble ... \n")
-  j <- which(btd$cluster %in% updated_bubbles)
-
-  # run update
-  u_kms <- update_bubbles(A = A[j,],
-                          k = k,
-                          n_start = n_start,
-                          iter_max = iter_max,
-                          kmeans_algorithm = kmeans_algorithm)
-
-
-  # update -> increase iteration
-  update_iteration <- update_iteration + 1
-
-  # update cluster naming
-  btd$cluster[j] <- paste0(update_iteration, '_',
-                           c(base::LETTERS,
-                             base::letters)[u_kms$cluster])
-
-  cat("Updating dendrogram ... \n")
-  pair_dist <- get_dist(B = B,
-                        m = A,
-                        c = btd$cluster,
-                        N_eff = N_eff,
-                        cores = cores)
-
-  # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = pair_dist$pca_pair_dist,
-                       formula = c_i~c_j,
-                       value.var = "M")
-
-  d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = "average")
-  ph <- ape::as.phylo(x = hc)
-  ph <- ape::unroot(phy = ph)
-
-  # get branch support
-  ph <- get_ph_support(main_ph = ph,
-                       x = pair_dist$raw_pair_dist)
-
-  # tree
-  t <- get_dendrogram(ph = ph$main_ph,
-                      cluster = btd$cluster,
-                      round_digits = round_digits,
-                      show_simple_count = show_simple_count)
-
-  # update iteration
-  btd$input_par$update_iteration <- update_iteration
-
-
-  return(base::structure(class = "bubbletree",
-                         list(A = A,
-                              k = length(unique(btd$cluster)),
-                              km = u_kms,
-                              ph = ph,
-                              pair_dist = pair_dist,
-                              cluster = btd$cluster,
-                              input_par = btd$input_par,
-                              tree = t$tree,
-                              tree_meta = t$tree_meta)))
-}
 
 
 
