@@ -38,8 +38,8 @@ get_num_tiles(btd,
 \arguments{
 \item{btd}{bubbletree object}
 \item{fs}{numeric vector or matrix, numeric cell features}
-\item{summary_function}{character, "mean", "median" or "sum" summaries are
-allowed}
+\item{summary_function}{character, "mean", "median" or "sum", "pct nonzero",
+"pct zero", summaries are allowed}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
 \item{show_hclust}{logical, show hierarchical dendrogram in which different
@@ -65,9 +65,16 @@ get_num_tiles uses two main inputs:
 
 The order of the cells used to generat the bubbletree (input 1.)
 should correspond to the order of cells in the vector/matrix of
-numeric cell features (input  2.)
+numeric cell features (input 2.)
 
-This function computes summaries of numeric cell feature in each bubble.
+This function computes summaries of numeric cell feature in each bubble:
+1. mean = mean of feature
+2. median = median of feature
+3. sum = sum of feature
+4. pct nonzero = sum of cells with feature > 0
+5. pct zero = sum of cells with feature = 0
+
+Important note: NA and NULL values are omitted.
 }
 
 \value{
