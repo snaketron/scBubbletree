@@ -132,7 +132,8 @@ table(d@meta.data$celltype.l1, d@meta.data$donor)
 ... and also from annotation set *l2*
 
 ```{r, echo=T}
-table(d@meta.data$celltype.l2, d@meta.data$donor)
+table(d@meta.data$celltype.l2, 
+      d@meta.data$donor)
 ```
 
 
@@ -264,24 +265,24 @@ A <- get(load(file = "case_study_B/A.RData"))
 
 
 ```{r, fig.width=4, fig.height=3, echo = T, eval=F}
-b_k <- get_k(ks = seq(from = 1, to = 40, by = 1),
-             x = A,
-             n_start = 100,
-             iter_max = 200,
-             kmeans_algorithm = "MacQueen",
-             cores = 20,
-             B_gap = 20)
+b_k <- get_k(ks = c(seq(from = 1, to = 50, by = 1), 51, 56, 72, 82, 97, 111),
+               x = A,
+               n_start = 100,
+               iter_max = 200,
+               kmeans_algorithm = "MacQueen",
+               cores = 60,
+               B_gap = 20)
 ```
 
 
 ```{r, fig.width=4, fig.height=3, echo = F, eval = T}
 if(redo_case_b) {
-  b_k <- get_k(ks = seq(from = 1, to = 40, by = 1),
+  b_k <- get_k(ks = c(seq(from = 1, to = 50, by = 1), 51, 56, 72, 82, 97, 111),
                x = A,
                n_start = 100,
                iter_max = 200,
                kmeans_algorithm = "MacQueen",
-               cores = 40,
+               cores = 60,
                B_gap = 20)
   
   if(dir.exists("case_study_B")==F) {
@@ -402,7 +403,7 @@ $k=24$ is roughly equal to the $\Delta$ between $k=24$ and $k=72$. Means
 $k$ computed using `B_gap`=20 MCMC simulations. 
 
 In summary, the Louvain algorithm suggests slightly higher $k$ than k-means.
-We get $k=24$ with resolution parameter $r\approx0.8$, which is the default 
+We get $k=24$ with resolution parameter $r\approx0.79$, which is the default 
 setting of $r$ used by the Seurat R-package.
 
 Importantly, the final choice of $k$ also depends on the intent of the 
@@ -433,7 +434,7 @@ knitr::kable(x = b_r$gap_stats_summary,
 For complex datasets it has been shown graph based methods for community 
 detection have a higher power of detecting rare and common clusters of cells 
 than k-means. Hence in the next we will proceed with Louvain clustering 
-(R-package Seurat) with $r=0.8$.
+(R-package Seurat) with $r=0.79$.
 
 There are numerous variants of the Louvain algorithm. Here we will use the 
 original implementation. We will do clustering with $n_{start} = 20$ random 
@@ -463,8 +464,8 @@ Steps 2. and 3. are performed next
 
 
 ```{r, echo=T, eval=F}
-k25_louvain <- get_bubbletree_louvain(x = A,
-                                      r = 0.8,
+k24_louvain <- get_bubbletree_louvain(x = A,
+                                      r = 0.79,
                                       n_start = 20,
                                       iter_max = 100,
                                       louvain_algorithm = "original",
@@ -473,7 +474,7 @@ k25_louvain <- get_bubbletree_louvain(x = A,
                                       B = 200,
                                       N_eff = 200,
                                       round_digits = 1,
-                                      show_simple_count = F)
+                                      show_simple_count = T)
 ```
 
 
@@ -481,8 +482,8 @@ k25_louvain <- get_bubbletree_louvain(x = A,
 
 if(redo_case_b) {
   
-  k25_louvain <- get_bubbletree_louvain(x = A,
-                                        r = 0.8,
+  k24_louvain <- get_bubbletree_louvain(x = A,
+                                        r = 0.79,
                                         n_start = 20,
                                         iter_max = 100,
                                         louvain_algorithm = "original",
@@ -496,9 +497,9 @@ if(redo_case_b) {
   if(dir.exists("case_study_B")==F) {
     dir.create("case_study_B")
   }
-  save(k25_louvain, file = "case_study_B/k25_louvain.RData")
+  save(k24_louvain, file = "case_study_B/k24_louvain.RData")
 } else {
-  k25_louvain <- get(load("~/scBubbletree/case_study_B/k25_louvain.RData"))
+  k24_louvain <- get(load("~/scBubbletree/case_study_B/k24_louvain.RData"))
 }
 
 
@@ -507,15 +508,54 @@ if(redo_case_b) {
 
 
 
+
+
+
+
+
+
+```{r, echo=F}
+
+if(redo_case_b) {
+  
+  k24_kmeans <- get_bubbletree_kmeans(x = A,
+                                      k = 24,
+                                      kmeans_algorithm = "MacQueen",
+                                      seed = 1234,
+                                      cores = 5,
+                                      B = 200,
+                                      N_eff = 200,
+                                      round_digits = 1,
+                                      show_simple_count = F)
+  
+  if(dir.exists("case_study_B")==F) {
+    dir.create("case_study_B")
+  }
+  save(k24_kmeans, file = "case_study_B/k24_kmeans.RData")
+} else {
+  k24_kmeans <- get(load("~/scBubbletree/case_study_B/k24_kmeans.RData"))
+}
+
+
+```
+
+
+
+
+
+
+
+
+
 ... and plot the bubbletree
 
 ```{r, fig.width=4, fig.height=6, fig.align='center', echo=T}
-k25_louvain$tree
+k24_louvain$tree
 ```
 
 Lets describe the bubbletree:
 
-**bubbles**: The bubbletree has `k=25` bubbles (clusters) shown as leaves. 
+**bubbles**: The bubbletree has `k=24` bubbles (clusters) shown as leaves. 
 The absolute and relative cell frequencies in each bubble and the bubble 
 IDs are shown as labels. Bubble radii are scaled linearly as the absolute 
 cell count in each bubble, i.e. large bubbles have many cells and small
@@ -530,7 +570,7 @@ to medium sizes.
 We can access the bubble data shown in the bubbletree
 
 ```{r, echo=T, results=T}
-knitr::kable(k25_louvain$tree_meta, digits = 2, row.names = F)
+knitr::kable(k24_louvain$tree_meta, digits = 2, row.names = F)
 ```
 
 
@@ -571,7 +611,7 @@ donor <- paste0(meta$donor, '(', meta$time, ')')
 
 
 ```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
-w0_v <- get_cat_tiles(btd = k25_louvain,
+w0_v <- get_cat_tiles(btd = k24_louvain,
                       f = c1,
                       integrate_vertical = T,
                       round_digits = 0,
@@ -581,7 +621,7 @@ w0_v <- get_cat_tiles(btd = k25_louvain,
                       x_axis_name = 'Cell type (l1)')
 
 
-w0_h <- get_cat_tiles(btd = k25_louvain,
+w0_h <- get_cat_tiles(btd = k24_louvain,
                       f = c1,
                       integrate_vertical = F,
                       round_digits = 0,
@@ -593,7 +633,7 @@ w0_h <- get_cat_tiles(btd = k25_louvain,
 
 
 ```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
-w1_v <- get_cat_tiles(btd = k25_louvain,
+w1_v <- get_cat_tiles(btd = k24_louvain,
                       f = c2,
                       integrate_vertical = T,
                       round_digits = 0,
@@ -602,7 +642,7 @@ w1_v <- get_cat_tiles(btd = k25_louvain,
                       disable_hclust = F,
                       x_axis_name = 'Cell type (l2)')
 
-w1_h <- get_cat_tiles(btd = k25_louvain,
+w1_h <- get_cat_tiles(btd = k24_louvain,
                       f = c2,
                       integrate_vertical = F,
                       round_digits = 0,
@@ -614,7 +654,7 @@ w1_h <- get_cat_tiles(btd = k25_louvain,
 
 
 ```{r, fig.width=9, fig.height=5, fig.align='center', echo=T}
-w2 <- get_cat_tiles(btd = k25_louvain,
+w2 <- get_cat_tiles(btd = k24_louvain,
                     f = donor,
                     integrate_vertical = T,
                     round_digits = 0,
@@ -630,10 +670,10 @@ w2 <- get_cat_tiles(btd = k25_louvain,
 ```{r, echo=T, results='hide'}
 fig_l0 <- g0_r
 
-fig_l1 <- (k25_louvain$tree|w0_v$plot|w0_h$plot)+
+fig_l1 <- (k24_louvain$tree|w0_v$plot|w0_h$plot)+
   patchwork::plot_layout(widths = c(2, 3, 3))
 
-fig_l2 <- (k25_louvain$tree|w1_v$plot|w1_h$plot)+
+fig_l2 <- (k24_louvain$tree|w1_v$plot|w1_h$plot)+
   patchwork::plot_layout(widths = c(2, 3, 3))
 
 fig <- (fig_l0/fig_l1/fig_l2)+
@@ -665,7 +705,7 @@ some marker genes in the bubbles:
   * PPBP:	*Megakaryocytes*
 
 ```{r, fig.width=8, fig.height=8, fig.align='center', echo=T}
-fig_markers <- get_num_tiles(btd = k25_louvain,
+fig_markers <- get_num_tiles(btd = k24_louvain,
                              fs = as,
                              summary_function = "mean",
                              round_digits = 1,
@@ -674,7 +714,7 @@ fig_markers <- get_num_tiles(btd = k25_louvain,
                              x_axis_name = "Gene expression",
                              rotate_x_axis_labels = T)
 
-(k25_louvain$tree|fig_markers$plot)+
+(k24_louvain$tree|fig_markers$plot)+
   patchwork::plot_layout(widths = c(1, 1))
 ```
 
@@ -685,13 +725,13 @@ the same input as `get_num_tiles`.
 Lets invoke this function now.
 
 ```{r, fig.width=8, fig.height=14, fig.align='center', echo=T}
-fig_markers_violin <- get_num_violins(btd = k25_louvain,
+fig_markers_violin <- get_num_violins(btd = k24_louvain,
                       fs = as,
                       x_axis_name = "Gene expression",
                       rotate_x_axis_labels = T)
 
 
-((k25_louvain$tree|fig_markers$plot)+
+((k24_louvain$tree|fig_markers$plot)+
     patchwork::plot_layout(widths = c(1, 1)))/
   fig_markers_violin$plot
 ```
@@ -701,15 +741,15 @@ fig_markers_violin <- get_num_violins(btd = k25_louvain,
 ### quality control with `scBubbletree`
 
 ```{r, echo = F, fig.align='center', fig.width=7, fig.height=6}
-sup_w <- (get_num_violins(btd = k25_louvain,
+sup_w <- (get_num_violins(btd = k24_louvain,
                           fs = meta$mt*100,
                           x_axis_name = "MT [%]",
                           rotate_x_axis_labels = F)$plot|
-            get_num_violins(btd = k25_louvain,
+            get_num_violins(btd = k24_louvain,
                             fs = meta$nCount_RNA/1000,
                             x_axis_name = "RNA count (in thousands)",
                             rotate_x_axis_labels = F)$plot|
-            get_num_violins(btd = k25_louvain,
+            get_num_violins(btd = k24_louvain,
                             fs = meta$nFeature_RNA,
                             x_axis_name = "Gene count",
                             rotate_x_axis_labels = F)$plot
@@ -853,6 +893,8 @@ dist_preservation <- data.frame(euc_a = unlist(euc_a),
                                 i = i_cell, 
                                 j = j_cell, 
                                 comparison = comparison)
+
+save(dist_preservation, file = "case_study_B/dist_preservation.RData")
 ```
 
 
@@ -884,6 +926,24 @@ g_pairs_umap_tsne
 ```{r, echo=F}
 # save image
 save.image(file = "case_study_B/workspace_image.RData")
+```
+
+
+
+
+
+```{r, echo=F}
+# save image
+
+key_results <- list(b_r = b_r,
+                    b_k = b_k,
+                    k24_louvain = k24_louvain,
+                    k24_kmeans = k24_kmeans,
+                    dist_preservation = dist_preservation,
+                    meta = meta)
+
+save(key_results, file = "case_study_B/key_results.RData")
+
 ```
 
 

@@ -41,7 +41,7 @@ library(ggrepel, lib.loc = lib.loc)
 
 
 ```{r, echo=F}
-redo_case_a <- T
+redo_case_a <- FALSE
 ```
 
 
@@ -235,16 +235,17 @@ reasonable value of $r$.
 Lets use the function `get_r` for data-driven estimation of $r$ based on the
 Gap statistic and WCSS. As input we need to provide the matrix $A$ and a vector 
 of $r$s. The output will be the Gap statistic and WCSS estimate for each $r$ 
-(or the number of communities $k$ detected at resolution $r$).
+(or the number of communities $k'$ detected at resolution $r$).
 
 ```{r, echo = T, eval = T}
 b_r <- get_r(B_gap = 20,
-           rs = 10^seq(from = -4, to = 1, by = 0.5),
+           rs = 10^seq(from = -4, to = 1, by = 0.1),
            x = A,
            n_start = 20, 
            iter_max = 100,
            louvain_algorithm = "original",
            cores = 20)
+
 ```
 
 
@@ -256,12 +257,12 @@ at each $k$ computed using `B_gap`=20 MCMC simulations.
 g0_r <- ggplot(data = b_r$gap_stats_summary)+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ylab(label = "Gap")|
+  ylab(label = "Gap")+
+  xlab(label = "k'")|
 ggplot(data = b_r$wcss_stats_summary)+
   geom_point(aes(x = k, y = wcss_mean), size = 1)+
   ylab(label = "WCSS")+
-  scale_y_log10()+
-  annotation_logticks(base = 10, sides = "l")
+  xlab(label = "k'")
 ```
 
 
@@ -270,12 +271,22 @@ g0_r
 ```
 
 
-A range of resolutions yields $k=5$ number of communities, i.e. $r = 0.003$ 
-and $r = 0.1$ result in $k=5$. Lets use $r=0.1$ for clustering. 
+A range of resolutions yields $k=5$ number of communities, i.e. $r = 0.0025$ 
+and $r = 0.125$ result in $k=5$. Lets use $r=0.1$ for clustering
+
+```{r, fig.width=4, fig.height=3, fig.align='center', echo=T, eval=T}
+ggplot(data = b_r$gap_stats_summary)+
+    geom_point(aes(x = r, y = k), size = 1)+
+    xlab(label = "r")+
+    ylab(label = "k'")+
+  scale_x_log10()+
+  annotation_logticks(base = 10, sides = "b")
+```
+
 
 ```{r}
 knitr::kable(x = b_r$gap_stats_summary[b_r$gap_stats_summary$k == 5, ],
-             digits = 3, row.names = F)
+             digits = 4, row.names = F)
 ```
 
 
@@ -287,9 +298,9 @@ will perform k-means clustering with $k=5$ and $A$ as inputs. For this we will
 use the function kmeans (R-package stats) which offers various variants of 
 k-means. Here we will use MacQueen's k-means variant and perform 
 $n_{start} = 1000$ (default in scBubbletree) random starts and a maximum 
-number of iterations $iter_{max} = 300$. 
+number of iterations $iter_{max}=300$. 
 
-**Important remark**: for smaller datasets (e.g. $n<50,000$) $n_{start} = 1000$ 
+**Important remark**: for smaller datasets (e.g. $n<50,000$) $n_{start}=1000$ 
 and $n_{iter} = 300$ are unnecessarily high, however for larger datasets this 
 is necessary to make sure that k-means converges.
 
@@ -406,7 +417,7 @@ Steps 2.2 and 3. (hierarchical clustering) are performed next
 
 ```{r, echo=T, eval=F}
 k5_louvain <- get_bubbletree_louvain(x = A,
-                                     r = 0.1,
+                                     r = 0.0025,
                                      n_start = 20,
                                      iter_max = 100,
                                      louvain_algorithm = "original",
@@ -990,27 +1001,31 @@ dummy_k5_pam$tree|
 
 ### Summary
 
-`scBubbletree` promotes simple and transparent analysis of scRNA-seq. It is 
-*not a black-box* approach and the user *is encouraged* to explore the data 
-with different values of $k$. At each stage the user should 'attach' annotation 
-to the bubbletree for better biological interpretation of the different bubbles 
-and their relationships which are described by the bubbletree topology.
-
-
-
-
-
-
-### Play around with the method: what would happen if we used $k=10$ or a different resolution parameter $r$?
-
+`scBubbletree` promotes simple and transparent visual exploration of scRNA-seq. 
+It is *not a black-box* approach and the user *is encouraged* to explore the data 
+with different values of $k$ and $r$ or custom clustering solutions. Attaching
+of cell features to the bubbletree is necessary for biological interpretation
+of the individual bubbles and their relationships which are described by the 
+bubbletree topology.
 
 
 
 ```{r, echo=F}
-# variable cleanup
-rm(b, k5, d, meta, w1, w2, w3, w4, A, as, u, gini_boot,
-   g, g0, g1, h, tpm, x, cell_line_pattern, cols)
+# save image
+
+key_results <- list(b_r = b_r,
+                    b_k = b_k,
+                    k5_louvain = k5_louvain,
+                    k5_kmeans = k5_kmeans,
+                    dist_preservation = dist_preservation,
+                    umap_data = umap_data,
+                    tsne_data = tsne_data)
+
+save(key_results, file = "case_study_A/key_results.RData")
+
 ```
+
+
 
 
 
