@@ -34,8 +34,8 @@ get_k(x,
 
 
 \arguments{
-\item{x}{numeric matrix (\eqn{A^{n x f}} with \eqn{n} cells, and \eqn{f}
-low-dimensional projections)}
+\item{x}{numeric matrix \eqn{A^{n x f}} with \eqn{n} cells, and \eqn{f}
+low-dimensional projections}
 \item{B_gap}{integer, number of Monte Carlo ("bootstrap") samples taken when
 computing the Gap statistic (see documentation of function clusGap, R-package
 cluster)}
