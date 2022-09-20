@@ -45,7 +45,6 @@ library(ggrepel, lib.loc = lib.loc)
 
 ```{r}
 
-
 get_clusters_graph <- function(d, res, reduction_type, dims, labels) {
   
     d <- Seurat::FindNeighbors(object = d, 
