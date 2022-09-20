@@ -51,9 +51,6 @@ get_ph_support <- function(main_ph,
     }
   }
 
-  # compute majortiy tree
-  # majority_ph <- ape::consensus(boot_ph, p = 0.5)
-
   # compute clade proportions
   clade_b <- ape::prop.clades(phy = main_ph,
                               x = boot_ph,
@@ -122,7 +119,7 @@ get_dendrogram <- function(ph,
 
   # build ggtree
   tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
-    geom_point()+
+    geom_point2(aes(subset=isTip==F), size = 0.5, col = "black")+
     layout_rectangular()+
     # geom_tippoint(aes(size = c, fill = c), shape = 21)+ # old bubble coloring
     geom_tippoint(aes(size = c), fill = "white", shape = 21)+
@@ -139,12 +136,12 @@ get_dendrogram <- function(ph,
       geom_tiplab(aes(label=paste0(label, " (",
                                    paste0(round(c/1000, digits = round_digits),
                                           'K'), ', ', pct, "%)")),
-                  color='black', size = 2.8, hjust=-0.25,
+                  color='black', size = 2.75, hjust=-0.25,
                   align = T)
   } else {
     tree <- tree+
       geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
-                  color='black', size = 2.8, hjust=-0.25,
+                  color='black', size = 2.75, hjust=-0.25,
                   align = T)
   }
 
@@ -154,11 +151,11 @@ get_dendrogram <- function(ph,
     geom_nodelab(geom='text',
                  color = "#4c4c4c", # previously red
                  aes(label=label, subset=isTip==F),
-                 size = 2.8, hjust=-0.2)
+                 size = 2.75, hjust=-0.2)
 
   tree <- tree+
     # scale_radius
-    scale_radius(range = c(1, 5),
+    scale_radius(range = c(1, 4),
                  limits = c(0, max(km_meta$c)))+
     guides(size = guide_legend(title = "cells", nrow = 2, byrow = TRUE))
     # scale_fill_gradient(low = "white",
@@ -294,7 +291,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
       if(nrow(x_i)>N_eff) {
         x_i <- x_i[base::sample(x = 1:nrow(x_i),
                                 size = N_eff,
-                                replace = T), ]
+                                replace = FALSE), ]
       }
     }
 
@@ -310,7 +307,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
         if(nrow(x_j)>N_eff) {
           x_j <- x_j[base::sample(x = 1:nrow(x_j),
                                   size = N_eff,
-                                  replace = T), ]
+                                  replace = FALSE), ]
         }
       }
 

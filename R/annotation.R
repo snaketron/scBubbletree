@@ -363,12 +363,14 @@ get_cat_tiles <- function(btd,
   if(tile_bw==F) {
     w <- w+scale_fill_distiller(name = legend,
                          palette = "Spectral",
-                         na.value = 'white')
+                         na.value = 'white',
+                         limits = c(0, 100))
   } else {
     w <- w+scale_fill_gradient(name = legend,
                                low = "#f9f9f9",
-                               high = "#666666",
-                               na.value = 'white')
+                               high = "#848484",
+                               na.value = 'white',
+                               limits = c(0, 100))
   }
 
   if(rotate_x_axis_labels==T) {
@@ -477,13 +479,17 @@ get_num_tiles <- function(btd,
 
     # check summary_function
     if(is.character(summary_function)==F) {
-      stop("summary_function is one of: 'mean', 'median', 'sum'")
+      stop("summary_function is one of: 'mean', 'median', 'sum',
+           'pct nonzero', 'pct zero'")
     }
     if(length(summary_function) != 1) {
-      stop("summary_function is one of: 'mean', 'median', 'sum'")
+      stop("summary_function is one of: 'mean', 'median', 'sum',
+           'pct nonzero', 'pct zero'")
     }
-    if(!summary_function %in% c("mean", "median", "sum")) {
-      stop("summary_function is one of: 'mean', 'median', 'sum'")
+    if(!summary_function %in% c("mean", "median", "sum",
+                                "pct nonzero", "pct zero")) {
+      stop("summary_function is one of: 'mean', 'median', 'sum',
+           'pct nonzero', 'pct zero'")
     }
 
 
@@ -597,6 +603,27 @@ get_num_tiles <- function(btd,
                             na.action = na.omit)
       f$value <- round(x = f$a, digits = round_digits)
     }
+    if(summary_function == "pct nonzero") {
+      get_nonzero <- function(x) {
+        return(sum(x>0)/length(x))
+      }
+      f <- stats::aggregate(a~cluster,
+                            data = f,
+                            FUN = get_nonzero,
+                            na.action = na.omit)
+      f$value <- round(x = f$a, digits = round_digits)
+    }
+    if(summary_function == "pct zero") {
+      get_zero <- function(x) {
+        return(sum(x==0)/length(x))
+      }
+      f <- stats::aggregate(a~cluster,
+                            data = f,
+                            FUN = get_zero,
+                            na.action = na.omit)
+      f$value <- round(x = f$a, digits = round_digits)
+    }
+
     f$a <- NULL
     f$feature <- feature
     return(f)
@@ -653,7 +680,7 @@ get_num_tiles <- function(btd,
     geom_text(aes(x = feature, y = cluster, label = value), col = "black",
               size = tile_text_size)+
     theme(legend.position = "top",
-          legend.margin=margin(0,0,0,0),
+          legend.margin=margin(t=0,r=0,b=2,l=0, unit = "pt"),
           legend.box.margin=margin(-10,-10,-10,-10))+
     xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
@@ -663,12 +690,14 @@ get_num_tiles <- function(btd,
   if(tile_bw==F) {
     w <- w+scale_fill_distiller(name = "Feature",
                                 palette = "Spectral",
-                                na.value = 'white')
+                                na.value = 'white',
+                                breaks = scales::pretty_breaks(n = 3))
   } else {
     w <- w+scale_fill_gradient(name = "Feature",
                                low = "#f9f9f9",
-                               high = "#666666",
-                               na.value = 'white')
+                               high = "#848484",
+                               na.value = 'white',
+                               breaks = scales::pretty_breaks(n = 3))
   }
 
 
@@ -840,7 +869,7 @@ get_num_violins <- function(btd,
     ylab(label = x_axis_name)+
     xlab(label = "Bubble")+
     theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),
-          legend.margin=margin(0,0,0,0),
+          legend.margin=margin(t = 0,r = 0,b = 2,l = 0),
           legend.box.margin=margin(-10,-10,-10,-10))+
     geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
 

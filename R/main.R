@@ -2046,11 +2046,12 @@ get_gini_k <- function(labels, k_obj) {
 
     # total
     total_o[[counter]] <- base::data.frame(k = length(unique(cs)),
+                                           k_or_r = as.numeric(ks[j]),
                                            wgi = gini$wgi)
     # cluster
-    gini$gi
     cluster_o[[counter]] <- gini$gi
     cluster_o[[counter]]$k <- length(unique(cs))
+    cluster_o[[counter]]$k_or_r <- as.numeric(ks[j])
 
     counter <- counter + 1
   }
