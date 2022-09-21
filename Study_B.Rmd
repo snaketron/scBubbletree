@@ -164,7 +164,8 @@ var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
 g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
                                             PC = 1:length(var_explained)))+
   geom_point(aes(y = var_explained, x = PC), size = 1)+
-  ylab(label = "Variance explained [%]")
+  ylab(label = "Variance explained [%]")+
+  scale_y_log10()
 
 g_var_explained
 ```
@@ -266,12 +267,12 @@ A <- get(load(file = "case_study_B/A.RData"))
 
 ```{r, fig.width=4, fig.height=3, echo = T, eval=F}
 b_k <- get_k(ks = c(seq(from = 1, to = 50, by = 1), 51, 56, 72, 82, 97, 111),
-               x = A,
-               n_start = 100,
-               iter_max = 200,
-               kmeans_algorithm = "MacQueen",
-               cores = 60,
-               B_gap = 20)
+             x = A,
+             n_start = 100,
+             iter_max = 200,
+             kmeans_algorithm = "MacQueen",
+             cores = 60,
+             B_gap = 20)
 ```
 
 
