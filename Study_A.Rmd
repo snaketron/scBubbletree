@@ -145,7 +145,8 @@ var_explained <- ((d[["pca"]]@stdev)^2)/d[["pca"]]@misc$total.variance
 g_var_explained <- ggplot(data = data.frame(var_explained = var_explained*100,
                                             PC = 1:length(var_explained)))+
   geom_point(aes(y = var_explained, x = PC), size = 1)+
-  ylab(label = "Variance explained [%]")
+  ylab(label = "Variance explained [%]")+
+  scale_y_log10()
 
 g_var_explained
 ```
@@ -239,12 +240,12 @@ of $r$s. The output will be the Gap statistic and WCSS estimate for each $r$
 
 ```{r, echo = T, eval = T}
 b_r <- get_r(B_gap = 20,
-           rs = 10^seq(from = -4, to = 1, by = 0.1),
-           x = A,
-           n_start = 20, 
-           iter_max = 100,
-           louvain_algorithm = "original",
-           cores = 20)
+             rs = 10^seq(from = -4, to = 1, by = 0.1),
+             x = A,
+             n_start = 20, 
+             iter_max = 100,
+             louvain_algorithm = "original",
+             cores = 20)
 
 ```
 
@@ -611,16 +612,16 @@ get_gini(labels = d@meta.data$cell_line_demuxlet,
 All cluster-specific *GI*s are close to 0 and hence also *WGI* is close to 0. 
 This indicates nearly perfect mapping of cell lines to bubbles. This analysis 
 performed for different values of $k$ with function `get_gini_k`, which takes 
-as main input the output of `get_k`
+as main input the output of `get_k` or `get_r`
 
 ```{r, echo = T}
 gini_boot <- get_gini_k(labels = d@meta.data$cell_line_demuxlet,
-                        k_obj = b_k)
+                        obj = b_k)
 ```
 
-From the figure we can conclude that the Gini impurity reaches values close to 
-0 at `k=5`, and all labels are nearly perfectly split across the bubbles with 
-each bubble containing cells exclusively from one cell type.
+From the figure we can conclude that WGI drops to 0 at `k=5`, and all labels 
+are nearly perfectly split across the bubbles with each bubble containing cells 
+exclusively from one cell type.
 
 ```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
 g1 <- ggplot(data = gini_boot$wgi_summary)+
