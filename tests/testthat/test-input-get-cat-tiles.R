@@ -7,7 +7,7 @@ test_that("missing argument", {
 
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -161,7 +161,7 @@ test_that("null/na argument", {
 
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -453,7 +453,7 @@ test_that("null/na argument", {
 test_that("btd argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -751,7 +751,7 @@ test_that("btd argument", {
 test_that("f argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -918,7 +918,7 @@ test_that("f argument", {
 test_that("integrate_vertical argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -1017,7 +1017,7 @@ test_that("integrate_vertical argument", {
 test_that("show_hclust argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -1114,7 +1114,7 @@ test_that("show_hclust argument", {
 test_that("disable_hclust argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -1211,7 +1211,7 @@ test_that("disable_hclust argument", {
 test_that("tile_bw argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
@@ -1308,7 +1308,7 @@ test_that("tile_bw argument", {
 test_that("rotate_x_axis_labels argument", {
 
   # build bubbletree
-  btd <- get_bubbletree(x = matrix(data = rnorm(n = 100*10), ncol = 10),
+  btd <- get_bubbletree_kmeans(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                         k = 3,
                         B = 20,
                         N_eff = 50,
