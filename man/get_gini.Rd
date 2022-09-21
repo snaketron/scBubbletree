@@ -8,19 +8,28 @@
 
 
 \title{
-Gini impurity index
+Gini impurity index computed for a clustering solution and a vector of
+categorical cell feature labels
 }
 
 
 
 \description{
-The Gini impurity index allows us to quantitatively evaluate how well a set of
-labels (categorical features) are partitioned across a set of bubbles. We have a
-completely perfect split (Gini impurity = 0) when each bubble is 'pure', i.e.
-each bubble contains labels coming from distinct a class. In contrast to this,
-we have completely imperfect split (Gini impurity = 1) when the relative
-frequency distribution of the labels in each bubble is identical to the
-background relative frequency distribution of the labels.
+How well is a set of categorical feature labels (e.g. cell type predictions)
+partitioned accross the different clusters of a clustering solution? We can
+assess this using the Gini impurity index (see details below).
+
+Inputs are two equal-sized vectors:
+
+1) clusters IDs
+
+2) labels
+
+Output:
+
+1) cluster-specific purity -> Gini impurity (GI) index
+
+2) clustering solution impurity  -> Weighted Gini impurity (WGI) index
 }
 
 
@@ -37,20 +46,28 @@ get_gini(labels, clusters)
 
 
 \details{
-To measure the homogeneity of a cluster (or bubble) \eqn{i} of cells in terms of
-\eqn{L} distinct cell type labels we used the Gini impurity index:
+To quantify the purity of a cluster (or bubble) \eqn{i} with \eqn{n_i} number
+of cells, each of which carries one of \eqn{L} possible labels (e.g. cell type),
+we computed the Gini impurity index:
 
-\eqn{G_i=\sum_{j=1}^{L} \pi_{ij}(1-\pi_{ij})}
+\eqn{GI_i=\sum_{j=1}^{L} \pi_{ij}(1-\pi_{ij}),}
 
-with \eqn{\pi_{ij}} as the relative frequency of cell type \eqn{j} in cluster
-\eqn{i}. In homogeneous (`pure`) clusters most \eqn{\pi}'s are close to either
-1 or 0, and the Gini index takes on a small value close to zero. In clusters
-with heterogenous (`impure') composition most \eqn{\pi} are far from either 1
-or 0, and the Gini index approaches its maximum value close to 1. To compute
-the Gini impurity of a bubbletree with \eqn{k} bubbles we compute the weighted
-Gini impurity (WGI):
 
-\eqn{WGI=\sum_{i=1}^{k} G_i * n_i/n}
+with \eqn{\pi_{ij}} as the relative frequency of label \eqn{j} in cluster
+\eqn{i}. In homogeneous (`pure`) clusters most cells carry a distinct label.
+Hence, the \eqn{\pi}'s are close to either 1 or 0, and GI takes on a small
+value close to zero. In `impure' clusters cells carry a mixture of different
+labels. In this case most \eqn{\pi} are far from either 1 or 0, and GI diverges
+from 0 and approaches 1. If the relative frequencies of the different labels
+in cluster \eqn{i} are equal to the (background) relative frequencies of the
+labels in the sample, then cluster \eqn{i} is completely `impure'.
+
+To compute the overall Gini impurity of a bubbletree, which represents a
+clustering solution with \eqn{k} bubbles, we estimated the weighted Gini
+impurity (WGI) by computing the weighted (by the cluster size) average of
+the GIs:
+
+\eqn{WGI=\sum_{i=1}^{k} GI_i {n_i}/{n},}
 
 with \eqn{n_i} as the number of cells in cluster \eqn{i} and \eqn{n=\sum_i n_i}.
 }
@@ -71,5 +88,5 @@ get_gini(labels = sample(x = LETTERS[1:4], size = 100, replace = T),
          clusters = sample(x = letters[1:4], size = 100, replace = T))
 }
 
-\seealso{get_k, update_bubbletree, get_bubbletree, dummy_bubbletree,
-get_gini_k, A}
+\seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_dummy,
+get_bubbletree_louvain, get_gini_k, A}

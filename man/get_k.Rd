@@ -23,23 +23,24 @@ computes the Gap statistic and WCSS for a number of clusters \eqn{ks}.
 
 
 \usage{
+
 get_k(x,
-      B_gap = 10,
-      ks,
-      n_start = 100,
-      iter_max = 200,
-      kmeans_algorithm = "MacQueen",
-      cores = 1)
+     ks,
+     B_gap = 20,
+     n_start = 100,
+     iter_max = 200,
+     kmeans_algorithm = "MacQueen",
+     cores = 1)
 }
 
 
 \arguments{
 \item{x}{numeric matrix \eqn{A^{n x f}} with \eqn{n} cells, and \eqn{f}
 low-dimensional projections}
+\item{ks}{integer vector, \eqn{k} values to consider}
 \item{B_gap}{integer, number of Monte Carlo ("bootstrap") samples taken when
 computing the Gap statistic (see documentation of function clusGap, R-package
 cluster)}
-\item{ks}{integer vector, \eqn{k} values to consider}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function k-means, R-package stats}
 \item{cores}{integer, number of PC cores for parallel execution}
@@ -76,9 +77,16 @@ head(A)
 
 
 b <- get_k(x = A,
-          ks = 1:10,
-          B = 10)
+           ks = 1:5,
+           B_gap = 10,
+           n_start = 100,
+           iter_max = 200,
+           kmeans_algorithm = "MacQueen",
+           cores = 1)
+
+b$gap_stats_summary
 }
 
-\seealso{get_bubbletree, get_dummy_bubbletree, get_gini_k, get_gini,
-update_bubbletree, A}
+\seealso{get_r, get_bubbletree_dummy, get_bubbletree_louvain,
+get_bubbletree_kmeans, get_gini, get_gini_k, A, fs, f, get_num_tiles,
+get_num_violins, get_cat_tiles}
