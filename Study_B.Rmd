@@ -780,11 +780,11 @@ earlier together with the cell type predictions:
 
 ```{r, echo = T}
 gini_l1 <- get_gini_k(labels = meta$celltype.l1,
-                      k_obj = b_r)
+                      obj = b_r)
 gini_l2 <- get_gini_k(labels = meta$celltype.l2,
-                      k_obj = b_r)
+                      obj = b_r)
 gini_l3 <- get_gini_k(labels = meta$celltype.l3,
-                      k_obj = b_r)
+                      obj = b_r)
 ```
 
 
