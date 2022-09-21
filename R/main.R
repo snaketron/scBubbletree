@@ -23,7 +23,7 @@ get_k <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)=="SummarizedExperiment") {
+    if(base::class(x)[1]=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -415,7 +415,7 @@ get_r <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)=="SummarizedExperiment") {
+    if(base::class(x)[1]=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -925,7 +925,7 @@ get_bubbletree_kmeans <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)=="SummarizedExperiment") {
+    if(base::class(x)[1]=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -1333,7 +1333,7 @@ get_bubbletree_louvain <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)=="SummarizedExperiment") {
+    if(base::class(x)[1]=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -1741,7 +1741,7 @@ get_bubbletree_dummy <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)=="SummarizedExperiment") {
+    if(base::class(x)[1]=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
