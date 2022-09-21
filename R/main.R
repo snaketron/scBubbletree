@@ -809,8 +809,6 @@ get_r <- function(x,
                           louvain_algorithm = louvain_algorithm,
                           mc.cores = cores)
 
-  # browser()
-
 
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
@@ -893,7 +891,6 @@ get_r <- function(x,
                                     wcss_stats = wcss_stats,
                                     gap_stats = gap_stats)))
 }
-
 
 
 
@@ -1741,14 +1738,32 @@ get_bubbletree_dummy <- function(x,
                           show_simple_count) {
 
     # check x
-    if(is.numeric(x)==F) {
-      stop("x must be numeric matrix")
+    if(base::missing(x)==TRUE) {
+      stop("x input not found")
     }
     if(base::class(x)=="SummarizedExperiment") {
       x <- x@assays@data@listData
     }
-    if(is.matrix(x)==F) {
+    if(base::is.numeric(x)==FALSE) {
       stop("x must be numeric matrix")
+    }
+    if(base::is.matrix(x)==FALSE) {
+      stop("x must be numeric matrix")
+    }
+    if(base::any(base::is.infinite(x))==TRUE) {
+      stop("x must be numeric matrix, infinite values not allowed")
+    }
+    if(base::any(base::is.na(x))==TRUE) {
+      stop("x must be numeric matrix, NAs not allowed")
+    }
+    if(base::any(base::is.null(x))==TRUE) {
+      stop("x must be numeric matrix, NULLs not allowed")
+    }
+    if(base::all(x == x[1,1])==TRUE) {
+      stop("all elements in x are identical")
+    }
+    if(base::ncol(x)>base::nrow(x)) {
+      warning("more columns (features) than rows (cells) in x")
     }
 
 
@@ -1771,71 +1786,134 @@ get_bubbletree_dummy <- function(x,
 
 
     # check B
-    if(is.numeric(B)==F) {
-      stop("B must be a positive integer")
+    if(base::missing(B)==TRUE) {
+      stop("B input not found")
     }
-    if(length(B)!=1) {
-      stop("B must be a positive integer")
+    if(base::is.numeric(B)==FALSE) {
+      stop("B must be a positive integer > 0")
     }
-    if(B<=0) {
-      stop("B must be a positive integer")
+    if(base::length(B)!=1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B<1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.infinite(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.na(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B%%1!=0) {
+      stop("B must be a positive integer > 0")
     }
 
 
     # check N_eff
-    if(is.numeric(N_eff)==F) {
+    if(base::missing(N_eff)==TRUE) {
+      stop("N_eff input not found")
+    }
+    if(base::is.numeric(N_eff)==FALSE) {
       stop("N_eff must be a positive integer")
     }
-    if(length(N_eff) != 1) {
+    if(base::length(N_eff)!=1) {
       stop("N_eff must be a positive integer")
     }
-    if(N_eff<=0) {
+    if(N_eff<1) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.infinite(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.na(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(base::is.null(N_eff)==TRUE) {
+      stop("N_eff must be a positive integer")
+    }
+    if(N_eff%%1!=0) {
       stop("N_eff must be a positive integer")
     }
 
 
     # check cores
-    if(is.numeric(cores)==F) {
+    if(base::missing(cores)==TRUE) {
+      stop("cores input not found")
+    }
+    if(base::is.numeric(cores)==FALSE) {
       stop("cores must be a positive integer")
     }
-    if(length(cores)!=1) {
+    if(base::length(cores)!=1) {
       stop("cores must be a positive integer")
     }
-    if(cores<=0) {
+    if(base::is.infinite(cores)==TRUE) {
       stop("cores must be a positive integer")
     }
+    if(base::is.na(cores)==TRUE) {
+      stop("cores must be a positive integer")
+    }
+    if(cores<1) {
+      stop("cores must be a positive integer")
+    }
+    if(cores%%1!=0) {
+      stop("cores must be a positive integer")
+    }
+
 
 
     # check seed
-    if(is.numeric(seed)==F) {
-      stop("seed must be a positive integer")
-    }
-    if(length(seed)!=1) {
-      stop("seed must be a positive integer")
-    }
-    if(seed<=0) {
-      stop("seed must be a positive integer")
+    if(base::is.null(seed)==FALSE) {
+      if(base::is.numeric(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(base::length(seed)!=1) {
+        stop("seed must be a positive integer")
+      }
+      if(seed<=0) {
+        stop("seed must be a positive integer")
+      }
+      if(base::is.finite(seed)==FALSE) {
+        stop("seed must be a positive integer")
+      }
+      if(seed%%1!=0) {
+        stop("seed must be a positive integer")
+      }
     }
 
 
 
     # check round_digits
-    if(is.numeric(round_digits)==F) {
+    if(base::missing(round_digits)==TRUE) {
+      stop("round_digits input not found")
+    }
+    if(base::is.numeric(round_digits)==F) {
       stop("round_digits must be a positive integer")
     }
-    if(length(round_digits)!=1) {
+    if(base::length(round_digits)!=1) {
       stop("round_digits must be a positive integer")
     }
     if(round_digits<0) {
       stop("round_digits must be a positive integer")
     }
+    if(base::is.finite(round_digits)==FALSE) {
+      stop("round_digits must be a positive integer")
+    }
+    if(round_digits%%1!=0) {
+      stop("round_digits must be a positive integer")
+    }
 
 
     # show_simple_count
+    if(base::missing(show_simple_count)==TRUE) {
+      stop("show_simple_count input not found")
+    }
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
     if(is.logical(show_simple_count)==F) {
+      stop("show_simple_count is a logical parameter (TRUE or FALSE)")
+    }
+    if(base::is.na(show_simple_count)==TRUE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
   }
@@ -2026,11 +2104,11 @@ get_gini <- function(labels, clusters) {
 
 
 
-get_gini_k <- function(labels, k_obj) {
+get_gini_k <- function(labels, obj) {
 
 
   # check input param
-  check_input <- function(labels, k_obj) {
+  check_input <- function(labels, obj) {
 
     # check labels
     if(base::missing(labels)==TRUE) {
@@ -2053,39 +2131,39 @@ get_gini_k <- function(labels, k_obj) {
     }
 
 
-    # check k_obj
-    if(base::missing(k_obj)==TRUE) {
-      stop("k_obj is missing")
+    # check obj
+    if(base::missing(obj)==TRUE) {
+      stop("obj is missing")
     }
-    if(base::is.na(k_obj)||
-       base::is.null(k_obj)||
-       base::is.na(class(k_obj))||
-       base::is.null(class(k_obj))||
-       base::class(k_obj) %in% c("boot_k", "boot_r")==FALSE) {
-      stop("problem with k_obj")
+    if(base::is.na(obj)||
+       base::is.null(obj)||
+       base::is.na(class(obj))||
+       base::is.null(class(obj))||
+       base::class(obj) %in% c("boot_k", "boot_r")==FALSE) {
+      stop("problem with obj")
     }
 
-    if(base::is.list(k_obj$boot_obj)==F||
-       base::is.na(k_obj$boot_obj)||
-       base::is.null(k_obj$boot_obj)||
-       base::length(k_obj)<=1) {
-      stop("no boot_obj found in k_obj")
+    if(base::is.list(obj$boot_obj)==F||
+       base::is.na(obj$boot_obj)||
+       base::is.null(obj$boot_obj)||
+       base::length(obj)<=1) {
+      stop("no boot_obj found in obj")
     }
   }
 
 
   # check inputs
   check_input(labels = labels,
-              k_obj = k_obj)
+              obj = obj)
 
 
-  ks <- base::names(k_obj$boot_obj$obj)
+  ks <- base::names(obj$boot_obj$obj)
 
   total_o <- base::vector(mode = "list", length = base::length(ks))
   cluster_o <- base::vector(mode = "list", length = base::length(ks))
   counter <- 1
   for(j in 1:length(ks)) {
-    cs <- k_obj$boot_obj$obj[[ks[j]]]
+    cs <- obj$boot_obj$obj[[ks[j]]]
 
     gini <- get_gini(clusters = cs, labels = labels)
 
