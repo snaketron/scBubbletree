@@ -35,7 +35,7 @@ GI, which is another way of finding an optimal clustering resolution.
 
 
 \usage{
-get_gini(labels, clusters)
+get_gini_k(labels, obj)
 }
 
 
@@ -87,8 +87,36 @@ resolution \eqn{k} or \eqn{r}}
 
 
 \examples{
-get_gini(labels = sample(x = LETTERS[1:4], size = 100, replace = T),
-         clusters = sample(x = letters[1:4], size = 100, replace = T))
+# input data
+data(A)
+head(A)
+
+
+b_k <- get_k(x = A,
+           ks = 1:5,
+           B_gap = 10,
+           n_start = 100,
+           iter_max = 200,
+           kmeans_algorithm = "MacQueen",
+           cores = 1)
+
+
+b_r <- get_r(x = A,
+            rs = c(0.1, 0.5, 1),
+            B_gap = 10,
+            n_start = 20,
+            iter_max = 100,
+            louvain_algorithm = "original",
+            cores = 1)
+
+
+get_gini_k(
+    labels = sample(x = LETTERS[1:4], size = nrow(A), replace = T),
+    obj = b_k)
+
+get_gini_k(
+    labels = sample(x = LETTERS[1:4], size = nrow(A), replace = T),
+    obj = b_r)
 }
 
 \seealso{get_k, get_r, get_gini, get_bubbletree_kmeans, get_bubbletree_louvain,
