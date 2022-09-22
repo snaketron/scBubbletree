@@ -473,31 +473,31 @@ get_r <- function(x,
       stop("rs input not found")
     }
     if(base::is.numeric(rs)==FALSE) {
-      stop("rs must be a positive integer or vector of positive numbers")
+      stop("rs must be a positive number or vector of positive numbers")
     }
     if(base::is.vector(x = rs)==FALSE) {
-      stop("rs must be a positive integer or vector of positive numbers")
+      stop("rs must be a positive number or vector of positive numbers")
     }
     if(base::length(rs)<=0) {
-      stop("rs must be a positive integer or vector of positive numbers")
+      stop("rs must be a positive number or vector of positive numbers")
     }
     if(base::any(base::is.infinite(rs))==TRUE) {
-      stop("rs must be a positive integer or vector of positive numbers,
+      stop("rs must be a positive number or vector of positive numbers,
            no infinite values are allowed")
     }
     if(base::any(base::is.na(rs))==TRUE) {
-      stop("rs must be a positive integer or vector of positive numbers,
+      stop("rs must be a positive number or vector of positive numbers,
            no NAs are allowed")
     }
     if(base::any(base::is.null(rs))==TRUE) {
-      stop("rs must be a positive integer or vector of positive numbers,
+      stop("rs must be a positive number or vector of positive numbers,
            no NULLs are allowed")
     }
     if(base::any(rs<0)==TRUE) {
-      stop("rs must be a positive integer or vector of positive numbers")
+      stop("rs must be a positive number or vector of positive numbers")
     }
     if(base::any(base::duplicated(rs))==TRUE) {
-      stop("ks must be a positive integer or vector of positive numbers,
+      stop("rs must be a positive number or vector of positive numbers,
            duplicate r values are not allowed")
     }
     if(base::length(rs)==1) {
@@ -748,10 +748,6 @@ get_r <- function(x,
 
 
 
-  # sort rs, smallest r first, largest r last
-  rs <- base::sort(rs, decreasing = F)
-
-
 
   # check input
   check_input(B_gap = B_gap,
@@ -764,6 +760,14 @@ get_r <- function(x,
 
 
 
+  # sort rs, smallest r first, largest r last
+  rs <- base::sort(rs, decreasing = F)
+
+
+  # add cell ids if needed
+  if(is.null(rownames(x))) {
+    rownames(x) <- 1:nrow(x)
+  }
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
                                k.param = 50)
@@ -794,7 +798,6 @@ get_r <- function(x,
     return(c)
   })
 
-  # browser()
 
 
   # Gap stats
@@ -1627,6 +1630,10 @@ get_bubbletree_louvain <- function(x,
   # perform clustering
   cat("Clustering ... \n")
 
+  # add cell ids if needed
+  if(is.null(rownames(x))) {
+    rownames(x) <- 1:nrow(x)
+  }
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
                                k.param = 50)
@@ -2096,9 +2103,6 @@ get_gini <- function(labels, clusters) {
 
   return(base::list(gi = gi, wgi = wgi))
 }
-
-
-
 
 
 
