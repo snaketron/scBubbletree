@@ -36,7 +36,6 @@ library(ggrepel)
 source(file = "~/Rutil/Graphics.R")
 library(scBubbletree, lib.loc = lib.loc)
 library(Seurat, lib.loc = lib.loc)
-library(ggrepel, lib.loc = lib.loc)
 ```
 
 
