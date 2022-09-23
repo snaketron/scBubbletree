@@ -13,10 +13,12 @@ Description: Visual exploration is an integral part of scRNA-seq data analysis.
   approaches for scRNA-seq data analysis.
 License: file LICENSE
 Depends: 
-    methods,
     R (>= 3.6.0),
+    methods,
+    stats,
     ggplot2 (>= 3.3.3),
-    ggtree (>= 3.2.0),
+    ggtree (>= 3.2.0)
+Imports:
     reshape2 (>= 1.4.4),
     parallel (>= 4.1.2),
     ape (>= 5.5),
@@ -25,7 +27,10 @@ Depends:
     Seurat (>= 4.1)
 Suggests:
     BiocStyle (>= 2.24.0),
-    prettydoc
+    prettydoc,
+    knitr,
+    testthat,
+    patchwork
 Encoding: UTF-8
 LazyData: true
 NeedsCompilation: no

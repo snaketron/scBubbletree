@@ -366,7 +366,7 @@ test_that("null/na argument", {
                               N_eff = 50,
                               n_start = 100,
                               iter_max = 100,
-                              kmeans_algorithm = NA,
+                              louvain_algorithm = NA,
                               cores = 1,
                               seed = NULL,
                               round_digits = 2,

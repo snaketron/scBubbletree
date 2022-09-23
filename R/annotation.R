@@ -5,12 +5,12 @@ get_cat_tiles <- function(btd,
                           f,
                           integrate_vertical,
                           round_digits = 2,
-                          show_hclust = F,
-                          disable_hclust = F,
+                          show_hclust = FALSE,
+                          disable_hclust = FALSE,
                           tile_text_size = 3,
-                          tile_bw = F,
+                          tile_bw = FALSE,
                           x_axis_name = "Feature",
-                          rotate_x_axis_labels = T) {
+                          rotate_x_axis_labels = TRUE) {
 
 
   # check input param
@@ -398,12 +398,12 @@ get_num_tiles <- function(btd,
                           fs,
                           summary_function = "mean",
                           round_digits = 2,
-                          show_hclust = F,
-                          disable_hclust = F,
+                          show_hclust = FALSE,
+                          disable_hclust = FALSE,
                           tile_text_size = 3,
-                          tile_bw = F,
+                          tile_bw = FALSE,
                           x_axis_name = "Feature",
-                          rotate_x_axis_labels = T) {
+                          rotate_x_axis_labels = TRUE) {
 
 
   # check input param
@@ -721,7 +721,7 @@ get_num_tiles <- function(btd,
 get_num_violins <- function(btd,
                             fs,
                             x_axis_name = "Feature distribution",
-                            rotate_x_axis_labels = T) {
+                            rotate_x_axis_labels = TRUE) {
 
 
   # check input param

@@ -26,14 +26,13 @@ get_num_tiles(btd,
               fs,
               summary_function = "mean",
               round_digits = 2,
-              show_hclust = F,
-              disable_hclust = F,
+              show_hclust = FALSE,
+              disable_hclust = FALSE,
               tile_text_size = 3,
+              tile_bw = TRUE,
               x_axis_name = "Feature",
-              rotate_x_axis_labels = T,
-              tile_bw = F)
+              rotate_x_axis_labels = TRUE)
 }
-
 
 \arguments{
 \item{btd}{bubbletree object}
@@ -94,25 +93,24 @@ Important note: NA and NULL values are omitted.
 data(A)
 data(fs)
 
-b <- get_bubbletree(x = A,
+b <- get_bubbletree_kmeans(x = A,
                     k = 8,
-                    N_eff = 100,
-                    B = 30)
+                    N_eff = 100)
 
 g <- get_num_tiles(btd = b,
                    fs = fs,
                    summary_function = "mean",
                    round_digits = 2,
-                   show_hclust = F,
-                   disable_hclust = F,
+                   show_hclust = FALSE,
+                   disable_hclust = FALSE,
                    tile_text_size = 3,
+                   tile_bw = TRUE,
                    x_axis_name = "Gene expression",
-                   rotate_x_axis_labels = T,
-                   tile_bw = T)
+                   rotate_x_axis_labels = TRUE)
 
 
 b$tree|g$plot
 }
 
-\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,
-A,f,get_cat_tiles,get_num_violins}
+\seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
+get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_violins}

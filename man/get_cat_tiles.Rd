@@ -25,12 +25,12 @@ get_cat_tiles(btd,
               f,
               integrate_vertical,
               round_digits = 2,
-              show_hclust = F,
-              disable_hclust = F,
+              show_hclust = FALSE,
+              disable_hclust = FALSE,
               tile_text_size = 3,
+              tile_bw = FALSE,
               x_axis_name = "Feature",
-              rotate_x_axis_labels = T,
-              tile_bw = F)
+              rotate_x_axis_labels = TRUE)
 }
 
 
@@ -93,34 +93,35 @@ of different features
 data(A)
 data(f)
 
-b <- get_bubbletree(x = A,
-                    k = 8,
-                    N_eff = 100,
-                    B = 30)
 
-g_v <- get_cat_tiles(b = b,
+b <- get_bubbletree_louvain(x = A,
+                    r = 0.8,
+                    N_eff = 100)
+
+
+g_v <- get_cat_tiles(btd = b,
                      f = f,
-                     integrate_vertical = T,
+                     integrate_vertical = TRUE,
                      round_digits = 2,
-                     show_hclust = F,
-                     disable_hclust = F,
+                     show_hclust = FALSE,
+                     disable_hclust = FALSE,
                      tile_text_size = 3,
                      x_axis_name = "Feature",
-                     rotate_x_axis_labels = T)
+                     rotate_x_axis_labels = TRUE)
 
 
-g_h <- get_cat_tiles(b = b,
+g_h <- get_cat_tiles(btd = b,
                     f = f,
-                    integrate_vertical = F,
+                    integrate_vertical = FALSE,
                     round_digits = 2,
-                    show_hclust = F,
-                    disable_hclust = F,
+                    show_hclust = FALSE,
+                    disable_hclust = FALSE,
                     tile_text_size = 3,
                     x_axis_name = "Feature",
-                    rotate_x_axis_labels = T)
+                    rotate_x_axis_labels = TRUE)
 
 b$tree|g_v$plot|g_h$plot
 }
 
-\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,
-A,f,get_num_tiles,get_num_violins}
+\seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
+get_bubbletree_louvain, get_gini, get_gini_k, get_num_tile, get_num_violins}

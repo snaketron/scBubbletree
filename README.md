@@ -16,7 +16,7 @@ seq data analysis.
 
 ## How to use scBubbletree
 
-scBubbletree is an R-package available from Bioconductor: https://bioconductor.org/packages/IgGeneUsage/
+scBubbletree is an R-package available from Bioconductor: https://bioconductor.org/packages/scBubbletree/
 
 To install this package, start R and enter:
 

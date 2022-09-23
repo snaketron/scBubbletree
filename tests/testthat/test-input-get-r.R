@@ -8,7 +8,7 @@ test_that("missing argument", {
 
   expect_error(get_r(#x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -18,7 +18,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      #rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -28,7 +28,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -39,7 +39,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     # B_gap = 10,
+                     # B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -49,7 +49,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -59,7 +59,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      # n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -69,7 +69,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      # iter_max = 100,
                      louvain_algorithm = "original",
@@ -79,7 +79,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      # louvain_algorithm = "original",
@@ -89,7 +89,7 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -100,17 +100,13 @@ test_that("missing argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
                      # cores = 1
                      ),
                NA)
-
-
-
-
 
 })
 
@@ -122,7 +118,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = NULL,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -130,7 +126,7 @@ test_that("null/na argument", {
                "x must be numeric matrix")
   expect_error(get_r(x = NA,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -140,7 +136,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = NULL,
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -148,7 +144,7 @@ test_that("null/na argument", {
                "rs must be a positive number or vector of positive numbers")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = NA,
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -177,7 +173,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = NULL,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -185,7 +181,7 @@ test_that("null/na argument", {
                "n_start must be a positive integer")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = NA,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -195,7 +191,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = NULL,
                      louvain_algorithm = "original",
@@ -203,7 +199,7 @@ test_that("null/na argument", {
                "iter_max must be a positive integer")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = NA,
                      louvain_algorithm = "original",
@@ -214,7 +210,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = NULL,
@@ -223,7 +219,7 @@ test_that("null/na argument", {
       one of: original, LMR, SLM or Leiden")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = NA,
@@ -235,7 +231,7 @@ test_that("null/na argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -243,7 +239,7 @@ test_that("null/na argument", {
                "cores must be a positive integer")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -259,7 +255,7 @@ test_that("x argument", {
 
   expect_error(get_r(x = 1:100,
     rs = c(0.1, 0.5, 1),
-    B_gap = 10,
+    B_gap = 5,
     n_start = 20,
     iter_max = 100,
     louvain_algorithm = "original",
@@ -270,7 +266,7 @@ test_that("x argument", {
   expect_error(get_r(x = data.frame(matrix(data = rnorm(n = 300*10),
                                            nrow = 300, ncol = 10)),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -282,7 +278,7 @@ test_that("x argument", {
   x <- matrix(data = NA, nrow = 300, ncol = 10)
   expect_error(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -293,7 +289,7 @@ test_that("x argument", {
   x <- matrix(data = Inf, nrow = 300, ncol = 10)
   expect_error(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -305,7 +301,7 @@ test_that("x argument", {
   x[10, 1] <- NA
   expect_error(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -317,7 +313,7 @@ test_that("x argument", {
   x[10, 1] <- Inf
   expect_error(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -329,7 +325,7 @@ test_that("x argument", {
   x <- matrix(data = 0, nrow = 1000, ncol = 10)
   expect_error(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -341,7 +337,7 @@ test_that("x argument", {
   x <- matrix(data = rnorm(n = 50*100), nrow = 50, ncol = 100)
   expect_warning(get_r(x = x,
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -360,7 +356,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = matrix(data = 1:10, ncol = 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -371,7 +367,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = matrix(data = 1:10, nrow = 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -382,7 +378,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = data.frame(x = 1:10),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -393,7 +389,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = numeric(length = 0),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -404,8 +400,8 @@ test_that("rs argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
-                     rs = c(1, 3, NA, 10),
-                     B_gap = 10,
+                     rs = c(0.5, 0.8, NA, 1),
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -416,8 +412,8 @@ test_that("rs argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
-                     rs = c(1, 3, Inf, 10),
-                     B_gap = 10,
+                     rs = c(0.5, 0.8, Inf, 1),
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -428,8 +424,8 @@ test_that("rs argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
-                     rs = c(1, 3, -5, 10),
-                     B_gap = 10,
+                     rs = c(0.5, 0.8, -5, 1),
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -441,8 +437,8 @@ test_that("rs argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
-                     rs = c(1, 3, NULL, 10),
-                     B_gap = 10,
+                     rs = c(0.5, 0.8, NULL, 1),
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -454,14 +450,14 @@ test_that("rs argument", {
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
-                     rs = c(1, 3, 3, 10),
-                     B_gap = 10,
+                     rs = c(0.5, 0.8, 0.8, 1),
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
                      cores = 1),
                "rs must be a positive number or vector of positive numbers,
-           duplicate k values are not allowed")
+           duplicate r values are not allowed")
 
 
 
@@ -470,7 +466,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = -10,
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -483,7 +479,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = 0,
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -500,7 +496,7 @@ test_that("rs argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(1, 0.5, 0.1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -597,7 +593,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = -1,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -609,7 +605,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = Inf,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -620,7 +616,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = -Inf,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -631,7 +627,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 0.5,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -642,7 +638,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 1:10,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -653,7 +649,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = "100",
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -664,7 +660,7 @@ test_that("n_start argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 1.5,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -682,7 +678,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = -1,
                      louvain_algorithm = "original",
@@ -694,7 +690,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = Inf,
                      louvain_algorithm = "original",
@@ -705,7 +701,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = -Inf,
                      louvain_algorithm = "original",
@@ -716,7 +712,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max  = 0.5,
                      louvain_algorithm = "original",
@@ -727,7 +723,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 1:10,
                      louvain_algorithm = "original",
@@ -738,7 +734,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = "100",
                      louvain_algorithm = "original",
@@ -749,7 +745,7 @@ test_that("iter_max argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 1.5,
                      louvain_algorithm = "original",
@@ -769,7 +765,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -781,7 +777,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -792,7 +788,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -803,7 +799,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -814,7 +810,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -825,7 +821,7 @@ test_that("cores argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -843,7 +839,7 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -855,98 +851,98 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "o",
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = c("o", "a"),
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "A",
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "L",
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = Inf,
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = NA,
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+      "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = 1,
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+          "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = FALSE,
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+        "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
 
@@ -954,7 +950,7 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "original",
@@ -967,7 +963,7 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "LMR",
@@ -980,7 +976,7 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "SLM",
@@ -992,7 +988,7 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = "Leiden",
@@ -1005,13 +1001,13 @@ test_that("louvain_algorithm argument", {
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
-                     B_gap = 10,
+                     B_gap = 5,
                      n_start = 20,
                      iter_max = 100,
                      louvain_algorithm = base::unique,
                      cores = 1),
-               "see \\?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
-      Lloyd, Forgy, MacQueen")
+          "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+      one of: original, LMR, SLM or Leiden")
 
 
 })

@@ -35,7 +35,7 @@ get_num_violins(btd,
 \item{fs}{numeric vector or matrix, numeric cell features}
 \item{x_axis_name}{character, x-axis title}
 \item{rotate_x_axis_labels}{logical, should the x-axis labels be shown
-horizontally (rotate_x_axis_labels  = FALSE) or vertically
+horizontally (rotate_x_axis_labels = FALSE) or vertically
 (rotate_x_axis_labels = TRUE)}
 }
 
@@ -72,19 +72,19 @@ bubble.
 data(A)
 data(fs)
 
-b <- get_bubbletree(x = A,
-                    k = 8,
-                    N_eff = 100,
-                    B = 100)
+b <- get_bubbletree_louvain(x = A,
+                            k = 0.8,
+                            N_eff = 100,
+                            B = 100)
 
 g <- get_num_violins(btd = b,
                      fs = fs,
                      x_axis_name = "Feature distribution",
-                     rotate_x_axis_labels = T)
+                     rotate_x_axis_labels = TRUE)
 
 
 b$tree|g$plot
 }
 
-\seealso{get_k, get_dummy_bubbletree, get_gini, get_gini_k, update_bubbletree,
-A,f,get_cat_tiles,get_num_tiles}
+\seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
+get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_tiles}

@@ -26,7 +26,6 @@ The function get_bubbletree_louvain performs two main operations. First, it
 performs Louvain clustering to identify groups (bubbles) of transcriptionally
 similar cells; second, it organizes the bubbles in a hierarchical dendrogram
 (bubbletree) which adequatly represents inter-cluster relationships.
-
 }
 
 
@@ -43,7 +42,7 @@ get_bubbletree_louvain(x,
                        cores = 1,
                        seed = NULL,
                        round_digits = 2,
-                       show_simple_count = F)
+                       show_simple_count = FALSE)
 }
 
 
@@ -132,7 +131,7 @@ b <- get_bubbletree_louvain(x = A,
                             cores = 1,
                             seed = 1234,
                             round_digits = 2,
-                            show_simple_count = F)
+                            show_simple_count = FALSE)
 
 b$tree
 }

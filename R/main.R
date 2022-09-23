@@ -908,7 +908,7 @@ get_bubbletree_kmeans <- function(x,
                                   cores = 1,
                                   seed = NULL,
                                   round_digits = 2,
-                                  show_simple_count = F) {
+                                  show_simple_count = FALSE) {
 
   # check input param
   check_input <- function(x,
@@ -955,36 +955,11 @@ get_bubbletree_kmeans <- function(x,
 
 
 
-    # check B
-    if(base::missing(B)==TRUE) {
-      stop("B input not found")
-    }
-    if(base::is.numeric(B)==FALSE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::length(B)!=1) {
-      stop("B must be a positive integer > 0")
-    }
-    if(B<1) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::is.infinite(B)==TRUE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(base::is.na(B)==TRUE) {
-      stop("B must be a positive integer > 0")
-    }
-    if(B%%1!=0) {
-      stop("B must be a positive integer > 0")
-    }
-
-
-
     # check k
     if(base::missing(k)==TRUE) {
       stop("k input not found")
     }
-    if(is.numeric(k)==F) {
+    if(is.numeric(k)==FALSE) {
       stop("k must be a positive integer (k>=2) to build a bubbletree")
     }
     if(length(k)!=1) {
@@ -1161,7 +1136,7 @@ get_bubbletree_kmeans <- function(x,
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
     }
-    if(base::is.numeric(round_digits)==F) {
+    if(base::is.numeric(round_digits)==FALSE) {
       stop("round_digits must be a positive integer")
     }
     if(base::length(round_digits)!=1) {
@@ -1186,7 +1161,7 @@ get_bubbletree_kmeans <- function(x,
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    if(is.logical(show_simple_count)==F) {
+    if(is.logical(show_simple_count)==FALSE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
     if(base::is.na(show_simple_count)==TRUE) {
@@ -1316,7 +1291,7 @@ get_bubbletree_louvain <- function(x,
                                    cores = 1,
                                    seed = NULL,
                                    round_digits = 2,
-                                   show_simple_count = F) {
+                                   show_simple_count = FALSE) {
 
   # check input param
   check_input <- function(x,
@@ -1392,7 +1367,7 @@ get_bubbletree_louvain <- function(x,
     if(base::missing(r)==TRUE) {
       stop("r input not found")
     }
-    if(is.numeric(r)==F) {
+    if(is.numeric(r)==FALSE) {
       stop("r must be a positive number (r>0) to build a bubbletree")
     }
     if(length(r)!=1) {
@@ -1565,7 +1540,7 @@ get_bubbletree_louvain <- function(x,
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
     }
-    if(base::is.numeric(round_digits)==F) {
+    if(base::is.numeric(round_digits)==FALSE) {
       stop("round_digits must be a positive integer")
     }
     if(base::length(round_digits)!=1) {
@@ -1590,7 +1565,7 @@ get_bubbletree_louvain <- function(x,
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    if(is.logical(show_simple_count)==F) {
+    if(is.logical(show_simple_count)==FALSE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
     if(base::is.na(show_simple_count)==TRUE) {
@@ -1731,7 +1706,7 @@ get_bubbletree_dummy <- function(x,
                                  cores = 1,
                                  seed = NA,
                                  round_digits = 2,
-                                 show_simple_count = F) {
+                                 show_simple_count = FALSE) {
 
 
   # check input param
@@ -1775,7 +1750,7 @@ get_bubbletree_dummy <- function(x,
 
 
     # check cs
-    if(is.vector(cs)==F) {
+    if(is.vector(cs)==FALSE) {
       stop("cs must be a vector")
     }
     if(length(cs)!=nrow(x)) {
@@ -1784,10 +1759,10 @@ get_bubbletree_dummy <- function(x,
     if(length(unique(cs))<=1) {
       stop("1 or 0 clusters found in vector cs")
     }
-    if(any(is.na(cs)|is.null(cs))==T) {
+    if(any(is.na(cs)|is.null(cs))==TRUE) {
       stop("NA or NULL elements are found in cs")
     }
-    if(any(is.na(cs)|is.null(cs))==T) {
+    if(any(is.na(cs)|is.null(cs))==TRUE) {
       stop("NA or NULL elements are found in cs")
     }
 
@@ -1893,7 +1868,7 @@ get_bubbletree_dummy <- function(x,
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
     }
-    if(base::is.numeric(round_digits)==F) {
+    if(base::is.numeric(round_digits)==FALSE) {
       stop("round_digits must be a positive integer")
     }
     if(base::length(round_digits)!=1) {
@@ -1917,7 +1892,7 @@ get_bubbletree_dummy <- function(x,
     if(length(show_simple_count)!=1) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    if(is.logical(show_simple_count)==F) {
+    if(is.logical(show_simple_count)==FALSE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
     if(base::is.na(show_simple_count)==TRUE) {
@@ -2018,7 +1993,7 @@ get_gini <- function(labels, clusters) {
        base::is.numeric(labels)==FALSE) {
       stop("labels can only contain characters or numbers")
     }
-    if(base::is.vector(labels)==F) {
+    if(base::is.vector(labels)==FALSE) {
       stop("labels must be a vector")
     }
     if(base::any(base::is.infinite(labels))==TRUE) {
@@ -2043,7 +2018,7 @@ get_gini <- function(labels, clusters) {
        base::is.numeric(clusters)==FALSE) {
       stop("clusters can only contain characters or numbers")
     }
-    if(base::is.vector(clusters)==F) {
+    if(base::is.vector(clusters)==FALSE) {
       stop("clusters must be a vector")
     }
     if(base::any(base::is.infinite(clusters))==TRUE) {
@@ -2121,7 +2096,7 @@ get_gini_k <- function(labels, obj) {
     if(base::length(labels)<=1) {
       stop("labels must be a vector with more than one element")
     }
-    if(base::is.vector(labels)==F) {
+    if(base::is.vector(labels)==FALSE) {
       stop("labels must be a vector")
     }
     if(base::any(base::is.infinite(labels))==TRUE) {
@@ -2147,7 +2122,7 @@ get_gini_k <- function(labels, obj) {
       stop("problem with obj")
     }
 
-    if(base::is.list(obj$boot_obj)==F||
+    if(base::is.list(obj$boot_obj)==FALSE||
        base::is.na(obj$boot_obj)||
        base::is.null(obj$boot_obj)||
        base::length(obj)<=1) {

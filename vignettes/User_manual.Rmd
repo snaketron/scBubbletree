@@ -2,9 +2,11 @@
 title: "Exploring scRNA-seq data from 5 cancer cell lines with scBubbletree"
 author: "Simo Kitanovski (simo.kitanovski@uni-due.de)"
 output:
-  prettydoc::html_pretty:
-    theme: cayman
-    highlight: github
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{User Manual: IgGeneUsage}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 

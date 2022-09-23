@@ -42,7 +42,7 @@ get_bubbletree_kmeans(x,
                       cores = 1,
                       seed = NULL,
                       round_digits = 2,
-                      show_simple_count = F)
+                      show_simple_count = FALSE)
 }
 
 
@@ -126,10 +126,9 @@ b <- get_bubbletree_kmeans(x = A,
                            k = 8,
                            seed = 1234,
                            cores = 1,
-                           B = 50,
                            N_eff = 100,
                            round_digits = 1,
-                           show_simple_count = F,
+                           show_simple_count = FALSE,
                            kmeans_algorithm = "MacQueen")
 
 b$tree
