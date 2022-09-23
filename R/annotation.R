@@ -745,7 +745,7 @@ get_num_violins <- function(btd,
       stop("problem with the input bubbletree")
     }
 
-    if(is.vector(btd$cluster)==F||
+    if(is.vector(btd$cluster)==FALSE||
        is.na(is.vector(btd$cluster))||
        is.null(is.vector(btd$cluster))) {
       stop("no clustering results in bubbletree")
@@ -756,7 +756,7 @@ get_num_violins <- function(btd,
     if(is.numeric(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
-    if(is.vector(fs)==F&is.matrix(fs)==FALSE) {
+    if(is.vector(fs)==FALSE&is.matrix(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
     if(is.vector(fs)) {
@@ -849,10 +849,10 @@ get_num_violins <- function(btd,
                     by.y = "label",
                     all = TRUE)
 
-  ws <- ws[order(ws$tree_order, decreasing = F), ]
+  ws <- ws[order(ws$tree_order, decreasing = FALSE), ]
   ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
   if(any(is.na(ws$feature))) {
-    ws$feature <- ws$feature[is.na(ws$feature)==F][1]
+    ws$feature <- ws$feature[is.na(ws$feature)==FALSE][1]
   }
   ws$feature <- as.character(ws$feature)
   ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))

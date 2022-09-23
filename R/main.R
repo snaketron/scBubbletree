@@ -286,7 +286,7 @@ get_k <- function(x,
 
 
   # sort ks, smallest k first, largest last
-  ks <- base::sort(ks, decreasing = F)
+  ks <- base::sort(ks, decreasing = FALSE)
 
 
 
@@ -761,7 +761,7 @@ get_r <- function(x,
 
 
   # sort rs, smallest r first, largest r last
-  rs <- base::sort(rs, decreasing = F)
+  rs <- base::sort(rs, decreasing = FALSE)
 
 
   # add cell ids if needed
@@ -1924,12 +1924,12 @@ get_bubbletree_dummy <- function(x,
 
 
   # set seed for reproducibility
-  if(is.na(seed) == F) {
-    set.seed(seed = seed)
+  if(is.na(seed) == FALSE) {
+    base::set.seed(seed = seed)
   }
   else {
     seed <- base::sample(x = 1:10^6, size = 1)
-    set.seed(seed = seed)
+    base::set.seed(seed = seed)
   }
 
 

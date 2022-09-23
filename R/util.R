@@ -11,13 +11,6 @@ get_dist <- function(B,
                                   c = c,
                                   N_eff = N_eff,
                                   mc.cores = cores)
-  # get distances between clusters
-  # pair_dist <- parallel::mclapply(X = 1:B,
-  #                                 FUN = get_pair_dist_2,
-  #                                 m = m,
-  #                                 c = c,
-  #                                 N_eff = N_eff,
-  #                                 mc.cores = cores)
 
   pair_dist <- base::do.call(rbind, pair_dist)
 
@@ -71,7 +64,7 @@ get_ph_support <- function(main_ph,
   #   branch_composition <- rbind(branch_composition,
   #     data.frame(branch_node = branch, descendent_tip_nodes = paste0(w, collapse = ',')))
   # }
-  # branch_composition$is_root <- ifelse(test = branch_composition$branch == root, yes = T, no = F)
+  # branch_composition$is_root <- ifelse(test = branch_composition$branch == root, yes = TRUE, no = FALSE)
 
 
   # add bootstrap
@@ -119,7 +112,7 @@ get_dendrogram <- function(ph,
 
   # build ggtree
   tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
-    geom_point2(aes(subset=isTip==F), size = 0.5, col = "black")+
+    geom_point2(aes(subset=isTip==FALSE), size = 0.5, col = "black")+
     layout_rectangular()+
     # geom_tippoint(aes(size = c, fill = c), shape = 21)+ # old bubble coloring
     geom_tippoint(aes(size = c), fill = "white", shape = 21)+
@@ -137,12 +130,12 @@ get_dendrogram <- function(ph,
                                    paste0(round(c/1000, digits = round_digits),
                                           'K'), ', ', pct, "%)")),
                   color='black', size = 2.75, hjust=-0.25,
-                  align = T)
+                  align = TRUE)
   } else {
     tree <- tree+
       geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
                   color='black', size = 2.75, hjust=-0.25,
-                  align = T)
+                  align = TRUE)
   }
 
 
@@ -150,7 +143,7 @@ get_dendrogram <- function(ph,
   tree <- tree+
     geom_nodelab(geom='text',
                  color = "#4c4c4c", # previously red
-                 aes(label=label, subset=isTip==F),
+                 aes(label=label, subset=isTip==FALSE),
                  size = 2.75, hjust=-0.2)
 
   tree <- tree+
@@ -167,11 +160,11 @@ get_dendrogram <- function(ph,
 
   # merge order of tips in the tree with metadata
   q <- tree$data
-  q <- q[order(q$y, decreasing = F), ]
-  tips <- q$label[q$isTip==T]
+  q <- q[order(q$y, decreasing = FALSE), ]
+  tips <- q$label[q$isTip==TRUE]
   tips <- data.frame(label = tips, tree_order = 1:length(tips))
   km_meta <- base::merge(x = km_meta, y = tips, by = "label")
-  km_meta <- km_meta[order(km_meta$tree_order, decreasing = T), ]
+  km_meta <- km_meta[order(km_meta$tree_order, decreasing = TRUE), ]
   rm(q, tips)
 
   # format output
@@ -207,11 +200,11 @@ get_pair_dist_2 <- function(x, m, c, N_eff) {
     }
 
     # efficiency
-    if(is.na(N_eff) == F) {
+    if(is.na(N_eff) ==FALSE) {
       if(nrow(x_i)>N_eff) {
         x_i <- x_i[base::sample(x = 1:nrow(x_i),
                                 size = N_eff,
-                                replace = T), ]
+                                replace = TRUE), ]
       }
     }
 
@@ -223,11 +216,11 @@ get_pair_dist_2 <- function(x, m, c, N_eff) {
       }
 
       # efficiency
-      if(is.na(N_eff) == F) {
+      if(is.na(N_eff) ==FALSE) {
         if(nrow(x_j)>N_eff) {
           x_j <- x_j[base::sample(x = 1:nrow(x_j),
                                   size = N_eff,
-                                  replace = T), ]
+                                  replace = TRUE), ]
         }
       }
 
@@ -287,7 +280,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
     }
 
     # efficiency
-    if(is.na(N_eff) == F) {
+    if(is.na(N_eff)==FALSE) {
       if(nrow(x_i)>N_eff) {
         x_i <- x_i[base::sample(x = 1:nrow(x_i),
                                 size = N_eff,
@@ -303,7 +296,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
       }
 
       # efficiency
-      if(is.na(N_eff) == F) {
+      if(is.na(N_eff)==FALSE) {
         if(nrow(x_j)>N_eff) {
           x_j <- x_j[base::sample(x = 1:nrow(x_j),
                                   size = N_eff,
@@ -432,7 +425,7 @@ get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
   for(i in 1:(nrow(w_df)-1)) {
     for(j in (i+1):nrow(w_df)) {
       d <- abs(w_df[i, ]-w_df[j,])
-      d <- d[order(as.numeric(names(d)), decreasing = F)]
+      d <- d[order(as.numeric(names(d)), decreasing = FALSE)]
 
       tree_dist <- ape::cophenetic.phylo(main_ph)
       for(k1 in 1:(length(d)-1)) {
@@ -451,7 +444,7 @@ get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
   for(i in 1:(nrow(w_df)-1)) {
     for(j in (i+1):nrow(w_df)) {
       d <- abs(w_df[i, ]-w_df[j,])
-      d <- d[order(as.numeric(names(d)), decreasing = F)]
+      d <- d[order(as.numeric(names(d)), decreasing = FALSE)]
 
       tree_dist <- ape::cophenetic.phylo(main_ph)
       for(k1 in 1:(length(d)-1)) {
@@ -480,8 +473,8 @@ get_weighted_feature_dist_num <- function(main_ph, w, value_var) {
           legend.box.margin=margin(-10,-10,-10,-10))
 
   tree_data <- tree$data
-  tree_data <- tree_data[tree_data$isTip==T,]
-  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = F)]
+  tree_data <- tree_data[tree_data$isTip==TRUE,]
+  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = FALSE)]
 
   return(list(tree = tree,
               labels = ordered_labels))
@@ -550,8 +543,8 @@ get_weighted_feature_dist <- function(main_ph, w, value_var) {
           legend.box.margin=margin(-10,-10,-10,-10))
 
   tree_data <- tree$data
-  tree_data <- tree_data[tree_data$isTip==T,]
-  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = F)]
+  tree_data <- tree_data[tree_data$isTip==TRUE,]
+  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = FALSE)]
 
   return(list(tree = tree,
               labels = ordered_labels))

@@ -10,11 +10,10 @@ vignette: >
 ---
 
 
-```{r setup, include = FALSE}
-knitr::opts_chunk$set(echo = F,
-                      comment = F, 
-                      warning = F, 
-                      message = F)
+```{r setup, include = FALSE, warning = FALSE}
+knitr::opts_chunk$set(comment = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE)
 ```
 
 This vignette introduces `scBubbletree`, a transparent workflow for quantitative 
@@ -22,7 +21,7 @@ exploration of single cell RNA-seq data.
 
 To run this vignette we need to load a few R-packages:
 
-```{r, echo = T, eval = T, results='hide'}
+```{r}
 library(scBubbletree)
 ```
 
@@ -52,7 +51,9 @@ of the variance in the data, and the proportion of variance explained by each
 subsequent principal component was negligible. Thus, we used the single cell 
 projections (embeddings) in 15-dimensional feature space, $A^{3,918\times 15}$.
 
-```{r, echo=T, eval = F, results='hide'}
+```{r, eval = FALSE, results='hide'}
+# This is how we generated the data used in this vignette
+
 # create directory
 dir.create(path = "case_study/")
 
@@ -158,7 +159,7 @@ negligible amount of variance in the data.
 
 
 
-```{r, echo = T}
+```{r}
 # A has n=cells as rows, f=features as columns (e.g. from PCA)
 dim(A)
 ```
@@ -195,7 +196,7 @@ statistic and WCSS estimates for each $k$.
   
 Lets run `get_k` now:
 
-```{r, echo = T, eval = T}
+```{r}
 b_k <- get_k(B_gap = 5,
              ks = 1:10,
              x = A,
@@ -210,7 +211,7 @@ Hence, $k$=5 appears to be reasonable first choice of $k$. Means (points) and
 95% confidence intervals are shown for the Gap statistic at each $k$ computed
 using `B_gap`=5 MCMC simulations.
 
-```{r, echo=T, eval=T}
+```{r}
 g0 <- ggplot(data = b_k$gap_stats_summary)+
   geom_line(aes(x = k, y = gap_mean))+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
@@ -225,7 +226,7 @@ ggplot(data = b_k$wcss_stats_summary)+
 ```
 
 
-```{r, fig.width=7, fig.height=2.5, fig.align='center', echo=T, eval=T}
+```{r, fig.width=7, fig.height=2.5, fig.align='center'}
 g0
 ```
 
@@ -241,7 +242,7 @@ Gap statistic and WCSS. As input we need to provide the matrix $A$ and a vector
 of $r$s. The output will be the Gap statistic and WCSS estimate for each $r$ 
 (or the number of communities $k'$ detected at resolution $r$).
 
-```{r, echo = T, eval = T}
+```{r}
 b_r <- get_r(B_gap = 5,
              rs = 10^seq(from = -4, to = 0, by = 0.35),
              x = A,
@@ -256,7 +257,7 @@ The Gap statistic and WCSS curves have a noticeable knee (elbow) at $k'=5$
 ($r=0.0025$). Means (points) and 95% confidence intervals are shown for the 
 Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
 
-```{r, echo=T, eval=T}
+```{r}
 g0_r <- (ggplot(data = b_r$gap_stats_summary)+
   geom_line(aes(x = k, y = gap_mean))+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
@@ -286,7 +287,7 @@ ggplot(data = b_r$wcss_stats_summary)+
 ```
 
 
-```{r, fig.width=6, fig.height=4, fig.align='center', echo=T, eval=T}
+```{r, fig.width=6, fig.height=4, fig.align='center'}
 g0_r
 ```
 
@@ -294,7 +295,7 @@ g0_r
 A range of resolutions yields $k=5$ number of communities, i.e. $r = 0.0025$ 
 and $r = 0.125$ result in $k=5$. Lets use $r=0.1$ for clustering
 
-```{r, fig.width=4, fig.height=3, fig.align='center', echo=T, eval=T}
+```{r, fig.width=4, fig.height=3, fig.align='center'}
 ggplot(data = b_r$gap_stats_summary)+
     geom_point(aes(x = r, y = k), size = 1)+
     xlab(label = "r")+
@@ -306,7 +307,7 @@ ggplot(data = b_r$gap_stats_summary)+
 
 ```{r}
 knitr::kable(x = b_r$gap_stats_summary[b_r$gap_stats_summary$k == 5, ],
-             digits = 4, row.names = F)
+             digits = 4, row.names = FALSE)
 ```
 
 
@@ -348,7 +349,7 @@ branch lengths.
 
 Steps 2.1 and 3. are performed next
 
-```{r, echo=T, eval=T}
+```{r}
 k5_kmeans <- get_bubbletree_kmeans(
   x = A,
   k = 5,
@@ -357,13 +358,13 @@ k5_kmeans <- get_bubbletree_kmeans(
   B = 200,
   N_eff = 200,
   round_digits = 1,
-  show_simple_count = F,
+  show_simple_count = FALSE,
   kmeans_algorithm = "MacQueen")
 ```
 
 ... and plot the bubbletree
 
-```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+```{r, fig.width=4, fig.height=3, fig.align='center'}
 k5_kmeans$tree
 ```
 
@@ -381,8 +382,9 @@ and contains only 436 cells ($\approx$ 11% of all cells in the dataset).
 
 We can access the bubble data shown in the bubbletree
 
-```{r, echo=T, results=T}
-knitr::kable(k5_kmeans$tree_meta, digits = 2, row.names = F)
+```{r}
+knitr::kable(k5_kmeans$tree_meta, 
+             digits = 2, row.names = FALSE)
 ```
 
 **topology**: inter-bubble distances are represented by sums of branch lengths 
@@ -405,7 +407,7 @@ $iter_{max} = 100$.
 
 Steps 2.2 and 3. (hierarchical clustering) are performed next
 
-```{r, echo=T, eval=T}
+```{r}
 k5_louvain <- get_bubbletree_louvain(x = A,
                                      r = 0.0025,
                                      n_start = 20,
@@ -416,7 +418,7 @@ k5_louvain <- get_bubbletree_louvain(x = A,
                                      B = 200,
                                      N_eff = 200,
                                      round_digits = 1,
-                                     show_simple_count = F)
+                                     show_simple_count = FALSE)
 ```
 
 
@@ -424,14 +426,14 @@ k5_louvain <- get_bubbletree_louvain(x = A,
 generated by kmeans clustering. The bubble IDs are different but we see similar 
 bubble sizes, topology and branch robustness values.
 
-```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+```{r, fig.width=4, fig.height=3, fig.align='center'}
 k5_louvain$tree
 ```
 
 
 The two dendrograms shown side-by-side:
 
-```{r, fig.width=7, fig.height=3, fig.align='center', echo=T}
+```{r, fig.width=7, fig.height=3, fig.align='center'}
 k5_kmeans$tree|k5_louvain$tree
 ```
 
@@ -473,7 +475,7 @@ categorical features to the bubbletree using `scBubbletree`.
 
 Categorical cell features can be 'attached' to the bubbletree using the function
 `get_cat_tiles`. Here we will show the relative frequency of cell type labels 
-across the bubbles (parameter `integrate_vertical=T`).
+across the bubbles (parameter `integrate_vertical=TRUE`).
 
 Interpretation of the figure below: 
   
@@ -482,15 +484,15 @@ Interpretation of the figure below:
   * for instance, 99.8% of cells that have feature HCC827 are found in bubble 2
   * columns in the tile plot integrate to 100%
 
-```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=7, fig.height=4, fig.align='center'}
 w1 <- get_cat_tiles(btd = k5_kmeans,
                     f = m$cell_line_demuxlet,
-                    integrate_vertical = T,
+                    integrate_vertical = TRUE,
                     round_digits = 1,
-                    show_hclust = F,
-                    disable_hclust = F,
+                    show_hclust = FALSE,
+                    disable_hclust = FALSE,
                     x_axis_name = 'Cell line',
-                    rotate_x_axis_labels = T,
+                    rotate_x_axis_labels = TRUE,
                     tile_text_size = 2.75)
 
 (k5_kmeans$tree|w1$plot)+
@@ -499,7 +501,7 @@ w1 <- get_cat_tiles(btd = k5_kmeans,
 
 We can also show the inter-bubble cell type composition, i.e. the relative 
 frequencies of different cell types in a specific bubble (with parameter 
-`integrate_vertical=F`).
+`integrate_vertical=FALSE`).
 
 Interpretation of the figure below: 
   
@@ -509,15 +511,15 @@ Interpretation of the figure below:
     0.1% H1975 and 0% HCC827 cells
   * rows integrate to 100%
 
-```{r, fig.width=7, fig.height=4, echo=T, fig.align='center'}
+```{r, fig.width=7, fig.height=4, fig.align='center'}
 w2 <- get_cat_tiles(btd = k5_kmeans,
                     f = m$cell_line_demuxlet,
-                    integrate_vertical = F,
+                    integrate_vertical = FALSE,
                     round_digits = 1,
-                    show_hclust = F,
-                    disable_hclust = F,
+                    show_hclust = FALSE,
+                    disable_hclust = FALSE,
                     x_axis_name = 'Cell line',
-                    rotate_x_axis_labels = T,
+                    rotate_x_axis_labels = TRUE,
                     tile_text_size = 2.75)
 
 (k5_kmeans$tree|w2$plot)+
@@ -528,7 +530,7 @@ w2 <- get_cat_tiles(btd = k5_kmeans,
 `ggplot2` to visualize annotations. Furthermore, R-package `patchwork` is 
 used to combine plots.
 
-```{r, fig.width=9, fig.height=4, echo=T, fig.align='center'}
+```{r, fig.width=9, fig.height=4, fig.align='center'}
 (k5_kmeans$tree|w1$plot|w2$plot)+
   patchwork::plot_layout(widths = c(1, 2, 2))+
   patchwork::plot_annotation(tag_levels = "A")
@@ -564,7 +566,7 @@ with $n_i$ as the number of cells in cluster $i$ and $n=\sum_i n_i$.
 
 The Gini impurity results are shown below:
 
-```{r, echo = T}
+```{r}
 # gini
 get_gini(labels = m$cell_line_demuxlet, 
          clusters = k5_kmeans$cluster)$gi
@@ -575,7 +577,7 @@ This indicates nearly perfect mapping of cell lines to bubbles. This analysis
 performed for different values of $k$ with function `get_gini_k`, which takes 
 as main input the output of `get_k` or `get_r`
 
-```{r, echo = T}
+```{r}
 gini_boot <- get_gini_k(labels = m$cell_line_demuxlet,
                         obj = b_k)
 ```
@@ -584,7 +586,7 @@ From the figure we can conclude that WGI drops to 0 at `k=5`, and all labels
 are nearly perfectly split across the bubbles with each bubble containing cells 
 exclusively from one cell type.
 
-```{r, fig.width=4, fig.height=3, fig.align='center', echo=T}
+```{r, fig.width=4, fig.height=3, fig.align='center'}
 g1 <- ggplot(data = gini_boot$wgi_summary)+
   geom_point(aes(x = k, y = wgi), size = 0.75)+
   ylab(label = "WGI")+
@@ -605,14 +607,14 @@ We can visualize numeric features in *two* ways.
 First, we can show numeric feature aggregates (e.g. "mean", "median" or "sum")
 in the different bubbles with `get_num_tiles`
 
-```{r, fig.width=8, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=8, fig.height=4, fig.align='center'}
 w3 <- get_num_tiles(btd = k5_kmeans,
                     fs = e,
                     summary_function = "mean",
-                    show_hclust = F,
-                    disable_hclust = F,
+                    show_hclust = FALSE,
+                    disable_hclust = FALSE,
                     x_axis_name = 'Gene expression',
-                    rotate_x_axis_labels = T,
+                    rotate_x_axis_labels = TRUE,
                     round_digits = 1,
                     tile_text_size = 2.75)
 
@@ -624,11 +626,11 @@ w3 <- get_num_tiles(btd = k5_kmeans,
 Second, we can visualize the distributions of the numeric cell features in each
 bubble as violins with `get_num_violins`
 
-```{r, fig.width=10, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=10, fig.height=4, fig.align='center'}
 w4 <- get_num_violins(btd = k5_kmeans,
                       fs = e,
                       x_axis_name = 'Gene expression',
-                      rotate_x_axis_labels = T)
+                      rotate_x_axis_labels = TRUE)
 
 (k5_kmeans$tree|w3$plot|w4$plot)+
   patchwork::plot_layout(widths = c(1.5, 2, 2.5))+
@@ -638,21 +640,21 @@ w4 <- get_num_violins(btd = k5_kmeans,
 ### quality control with `scBubbletree`
 What is the percent of UMIs coming from mitochondrial genes in each bubble? 
 
-```{r, fig.width=9, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=9, fig.height=4, fig.align='center'}
 w_mt_dist <- get_num_violins(btd = k5_kmeans,
                              fs = 1-m$non_mt_percent,
                              x_axis_name = 'MT [%]',
-                             rotate_x_axis_labels = T)
+                             rotate_x_axis_labels = TRUE)
 
 w_umi_dist <- get_num_violins(btd = k5_kmeans,
                               fs = m$nCount_RNA/1000,
                               x_axis_name = 'RNA count (in thousands)',
-                              rotate_x_axis_labels = T)
+                              rotate_x_axis_labels = TRUE)
 
 w_gene_dist <- get_num_violins(btd = k5_kmeans,
                                fs = m$nFeature_RNA,
                                x_axis_name = 'Gene count',
-                               rotate_x_axis_labels = T)
+                               rotate_x_axis_labels = TRUE)
 
 
 (k5_kmeans$tree|w_mt_dist$plot|w_umi_dist$plot|w_gene_dist$plot)+
@@ -694,7 +696,7 @@ generation of the bubbletree.
 Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering with
 R-package pam and then generate the bubbletree:
 
-```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
+```{r, fig.width=7, fig.height=4, fig.align='center'}
 pam_k5 <- cluster::pam(x = A, 
                        k = 5, 
                        metric = "euclidean")
@@ -709,13 +711,13 @@ dummy_k5_pam <- get_bubbletree_dummy(x = A,
 dummy_k5_pam$tree|
   get_cat_tiles(btd = dummy_k5_pam, 
                 f = m$cell_line_demuxlet,
-                integrate_vertical = T,
+                integrate_vertical = TRUE,
                 round_digits = 1,
-                show_hclust = F,
-                disable_hclust = F,
+                show_hclust = FALSE,
+                disable_hclust = FALSE,
                 tile_text_size = 2.75,
                 x_axis_name = 'Cell line',
-                rotate_x_axis_labels = T)$plot
+                rotate_x_axis_labels = TRUE)$plot
 ```
 
 
