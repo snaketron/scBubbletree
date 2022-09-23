@@ -582,48 +582,48 @@ get_num_tiles <- function(btd,
                           feature,
                           round_digits,
                           summary_function) {
-    f <- data.frame(cluster = k, a = a)
+    f <- base::data.frame(cluster = k, a = a)
 
     if(summary_function == "mean") {
       f <- stats::aggregate(a~cluster,
                             data = f,
-                            FUN = mean,
-                            na.action = na.omit)
+                            FUN = base::mean,
+                            na.action = stats::na.omit)
       f$value <- round(x = f$a, digits = round_digits)
     }
     if(summary_function == "median") {
       f <- stats::aggregate(a~cluster,
                             data = f,
-                            FUN = median,
-                            na.action = na.omit)
-      f$value <- round(x = f$a, digits = round_digits)
+                            FUN = stats::median,
+                            na.action = stats::na.omit)
+      f$value <- base::round(x = f$a, digits = round_digits)
     }
     if(summary_function == "sum") {
       f <- stats::aggregate(a~cluster,
                             data = f,
-                            FUN = sum,
-                            na.action = na.omit)
-      f$value <- round(x = f$a, digits = round_digits)
+                            FUN = base::sum,
+                            na.action = stats::na.omit)
+      f$value <- base::round(x = f$a, digits = round_digits)
     }
     if(summary_function == "pct nonzero") {
       get_nonzero <- function(x) {
-        return(sum(x>0)/length(x))
+        return(base::sum(x>0)/base::length(x))
       }
       f <- stats::aggregate(a~cluster,
                             data = f,
                             FUN = get_nonzero,
-                            na.action = na.omit)
-      f$value <- round(x = f$a, digits = round_digits)
+                            na.action = stats::na.omit)
+      f$value <- base::round(x = f$a, digits = round_digits)
     }
     if(summary_function == "pct zero") {
       get_zero <- function(x) {
-        return(sum(x==0)/length(x))
+        return(base::sum(x==0)/base::length(x))
       }
       f <- stats::aggregate(a~cluster,
                             data = f,
                             FUN = get_zero,
-                            na.action = na.omit)
-      f$value <- round(x = f$a, digits = round_digits)
+                            na.action = stats::na.omit)
+      f$value <- base::round(x = f$a, digits = round_digits)
     }
 
     f$a <- NULL
@@ -655,13 +655,13 @@ get_num_tiles <- function(btd,
                     by.x = "cluster",
                     by.y = "label",
                     all = TRUE)
-  ws <- ws[order(ws$tree_order, decreasing = FALSE), ]
-  ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
-  if(any(is.na(ws$feature))) {
-    ws$feature <- ws$feature[is.na(ws$feature)==FALSE][1]
+  ws <- ws[base::order(ws$tree_order, decreasing = FALSE), ]
+  ws$cluster <- base::factor(x = ws$cluster, levels = base::unique(ws$cluster))
+  if(base::any(base::is.na(ws$feature))) {
+    ws$feature <- ws$feature[base::is.na(ws$feature)==FALSE][1]
   }
-  ws$feature <- as.character(ws$feature)
-  ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))
+  ws$feature <- base::as.character(ws$feature)
+  ws$feature <- base::factor(x = ws$feature, levels = base::colnames(fs))
 
 
 
@@ -671,7 +671,7 @@ get_num_tiles <- function(btd,
       tree <- get_weighted_feature_dist_num(main_ph = btd$ph$main_ph,
                                             w = ws,
                                             value_var = "value")
-      ws$feature <- factor(levels = tree$labels, x = ws$feature)
+      ws$feature <- base::factor(levels = tree$labels, x = ws$feature)
     }
   }
 
@@ -716,7 +716,7 @@ get_num_tiles <- function(btd,
     }
   }
 
-  return(list(table = ws, plot = w))
+  return(base::list(table = ws, plot = w))
 }
 
 
@@ -806,7 +806,7 @@ get_num_violins <- function(btd,
 
   # aux. functions
   get_raw <- function(k, a, feature) {
-    f <- data.frame(cluster = k, a = a)
+    f <- base::data.frame(cluster = k, a = a)
     f$value <- f$a
     f$a <- NULL
     f$feature <- feature
@@ -849,13 +849,13 @@ get_num_violins <- function(btd,
                     by.y = "label",
                     all = TRUE)
 
-  ws <- ws[order(ws$tree_order, decreasing = FALSE), ]
-  ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
-  if(any(is.na(ws$feature))) {
-    ws$feature <- ws$feature[is.na(ws$feature)==FALSE][1]
+  ws <- ws[base::order(ws$tree_order, decreasing = FALSE), ]
+  ws$cluster <- base::factor(x = ws$cluster, levels = base::unique(ws$cluster))
+  if(base::any(base::is.na(ws$feature))) {
+    ws$feature <- ws$feature[base::is.na(ws$feature)==FALSE][1]
   }
-  ws$feature <- as.character(ws$feature)
-  ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))
+  ws$feature <- base::as.character(ws$feature)
+  ws$feature <- base::factor(x = ws$feature, levels = base::colnames(fs))
 
 
 
@@ -874,12 +874,12 @@ get_num_violins <- function(btd,
     ggplot2::xlab(label = "Bubble")+
     ggplot2::theme(strip.text.x = ggplot2::element_text(
       margin = ggplot2::margin(0.01,0,0.01,0, "cm")),
-          legend.margin=ggplot2::margin(t = 0,r = 0,b = 2,l = 0),
-          legend.box.margin=ggplot2::margin(-10,-10,-10,-10))+
-    ggplot2::geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
+      legend.margin=ggplot2::margin(t = 0,r = 0,b = 2,l = 0),
+      legend.box.margin=ggplot2::margin(-10,-10,-10,-10))+
+    ggplot2::geom_violin(data = ws, ggplot2::aes(
+      x = cluster, y = value), fill = NA)
 
-  return(list(table = ws,
-              plot = w))
+  return(base::list(table = ws, plot = w))
 }
 
 
