@@ -7,33 +7,35 @@ Authors@R:
            family = "Kitanovski",
            role = c("aut", "cre"),
            email = "simo.kitanovski@uni-due.de")
-Description: Visual exploration is an integral part of scRNA-seq data analysis.
-  scBubbletree is a quantitative method for visual exploration of scRNA-seq 
-  data. scBubbletree was designed to overcome challenges associated with the 
-  rapid growth of the scale of scRNA-seq datasets, such as overplotting, and to 
-  accurately preserve the local and global structure of the data. The workflow
-  of scBubbletree is easy-to-use and allows seamless integrate with popular 
-  approaches for scRNA-seq data analysis.
+Description: Visual exploration is an integral part of scRNA-seq data 
+  analysis. scBubbletree is a quantitative method for visual exploration 
+  of scRNA-seq data. scBubbletree was designed to overcome challenges 
+  associated with the rapid growth of the scale of scRNA-seq datasets, 
+  such as overplotting, and to accurately preserve the local and global 
+  structure of the data. scBubbletree is easy-to-use and allows seamless 
+  integrate with popular approaches for scRNA-seq data analysis.
 License: file LICENSE
 Depends: 
-    R (>= 4.1.0),
+    R (>= 4.1.0)
+Imports:
+    reshape2,
+    parallel,
+    ape,
+    scales,
+    SummarizedExperiment,
+    Seurat,
+    ggplot2,
+    ggtree,
+    patchwork,
     methods,
     stats,
-    ggplot2 (>= 3.3.3),
-    ggtree (>= 3.2.0)
-Imports:
-    reshape2 (>= 1.4.4),
-    parallel (>= 4.1.2),
-    ape (>= 5.5),
-    scales (>= 1.1),
-    SummarizedExperiment (>= 1.24.0),
-    Seurat (>= 4.1)
+    base,
+    utils
 Suggests:
-    BiocStyle (>= 2.24.0),
-    prettydoc,
+    BiocStyle,
     knitr,
     testthat,
-    patchwork
+    cluster
 Encoding: UTF-8
 NeedsCompilation: no
 biocViews: Visualization,Clustering,
