@@ -23,6 +23,9 @@ To run this vignette we need to load a few R-packages:
 
 ```{r}
 library(scBubbletree)
+library(ggplot2)
+library(ggtree)
+library(patchwork)
 ```
 
 
