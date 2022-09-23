@@ -1,9 +1,12 @@
 Package: scBubbletree
 Type: Package
 Title: Quantiative visual exploration of scRNA-seq data
-Version: 0.1.39
-Author: Simo Kitanovski
-Maintainer: Simo Kitanovski <simo.kitanovski@uni-due.de>
+Version: 0.99.0
+Authors@R: 
+    person(given = "Simo",  
+           family = "Kitanovski",
+           role = c("aut", "cre"),
+           email = "simo.kitanovski@uni-due.de")
 Description: Visual exploration is an integral part of scRNA-seq data analysis.
   scBubbletree is a quantitative method for visual exploration of scRNA-seq 
   data. scBubbletree was designed to overcome challenges associated with the 
@@ -13,7 +16,7 @@ Description: Visual exploration is an integral part of scRNA-seq data analysis.
   approaches for scRNA-seq data analysis.
 License: file LICENSE
 Depends: 
-    R (>= 3.6.0),
+    R (>= 4.1.0),
     methods,
     stats,
     ggplot2 (>= 3.3.3),
@@ -32,9 +35,8 @@ Suggests:
     testthat,
     patchwork
 Encoding: UTF-8
-LazyData: true
 NeedsCompilation: no
-biocViews: Visualization,Clustering,SingleCellWorkflow,GeneExpressionWorkflow,
+biocViews: Visualization,Clustering,
     SingleCell,Transcriptomics,RNASeq
 BugReports: https://github.com/snaketron/scBubbletree/issues
 RoxygenNote: 6.1.1
