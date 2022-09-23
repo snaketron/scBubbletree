@@ -73,7 +73,7 @@ get_cat_tiles <- function(btd,
     if(nrow(btd$A)!=length(btd$cluster)) {
       stop("problem in btd: nrow(btd$A)!=length(btd$cluster)")
     }
-    if(is.numeric(btd$k)==F) {
+    if(is.numeric(btd$k)==FALSE) {
       stop("problem in btd: btd$k must be a positive integer (k>=2)")
     }
     if(length(btd$k)!=1) {
@@ -155,7 +155,7 @@ get_cat_tiles <- function(btd,
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
     }
-    if(base::is.numeric(round_digits)==F) {
+    if(base::is.numeric(round_digits)==FALSE) {
       stop("round_digits must be a positive integer")
     }
     if(base::length(round_digits)!=1) {
@@ -245,7 +245,7 @@ get_cat_tiles <- function(btd,
     if(base::missing(x_axis_name)==TRUE) {
       stop("x_axis_name input not found")
     }
-    if(base::is.character(x_axis_name)==F) {
+    if(base::is.character(x_axis_name)==FALSE) {
       stop("x_axis_name must be a character string")
     }
     if(base::length(x_axis_name)!=1) {
@@ -311,13 +311,13 @@ get_cat_tiles <- function(btd,
   ws$norm_percent_feature <- ws$percent_feature/ws$n_cluster
   ws$norm_percent_cluster <- ws$percent_cluster/ws$n_feature
 
-  if(integrate_vertical==F) {
+  if(integrate_vertical==FALSE) {
     legend <- "Bubble composition [%]"
     ws$percent <- base::round(x = ws$percent_cluster,
                               digits = round_digits)
     ws$norm_percent <- ws$norm_percent_cluster
   }
-  if(integrate_vertical==T) {
+  if(integrate_vertical==TRUE) {
     legend <- "Feature composition [%]"
     ws$percent <- base::round(x = ws$percent_feature,
                               digits = round_digits)
@@ -328,67 +328,69 @@ get_cat_tiles <- function(btd,
                     y = btd$tree_meta,
                     by.x = "cluster",
                     by.y = "label",
-                    all = T)
+                    all = TRUE)
   ws <- ws[ base::order(ws$tree_order,
-                        decreasing = F),]
+                        decreasing = FALSE),]
   ws$cluster <- base::factor(x = ws$cluster,
                              levels = base::unique(ws$cluster))
 
 
   # reorder features based on hclust
-  if(disable_hclust==F) {
-    if(length(unique(ws$feature))>1) {
-      tree <- get_weighted_feature_dist(main_ph = btd$ph$main_ph,
-                                        w = ws,
-                                        value_var = "prob_feature")
-      ws$feature <- as.character(ws$feature)
-      ws$feature <- factor(levels = tree$labels, x = ws$feature)
+  if(disable_hclust==FALSE) {
+    if(base::length(base::unique(ws$feature))>1) {
+      tree <- get_weighted_feature_dist(
+        main_ph = btd$ph$main_ph, w = ws, value_var = "prob_feature")
+      ws$feature <- base::as.character(ws$feature)
+      ws$feature <- base::factor(levels = tree$labels, x = ws$feature)
     }
   }
 
 
-  w <- ggplot(data = ws)+
-    theme_bw(base_size = 10)+
-    geom_tile(aes(x = feature, y = cluster, fill = percent), col = "white")+
-    geom_text(aes(x = feature, y = cluster, label = percent),
-              col = "black", size = tile_text_size)+
-    theme(legend.position = "top",
-          legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-5,-5,-5,-5))+
-    xlab(label = x_axis_name)+
-    ylab(label = "Bubble")+
-    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
+  w <- ggplot2::ggplot(data = ws)+
+    ggplot2::theme_bw(base_size = 10)+
+    ggplot2::geom_tile(ggplot2::aes(x = feature, y = cluster, fill = percent),
+                       col = "white")+
+    ggplot2::geom_text(ggplot2::aes(x = feature, y = cluster, label = percent),
+                       col = "black", size = tile_text_size)+
+    ggplot2::theme(legend.position = "top",
+                   legend.margin=ggplot2::margin(0,0,0,0),
+                   legend.box.margin=ggplot2::margin(-5,-5,-5,-5))+
+    ggplot2::xlab(label = x_axis_name)+
+    ggplot2::ylab(label = "Bubble")+
+    ggplot2::guides(fill = ggplot2::guide_colourbar(
+      barwidth = 4, barheight = 0.7))
 
 
-  if(tile_bw==F) {
-    w <- w+scale_fill_distiller(name = legend,
-                         palette = "Spectral",
-                         na.value = 'white',
-                         limits = c(0, 100))
+  if(tile_bw==FALSE) {
+    w <- w+ggplot2::scale_fill_distiller(name = legend,
+                                         palette = "Spectral",
+                                         na.value = 'white',
+                                         limits = c(0, 100))
   } else {
-    w <- w+scale_fill_gradient(name = legend,
-                               low = "#f9f9f9",
-                               high = "#848484",
-                               na.value = 'white',
-                               limits = c(0, 100))
+    w <- w+ggplot2::scale_fill_gradient(name = legend,
+                                        low = "#f9f9f9",
+                                        high = "#848484",
+                                        na.value = 'white',
+                                        limits = c(0, 100))
   }
 
-  if(rotate_x_axis_labels==T) {
-    w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  if(rotate_x_axis_labels==TRUE) {
+    w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90,
+                                                              vjust = 0.5,
+                                                              hjust=1))
   }
 
-  if(disable_hclust==F) {
-    if(show_hclust==T) {
-      if(length(unique(w$feature))==1) {
-        warning("Cannot perform hierarchical clustering:feature has 1 category\n")
+  if(disable_hclust==FALSE) {
+    if(show_hclust==TRUE) {
+      if(length(base::unique(w$feature))==1) {
+        warning("Can't do hierarchical clustering:feature has 1 category\n")
       } else {
         w <- (w/tree$tree)+patchwork::plot_layout(heights = c(0.7, 0.3))
       }
     }
   }
 
-  return(list(table = ws,
-              plot = w))
+  return(base::list(table = ws, plot = w))
 }
 
 
@@ -437,10 +439,10 @@ get_num_tiles <- function(btd,
     }
 
     # check fs
-    if(is.numeric(fs)==F) {
+    if(is.numeric(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
-    if(is.vector(fs)==F&is.matrix(fs)==F) {
+    if(is.vector(fs)==FALSE & is.matrix(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
     if(is.vector(fs)) {
@@ -460,7 +462,7 @@ get_num_tiles <- function(btd,
 
 
     # check round_digits
-    if(is.numeric(round_digits)==F) {
+    if(is.numeric(round_digits)==FALSE) {
       stop("round_digits must be an integer >=0")
     }
     if(round_digits%%1!=0) {
@@ -478,7 +480,7 @@ get_num_tiles <- function(btd,
 
 
     # check summary_function
-    if(is.character(summary_function)==F) {
+    if(is.character(summary_function)==FALSE) {
       stop("summary_function is one of: 'mean', 'median', 'sum',
            'pct nonzero', 'pct zero'")
     }
@@ -494,7 +496,7 @@ get_num_tiles <- function(btd,
 
 
     # check show_hclust
-    if(is.logical(show_hclust)==F) {
+    if(is.logical(show_hclust)==FALSE) {
       stop("show_hclust must be a logical parameter")
     }
     if(length(show_hclust)!=1) {
@@ -503,14 +505,14 @@ get_num_tiles <- function(btd,
 
 
     # check disable_hclust
-    if(is.logical(disable_hclust)==F) {
+    if(is.logical(disable_hclust)==FALSE) {
       stop("disable_hclust must be a logical parameter")
     }
     if(length(disable_hclust)!=1) {
       stop("disable_hclust must be a logical parameter (either TRUE or FALSE)")
     }
 
-    if(disable_hclust==T & show_hclust==T) {
+    if(disable_hclust==TRUE & show_hclust==TRUE) {
       warning("hierarchical feature clustering is disabled (disable_hclust=T),
               show_hclust=T has no effect (set disable_hclust=F to show
               hierarchical dendrogram")
@@ -518,7 +520,7 @@ get_num_tiles <- function(btd,
 
 
     # check tile_text_size
-    if(is.numeric(tile_text_size)==F) {
+    if(is.numeric(tile_text_size)==FALSE) {
       stop("tile_text_size must be a number >0")
     }
     if(length(tile_text_size)!=1) {
@@ -533,7 +535,7 @@ get_num_tiles <- function(btd,
 
 
     # check tile_bw
-    if(is.logical(tile_bw)==F) {
+    if(is.logical(tile_bw)==FALSE) {
       stop("tile_bw must be a logical parameter")
     }
     if(length(tile_bw)!=1) {
@@ -542,7 +544,7 @@ get_num_tiles <- function(btd,
 
 
     # check x_axis_name
-    if(is.character(x_axis_name)==F) {
+    if(is.character(x_axis_name)==FALSE) {
       stop("x_axis_name must be a character string")
     }
     if(length(x_axis_name)!=1) {
@@ -550,7 +552,7 @@ get_num_tiles <- function(btd,
     }
 
     # check rotate_x_axis_labels
-    if(is.logical(rotate_x_axis_labels)==F) {
+    if(is.logical(rotate_x_axis_labels)==FALSE) {
       stop("rotate_x_axis_labels must be a logical parameter
            (either TRUE or FALSE)")
     }
@@ -652,11 +654,11 @@ get_num_tiles <- function(btd,
   ws <- base::merge(x = ws, y = btd$tree_meta,
                     by.x = "cluster",
                     by.y = "label",
-                    all = T)
-  ws <- ws[order(ws$tree_order, decreasing = F), ]
+                    all = TRUE)
+  ws <- ws[order(ws$tree_order, decreasing = FALSE), ]
   ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
   if(any(is.na(ws$feature))) {
-    ws$feature <- ws$feature[is.na(ws$feature)==F][1]
+    ws$feature <- ws$feature[is.na(ws$feature)==FALSE][1]
   }
   ws$feature <- as.character(ws$feature)
   ws$feature <- factor(x = ws$feature, levels = base::colnames(fs))
@@ -664,7 +666,7 @@ get_num_tiles <- function(btd,
 
 
   # reorder features based on hclust
-  if(disable_hclust==F) {
+  if(disable_hclust==FALSE) {
     if(ncol(fs)>1) {
       tree <- get_weighted_feature_dist_num(main_ph = btd$ph$main_ph,
                                             w = ws,
@@ -674,45 +676,47 @@ get_num_tiles <- function(btd,
   }
 
 
-  w <- ggplot(data = ws)+
-    theme_bw(base_size = 10)+
-    geom_tile(aes(x = feature, y = cluster, fill = value), col = "white")+
-    geom_text(aes(x = feature, y = cluster, label = value), col = "black",
-              size = tile_text_size)+
-    theme(legend.position = "top",
-          legend.margin=margin(t=0,r=0,b=2,l=0, unit = "pt"),
-          legend.box.margin=margin(-10,-10,-10,-10))+
-    xlab(label = x_axis_name)+
-    ylab(label = "Bubble")+
-    guides(fill = guide_colourbar(barwidth = 5, barheight = 1))
+  w <- ggplot2::ggplot(data = ws)+
+    ggplot2::theme_bw(base_size = 10)+
+    ggplot2::geom_tile(ggplot2::aes(x = feature, y = cluster, fill = value),
+                       col = "white")+
+    ggplot2::geom_text(ggplot2::aes(x = feature, y = cluster, label = value),
+                       col = "black",
+                       size = tile_text_size)+
+    ggplot2::theme(legend.position = "top",
+                   legend.margin=ggplot2::margin(t=0,r=0,b=2,l=0, unit = "pt"),
+                   legend.box.margin=ggplot2::margin(-10,-10,-10,-10))+
+    ggplot2::xlab(label = x_axis_name)+
+    ggplot2::ylab(label = "Bubble")+
+    ggplot2::guides(fill = ggplot2::guide_colourbar(barwidth = 5, barheight=1))
 
 
-  if(tile_bw==F) {
-    w <- w+scale_fill_distiller(name = "Feature",
-                                palette = "Spectral",
-                                na.value = 'white',
-                                breaks = scales::pretty_breaks(n = 3))
+  if(tile_bw==FALSE) {
+    w <- w+ggplot2::scale_fill_distiller(name = "Feature",
+                                         palette = "Spectral",
+                                         na.value = 'white',
+                                         breaks = scales::pretty_breaks(n = 3))
   } else {
-    w <- w+scale_fill_gradient(name = "Feature",
-                               low = "#f9f9f9",
-                               high = "#848484",
-                               na.value = 'white',
-                               breaks = scales::pretty_breaks(n = 3))
+    w <- w+ggplot2::scale_fill_gradient(name = "Feature",
+                                        low = "#f9f9f9",
+                                        high = "#848484",
+                                        na.value = 'white',
+                                        breaks = scales::pretty_breaks(n = 3))
   }
 
 
-  if(rotate_x_axis_labels==T) {
-    w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+  if(rotate_x_axis_labels==TRUE) {
+    w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(
+      angle = 90, vjust = 0.5, hjust=1))
   }
 
-  if(disable_hclust==F) {
-    if(show_hclust==T) {
+  if(disable_hclust==FALSE) {
+    if(show_hclust==TRUE) {
       w <- (w/tree$tree)+patchwork::plot_layout(heights = c(0.7, 0.3))
     }
   }
 
-  return(list(table = ws,
-              plot = w))
+  return(list(table = ws, plot = w))
 }
 
 
@@ -749,10 +753,10 @@ get_num_violins <- function(btd,
 
 
     # check fs
-    if(is.numeric(fs)==F) {
+    if(is.numeric(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
-    if(is.vector(fs)==F&is.matrix(fs)==F) {
+    if(is.vector(fs)==F&is.matrix(fs)==FALSE) {
       stop("fs must be a numeric vector or matrix")
     }
     if(is.vector(fs)) {
@@ -772,7 +776,7 @@ get_num_violins <- function(btd,
 
 
     # check x_axis_name
-    if(is.character(x_axis_name)==F) {
+    if(is.character(x_axis_name)==FALSE) {
       stop("x_axis_name must be a character string")
     }
     if(length(x_axis_name)!=1) {
@@ -781,7 +785,7 @@ get_num_violins <- function(btd,
 
 
     # check rotate_x_axis_labels
-    if(is.logical(rotate_x_axis_labels)==F) {
+    if(is.logical(rotate_x_axis_labels)==FALSE) {
       stop("rotate_x_axis_labels must be a logical parameter
            (either TRUE or FALSE)")
     }
@@ -857,21 +861,22 @@ get_num_violins <- function(btd,
 
   j <- base::which(btd$tree_meta$c < 10)
   if(base::length(j)>0) {
-    warning(base::paste0("Bubbles: ", paste0(btd$tree_meta$label[j],
-                                             collapse = ','), " have fewer than 10 cells
-    -> violins might not be robust"))
+    warning(base::paste0("Bubbles: ",
+                         paste0(btd$tree_meta$label[j], collapse = ','),
+                         " have < 10 cells -> violins might not be robust"))
   }
 
-  w <- ggplot(data = ws)+
-    theme_bw(base_size = 10)+
-    facet_grid(.~feature, scales = "free_x")+
-    coord_flip()+
-    ylab(label = x_axis_name)+
-    xlab(label = "Bubble")+
-    theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),
-          legend.margin=margin(t = 0,r = 0,b = 2,l = 0),
-          legend.box.margin=margin(-10,-10,-10,-10))+
-    geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
+  w <- ggplot2::ggplot(data = ws)+
+    ggplot2::theme_bw(base_size = 10)+
+    ggplot2::facet_grid(.~feature, scales = "free_x")+
+    ggplot2::coord_flip()+
+    ggplot2::ylab(label = x_axis_name)+
+    ggplot2::xlab(label = "Bubble")+
+    ggplot2::theme(strip.text.x = ggplot2::element_text(
+      margin = ggplot2::margin(0.01,0,0.01,0, "cm")),
+          legend.margin=ggplot2::margin(t = 0,r = 0,b = 2,l = 0),
+          legend.box.margin=ggplot2::margin(-10,-10,-10,-10))+
+    ggplot2::geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
 
   return(list(table = ws,
               plot = w))

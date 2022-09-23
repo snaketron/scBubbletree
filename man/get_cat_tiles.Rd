@@ -89,9 +89,9 @@ of different features
 
 \examples{
 # input data
-
-data(A)
-data(f)
+data(d_500)
+A <- d_500$A
+f <- d_500$f
 
 
 b <- get_bubbletree_louvain(x = A,
@@ -124,4 +124,5 @@ b$tree|g_v$plot|g_h$plot
 }
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
-get_bubbletree_louvain, get_gini, get_gini_k, get_num_tile, get_num_violins}
+get_bubbletree_louvain, get_gini, get_gini_k, get_num_tile, get_num_violins,
+d_500}

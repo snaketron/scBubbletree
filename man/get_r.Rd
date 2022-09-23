@@ -73,8 +73,8 @@ estimates for each \eqn{r} and \eqn{k'} and bootstrap iteration \eqn{b}}
 
 \examples{
 # input data
-data(A)
-head(A)
+data(d_500)
+A <- d_500$A
 
 
 b <- get_r(x = A,
@@ -89,5 +89,5 @@ b$gap_stats_summary
 }
 
 \seealso{get_k, get_bubbletree_dummy, get_bubbletree_louvain,
-get_bubbletree_kmeans, get_gini, get_gini_k, A, fs, f, get_num_tiles,
+get_bubbletree_kmeans, get_gini, get_gini_k, d_500, get_num_tiles,
 get_num_violins, get_cat_tiles}

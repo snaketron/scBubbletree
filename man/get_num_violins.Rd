@@ -26,7 +26,7 @@ bubbletree
 get_num_violins(btd,
                 fs,
                 x_axis_name = "Feature distribution",
-                rotate_x_axis_labels = T)
+                rotate_x_axis_labels = TRUE)
 }
 
 
@@ -68,12 +68,12 @@ bubble.
 
 \examples{
 # input data
-
-data(A)
-data(fs)
+data(d_500)
+A <- d_500$A
+fs <- d_500$fs
 
 b <- get_bubbletree_louvain(x = A,
-                            k = 0.8,
+                            r = 0.8,
                             N_eff = 100,
                             B = 100)
 
@@ -87,4 +87,5 @@ b$tree|g$plot
 }
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
-get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_tiles}
+get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_tiles,
+d_500}

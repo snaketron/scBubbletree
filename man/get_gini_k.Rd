@@ -88,13 +88,14 @@ resolution \eqn{k} or \eqn{r}}
 
 \examples{
 # input data
-data(A)
-head(A)
+data(d_500)
+A <- d_500$A
+f <- d_500$f
 
 
 b_k <- get_k(x = A,
            ks = 1:5,
-           B_gap = 10,
+           B_gap = 5,
            n_start = 100,
            iter_max = 200,
            kmeans_algorithm = "MacQueen",
@@ -103,21 +104,15 @@ b_k <- get_k(x = A,
 
 b_r <- get_r(x = A,
             rs = c(0.1, 0.5, 1),
-            B_gap = 10,
+            B_gap = 5,
             n_start = 20,
             iter_max = 100,
             louvain_algorithm = "original",
             cores = 1)
 
-
-get_gini_k(
-    labels = sample(x = LETTERS[1:4], size = nrow(A), replace = T),
-    obj = b_k)
-
-get_gini_k(
-    labels = sample(x = LETTERS[1:4], size = nrow(A), replace = T),
-    obj = b_r)
+get_gini_k(labels = f, obj = b_k)
+get_gini_k(labels = f, obj = b_r)
 }
 
 \seealso{get_k, get_r, get_gini, get_bubbletree_kmeans, get_bubbletree_louvain,
-get_bubbletree_dummy, A, f, fs, get_num_tiles, get_num_violins, get_cat_tiles}
+get_bubbletree_dummy, d_500, get_num_tiles, get_num_violins, get_cat_tiles}

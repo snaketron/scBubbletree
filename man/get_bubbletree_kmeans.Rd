@@ -119,8 +119,8 @@ in a hierarchical dendrogram the algorithm performs the following steps:
 
 \examples{
 # input data
-data(A)
-head(A)
+data(d_500)
+A <- d_500$A
 
 b <- get_bubbletree_kmeans(x = A,
                            k = 8,
@@ -135,4 +135,4 @@ b$tree
 }
 
 \seealso{get_k, get_bubbletree_dummy, get_bubbletree_louvain, get_gini,
-get_gini_k, A, fs, f, get_num_tiles, get_num_violins, get_cat_tiles}
+get_gini_k, d_500, get_num_tiles, get_num_violins, get_cat_tiles}

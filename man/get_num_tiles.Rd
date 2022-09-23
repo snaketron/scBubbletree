@@ -29,7 +29,7 @@ get_num_tiles(btd,
               show_hclust = FALSE,
               disable_hclust = FALSE,
               tile_text_size = 3,
-              tile_bw = TRUE,
+              tile_bw = FALSE,
               x_axis_name = "Feature",
               rotate_x_axis_labels = TRUE)
 }
@@ -89,9 +89,9 @@ Important note: NA and NULL values are omitted.
 
 \examples{
 # input data
-
-data(A)
-data(fs)
+data(d_500)
+A <- d_500$A
+fs <- d_500$fs
 
 b <- get_bubbletree_kmeans(x = A,
                     k = 8,
@@ -113,4 +113,5 @@ b$tree|g$plot
 }
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
-get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_violins}
+get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_violins,
+d_500}

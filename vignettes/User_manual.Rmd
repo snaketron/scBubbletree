@@ -110,24 +110,24 @@ d <- RunTSNE(d, dims = 1:15)
 save(d, file = "case_study/d.RData")
 
 
-# save the PCA matrix 'study_A', meta data 'study_m' and 
-# marker genes matrix 'study_e'
-study_A <- d@reductions$pca@cell.embeddings[, 1:15]
-save(study_A, file = "case_study/study_A.RData")
-
-
-study_m <- d@meta.data
-save(study_m, file = "case_study/study_m.RData")
-
-
-study_e <- t(as.matrix(d@assays$SCT@data[
+# save the PCA matrix 'A', meta data 'm' and 
+# marker genes matrix 'e'
+d <- get(load(file ="case_study/d.RData"))
+A <- d@reductions$pca@cell.embeddings[, 1:15]
+m <- d@meta.data
+e <- t(as.matrix(d@assays$SCT@data[
   rownames(d@assays$SCT@data) %in% 
     c("ALDH1A1", 
       "PIP4K2C", 
       "SLPI",
       "CT45A2",
       "CD74"), ]))
-save(study_e, file = "case_study/study_e.RData")
+
+
+d_ccl <- list(A = A, m = m, e = e)
+save(d_ccl, file = "data/d_ccl.RData")
+
+
 
 ```
 
@@ -135,9 +135,10 @@ save(study_e, file = "case_study/study_e.RData")
 Load the processed PCA matrix and the meta data
 
 ```{r}
-data("study_A", package = "scBubbletree")
-data("study_m", package = "scBubbletree")
-data("study_e", package = "scBubbletree")
+data("d_ccl", package = "scBubbletree")
+A <- d_ccl$A
+m <- d_ccl$m
+e <- d_ccl$e
 ```
 
 
@@ -159,7 +160,7 @@ negligible amount of variance in the data.
 
 ```{r, echo = T}
 # A has n=cells as rows, f=features as columns (e.g. from PCA)
-dim(study_A)
+dim(A)
 ```
 
 
@@ -197,7 +198,7 @@ Lets run `get_k` now:
 ```{r, echo = T, eval = T}
 b_k <- get_k(B_gap = 5,
              ks = 1:10,
-             x = study_A,
+             x = A,
              n_start = 50, 
              iter_max = 200,
              kmeans_algorithm = "MacQueen", 
@@ -243,7 +244,7 @@ of $r$s. The output will be the Gap statistic and WCSS estimate for each $r$
 ```{r, echo = T, eval = T}
 b_r <- get_r(B_gap = 5,
              rs = 10^seq(from = -4, to = 0, by = 0.35),
-             x = study_A,
+             x = A,
              n_start = 10, 
              iter_max = 50,
              louvain_algorithm = "original",
@@ -349,7 +350,7 @@ Steps 2.1 and 3. are performed next
 
 ```{r, echo=T, eval=T}
 k5_kmeans <- get_bubbletree_kmeans(
-  x = study_A,
+  x = A,
   k = 5,
   seed = 1234,
   cores = 1,
@@ -405,7 +406,7 @@ $iter_{max} = 100$.
 Steps 2.2 and 3. (hierarchical clustering) are performed next
 
 ```{r, echo=T, eval=T}
-k5_louvain <- get_bubbletree_louvain(x = study_A,
+k5_louvain <- get_bubbletree_louvain(x = A,
                                      r = 0.0025,
                                      n_start = 20,
                                      iter_max = 100,
@@ -483,7 +484,7 @@ Interpretation of the figure below:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
 w1 <- get_cat_tiles(btd = k5_kmeans,
-                    f = study_m$cell_line_demuxlet,
+                    f = m$cell_line_demuxlet,
                     integrate_vertical = T,
                     round_digits = 1,
                     show_hclust = F,
@@ -510,7 +511,7 @@ Interpretation of the figure below:
 
 ```{r, fig.width=7, fig.height=4, echo=T, fig.align='center'}
 w2 <- get_cat_tiles(btd = k5_kmeans,
-                    f = study_m$cell_line_demuxlet,
+                    f = m$cell_line_demuxlet,
                     integrate_vertical = F,
                     round_digits = 1,
                     show_hclust = F,
@@ -565,7 +566,7 @@ The Gini impurity results are shown below:
 
 ```{r, echo = T}
 # gini
-get_gini(labels = study_m$cell_line_demuxlet, 
+get_gini(labels = m$cell_line_demuxlet, 
          clusters = k5_kmeans$cluster)$gi
 ```
 
@@ -575,7 +576,7 @@ performed for different values of $k$ with function `get_gini_k`, which takes
 as main input the output of `get_k` or `get_r`
 
 ```{r, echo = T}
-gini_boot <- get_gini_k(labels = study_m$cell_line_demuxlet,
+gini_boot <- get_gini_k(labels = m$cell_line_demuxlet,
                         obj = b_k)
 ```
 
@@ -606,7 +607,7 @@ in the different bubbles with `get_num_tiles`
 
 ```{r, fig.width=8, fig.height=4, fig.align='center', echo=T}
 w3 <- get_num_tiles(btd = k5_kmeans,
-                    fs = study_e,
+                    fs = e,
                     summary_function = "mean",
                     show_hclust = F,
                     disable_hclust = F,
@@ -625,7 +626,7 @@ bubble as violins with `get_num_violins`
 
 ```{r, fig.width=10, fig.height=4, fig.align='center', echo=T}
 w4 <- get_num_violins(btd = k5_kmeans,
-                      fs = study_e,
+                      fs = e,
                       x_axis_name = 'Gene expression',
                       rotate_x_axis_labels = T)
 
@@ -639,17 +640,17 @@ What is the percent of UMIs coming from mitochondrial genes in each bubble?
 
 ```{r, fig.width=9, fig.height=4, fig.align='center', echo=T}
 w_mt_dist <- get_num_violins(btd = k5_kmeans,
-                             fs = 1-study_m$non_mt_percent,
+                             fs = 1-m$non_mt_percent,
                              x_axis_name = 'MT [%]',
                              rotate_x_axis_labels = T)
 
 w_umi_dist <- get_num_violins(btd = k5_kmeans,
-                              fs = study_m$nCount_RNA/1000,
+                              fs = m$nCount_RNA/1000,
                               x_axis_name = 'RNA count (in thousands)',
                               rotate_x_axis_labels = T)
 
 w_gene_dist <- get_num_violins(btd = k5_kmeans,
-                               fs = study_m$nFeature_RNA,
+                               fs = m$nFeature_RNA,
                                x_axis_name = 'Gene count',
                                rotate_x_axis_labels = T)
 
@@ -694,11 +695,11 @@ Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering with
 R-package pam and then generate the bubbletree:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center', echo=T}
-pam_k5 <- cluster::pam(x = study_A, 
+pam_k5 <- cluster::pam(x = A, 
                        k = 5, 
                        metric = "euclidean")
 
-dummy_k5_pam <- get_bubbletree_dummy(x = study_A,
+dummy_k5_pam <- get_bubbletree_dummy(x = A,
                                      cs = pam_k5$clustering,
                                      B = 200,
                                      N_eff = 200,
@@ -707,7 +708,7 @@ dummy_k5_pam <- get_bubbletree_dummy(x = study_A,
 
 dummy_k5_pam$tree|
   get_cat_tiles(btd = dummy_k5_pam, 
-                f = study_m$cell_line_demuxlet,
+                f = m$cell_line_demuxlet,
                 integrate_vertical = T,
                 round_digits = 1,
                 show_hclust = F,
@@ -722,11 +723,11 @@ dummy_k5_pam$tree|
 ### Summary
 
 `scBubbletree` promotes simple and transparent visual exploration of scRNA-seq. 
-It is *not a black-box* approach and the user *is encouraged* to explore the data 
-with different values of $k$ and $r$ or custom clustering solutions. Attaching
-of cell features to the bubbletree is necessary for biological interpretation
-of the individual bubbles and their relationships which are described by the 
-bubbletree topology.
+It is *not a black-box* approach and the user *is encouraged* to explore the 
+data with different values of $k$ and $r$ or custom clustering solutions. 
+Attaching of cell features to the bubbletree is necessary for biological 
+interpretation of the individual bubbles and their relationships which are 
+described by the bubbletree topology.
 
 
 
@@ -735,4 +736,3 @@ bubbletree topology.
 pipelines using mixture control experiments." Nature methods 16.6 (2019): 
 479-487.
 [^2]: https://github.com/LuyiTian/sc_mixology/blob/master/data/sincell_with_class_5cl.RData
-[^3]: https://www.ebi.ac.uk/gxa/experiments/E-MTAB-2770/Results

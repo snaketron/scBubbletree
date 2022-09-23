@@ -976,6 +976,28 @@ get_bubbletree_kmeans <- function(x,
     }
 
 
+    # check B
+    if(base::missing(B)==TRUE) {
+      stop("B input not found")
+    }
+    if(base::is.numeric(B)==FALSE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::length(B)!=1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B<1) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.infinite(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(base::is.na(B)==TRUE) {
+      stop("B must be a positive integer > 0")
+    }
+    if(B%%1!=0) {
+      stop("B must be a positive integer > 0")
+    }
 
 
     # check cores
@@ -2114,17 +2136,15 @@ get_gini_k <- function(labels, obj) {
     if(base::missing(obj)==TRUE) {
       stop("obj is missing")
     }
-    if(base::is.na(obj)||
-       base::is.null(obj)||
-       base::is.na(class(obj))||
-       base::is.null(class(obj))||
+    if(base::any(base::is.na(obj))|base::is.null(obj)|base::is.na(class(obj))|
+       base::is.null(class(obj))|
        base::class(obj) %in% c("boot_k", "boot_r")==FALSE) {
       stop("problem with obj")
     }
 
-    if(base::is.list(obj$boot_obj)==FALSE||
-       base::is.na(obj$boot_obj)||
-       base::is.null(obj$boot_obj)||
+    if(base::is.list(obj$boot_obj)==FALSE|
+       base::any(base::is.na(obj$boot_obj))|
+       base::is.null(obj$boot_obj)|
        base::length(obj)<=1) {
       stop("no boot_obj found in obj")
     }
@@ -2132,8 +2152,7 @@ get_gini_k <- function(labels, obj) {
 
 
   # check inputs
-  check_input(labels = labels,
-              obj = obj)
+  check_input(labels = labels, obj = obj)
 
 
   ks <- base::names(obj$boot_obj$obj)

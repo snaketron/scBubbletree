@@ -84,9 +84,9 @@ with \eqn{n_i} as the number of cells in cluster \eqn{i} and \eqn{n=\sum_i n_i}.
 
 
 \examples{
-get_gini(labels = sample(x = LETTERS[1:4], size = 100, replace = T),
-         clusters = sample(x = letters[1:4], size = 100, replace = T))
+get_gini(labels = base::sample(x = LETTERS[1:4], size = 100, replace = TRUE),
+         clusters = base::sample(x = letters[1:4], size = 100, replace = TRUE))
 }
 
 \seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_dummy,
-get_bubbletree_louvain, get_gini_k, A}
+get_bubbletree_louvain, get_gini_k, d_500}

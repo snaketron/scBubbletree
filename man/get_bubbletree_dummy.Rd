@@ -88,12 +88,10 @@ get_bubbletree_louvain.
 
 \examples{
 # input data
+data(d_500)
+A <- d_500$A
+f <- d_500$f
 
-data(A)
-
-head(A)
-
-# dummy clusters
 cs <- base::sample(x = LETTERS[1:5], size = nrow(A), replace = TRUE)
 
 db <- get_bubbletree_dummy(x = A,
@@ -106,4 +104,5 @@ db <- get_bubbletree_dummy(x = A,
 }
 
 \seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_louvain,
-get_gini, get_gini_k, get_num_tiles, get_num_violins, get_cat_tiles}
+get_gini, get_gini_k, get_num_tiles, get_num_violins, get_cat_tiles,
+d_500}
