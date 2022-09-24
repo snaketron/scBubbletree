@@ -29,3 +29,7 @@ BiocManager::install("scBubbletree")
 
 Multiple case studies are provided in the directory /vignettes
 
+
+## Output 
+
+![alt text](logo.png)
