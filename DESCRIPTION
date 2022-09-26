@@ -16,7 +16,7 @@ Description: Visual exploration is an integral part of scRNA-seq data
   integrate with popular approaches for scRNA-seq data analysis.
 License: file LICENSE
 Depends: 
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 Imports:
     reshape2,
     parallel,
