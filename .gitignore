@@ -2,6 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+.Rproj
 
 # files to ignore
 raw_data/
