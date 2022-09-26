@@ -117,7 +117,7 @@ in a hierarchical dendrogram the algorithm performs the following steps:
 
 \examples{
 # input data
-data(d_500, package = "scBubbletree")
+data("d_500", package = "scBubbletree")
 A <- d_500$A
 
 b <- get_bubbletree_kmeans(x = A,

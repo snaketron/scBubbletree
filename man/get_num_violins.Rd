@@ -68,7 +68,7 @@ bubble.
 
 \examples{
 # input data
-data(d_500, package = "scBubbletree")
+data("d_500", package = "scBubbletree")
 A <- d_500$A
 fs <- d_500$fs
 

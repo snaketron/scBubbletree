@@ -89,7 +89,7 @@ of different features
 
 \examples{
 # input data
-data(d_500, package = "scBubbletree")
+data("d_500", package = "scBubbletree")
 A <- d_500$A
 f <- d_500$f
 

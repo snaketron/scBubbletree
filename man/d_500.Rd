@@ -14,7 +14,7 @@ represents the predicted cell type of a specific cell.
 3. fs = numeric matrix containing normalized gene expressions of 12 marker
 genes in 500 cells.
 }
-\usage{data("d_500")}
+\usage{data("d_500", package = "scBubbletree")}
 \format{
 Format of d_500: list
 }

@@ -11,7 +11,7 @@ d_ccl is a list with 3 elements:
 
 3. e = numeric matrix containing normalized gene expressions of 5 marker genes
 }
-\usage{data("d_ccl")}
+\usage{data("d_ccl", package = "scBubbletree")}
 \format{
 Format of d_ccl: list
 }
