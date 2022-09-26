@@ -15,7 +15,6 @@ test_that("missing argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -169,7 +168,6 @@ test_that("null/na argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -461,7 +459,6 @@ test_that("btd argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -759,7 +756,6 @@ test_that("f argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -926,7 +922,6 @@ test_that("integrate_vertical argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -1025,7 +1020,6 @@ test_that("show_hclust argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -1122,7 +1116,6 @@ test_that("disable_hclust argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -1219,7 +1212,6 @@ test_that("tile_bw argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 
@@ -1316,7 +1308,6 @@ test_that("rotate_x_axis_labels argument", {
                         iter_max = 100,
                         kmeans_algorithm = "MacQueen",
                         cores = 1,
-                        seed = NULL,
                         round_digits = 2,
                         show_simple_count = F)
 

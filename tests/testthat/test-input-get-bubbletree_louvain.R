@@ -14,7 +14,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -27,7 +26,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "x input not found")
@@ -41,7 +39,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "r input not found")
@@ -56,7 +53,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -71,7 +67,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -86,7 +81,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -101,7 +95,6 @@ test_that("missing argument", {
                               #iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -116,7 +109,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               #louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -131,7 +123,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               #cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -146,22 +137,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              #seed = NULL,
-                              round_digits = 2,
-                              show_simple_count = F),
-               NA)
-
-
-  expect_error(get_bubbletree_louvain(x = matrix(data = rnorm(n = 100*10),
-                                                 ncol = 10),
-                              r = 1,
-                              B = 20,
-                              N_eff = 50,
-                              n_start = 100,
-                              iter_max = 100,
-                              louvain_algorithm = "original",
-                              cores = 1,
-                              seed = NULL,
                               #round_digits = 2,
                               show_simple_count = F),
                NA)
@@ -176,7 +151,6 @@ test_that("missing argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2),
                               #show_simple_count = F),
                NA)
@@ -198,7 +172,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "x must be numeric matrix")
@@ -210,7 +183,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "x must be numeric matrix")
@@ -223,7 +195,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "r must be a positive number \\(r>0\\) to build a bubbletree")
@@ -235,7 +206,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "r must be a positive number \\(r>0\\) to build a bubbletree")
@@ -250,7 +220,6 @@ test_that("null/na argument", {
                                      iter_max = 100,
                                      louvain_algorithm = "original",
                                      cores = 1,
-                                     seed = NULL,
                                      round_digits = 2,
                                      show_simple_count = F),
                "B must be a positive integer > 0")
@@ -262,7 +231,6 @@ test_that("null/na argument", {
                                      iter_max = 100,
                                      louvain_algorithm = "original",
                                      cores = 1,
-                                     seed = NULL,
                                      round_digits = 2,
                                      show_simple_count = F),
                "B must be a positive integer > 0")
@@ -277,7 +245,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "N_eff must be a positive integer")
@@ -289,7 +256,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "N_eff must be a positive integer")
@@ -303,7 +269,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "n_start must be a positive integer")
@@ -315,7 +280,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "n_start must be a positive integer")
@@ -329,7 +293,6 @@ test_that("null/na argument", {
                               iter_max = NULL,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "iter_max must be a positive integer")
@@ -341,7 +304,6 @@ test_that("null/na argument", {
                               iter_max = NA,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "iter_max must be a positive integer")
@@ -355,7 +317,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = NULL,
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
 "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
@@ -368,7 +329,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = NA,
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
           "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
@@ -383,7 +343,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = NULL,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "cores must be a positive integer")
@@ -395,7 +354,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = NA,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                "cores must be a positive integer")
@@ -409,22 +367,9 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = F),
                NA)
-  expect_error(get_bubbletree_louvain(x = matrix(data = rnorm(n = 100*10), ncol = 10),
-                              r = 1,
-                              B = 20,
-                              N_eff = 50,
-                              n_start = 100,
-                              iter_max = 100,
-                              louvain_algorithm = "original",
-                              cores = 1,
-                              seed = NA,
-                              round_digits = 2,
-                              show_simple_count = F),
-               "seed must be a positive integer")
 
 
   expect_error(get_bubbletree_louvain(x = matrix(data = rnorm(n = 100*10), ncol = 10),
@@ -435,7 +380,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = NULL,
                               show_simple_count = F),
                "round_digits must be a positive integer")
@@ -447,7 +391,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = NA,
                               show_simple_count = F),
                "round_digits must be a positive integer")
@@ -461,7 +404,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = NULL),
                "show_simple_count is a logical parameter \\(TRUE or FALSE\\)")
@@ -473,7 +415,6 @@ test_that("null/na argument", {
                               iter_max = 100,
                               louvain_algorithm = "original",
                               cores = 1,
-                              seed = NULL,
                               round_digits = 2,
                               show_simple_count = NA),
                "show_simple_count is a logical parameter \\(TRUE or FALSE\\)")
