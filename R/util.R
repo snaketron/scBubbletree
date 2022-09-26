@@ -260,9 +260,6 @@ get_hc_dist <- function(pair_dist) {
   m$L95 <- m$M-m$SE*1.96
   m$H95 <- m$M+m$SE*1.96
 
-  if(B<20) {
-    warning("B<20: standard errors and confidence intervals might be biased.")
-  }
   return(m)
 }
 
@@ -278,10 +275,6 @@ get_pca_dist <- function(pair_dist) {
   colnames(m) <- c("c_i", "c_j", "M", "SE")
   m$L95 <- m$M-m$SE*1.96
   m$H95 <- m$M+m$SE*1.96
-
-  if(B<20) {
-    warning("B<20: standard errors and confidence intervals might be biased.")
-  }
 
   return(m)
 }

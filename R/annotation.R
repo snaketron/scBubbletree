@@ -641,7 +641,7 @@ get_num_tiles <- function(btd,
 
 
   ws <- vector(mode = "list", length = ncol(fs))
-  for(i in 1:ncol(fs)) {
+  for(i in base::seq_len(length.out = base::ncol(fs))) {
     ws[[i]] <- get_summary(k = btd$cluster,
                            a = fs[, i],
                            feature = base::colnames(fs)[i],
@@ -823,7 +823,8 @@ get_num_violins <- function(btd,
 
   if(base::is.matrix(fs)) {
     if(base::length(base::unique(base::colnames(fs))) < base::ncol(fs)) {
-      base::colnames(fs) <- base::paste0("f_", 1:base::ncol(fs))
+      base::colnames(fs) <- base::paste0("f_", base::seq_len(
+        length.out = base::ncol(fs)))
     }
   }
 
@@ -832,7 +833,7 @@ get_num_violins <- function(btd,
   # get summary
   # TODO: solve this inefficiency -> data.frame too large for big datasets
   ws <- base::vector(mode = "list", length = base::ncol(fs))
-  for(i in 1:base::ncol(fs)) {
+  for(i in base::seq_len(length.out = base::ncol(fs))) {
     ws[[i]] <- get_raw(k = btd$cluster,
                        a = fs[, i],
                        feature = base::colnames(fs)[i])

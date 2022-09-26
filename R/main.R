@@ -1706,7 +1706,7 @@ get_bubbletree_dummy <- function(x,
       stop("cs must be a vector")
     }
     if(length(cs)!=nrow(x)) {
-      stop("Error: length(cs) != nrow(x)")
+      stop("length(cs) != nrow(x)")
     }
     if(length(unique(cs))<=1) {
       stop("1 or 0 clusters found in vector cs")
