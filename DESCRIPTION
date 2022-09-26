@@ -1,7 +1,7 @@
 Package: scBubbletree
 Type: Package
 Title: Quantiative visual exploration of scRNA-seq data
-Version: 0.99.2
+Version: 0.99.3
 Authors@R: 
     person(given = "Simo",  
            family = "Kitanovski",
