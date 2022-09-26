@@ -231,7 +231,7 @@ get_k <- function(x,
     spaceH0 = "original"
     cs <- km$cluster
     n <- base::nrow(x)
-    ii <- base::seq_len(n)
+    ii <- base::seq_len(length.out = n)
     kk <- base::length(base::unique(cs))
 
     get_Wk <- function(X, kk) {
@@ -637,7 +637,7 @@ get_r <- function(x,
 
     spaceH0 = "original"
     n <- base::nrow(x)
-    ii <- base::seq_len(n)
+    ii <- base::seq_len(length.out = n)
 
 
     get_Wk <- function(X) {
