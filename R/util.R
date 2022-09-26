@@ -5,7 +5,7 @@ get_dist <- function(B,
                      cores) {
 
   # get distances between clusters
-  pair_dist <- parallel::mclapply(X = 1:B,
+  pair_dist <- parallel::mclapply(X = base::seq_len(length.out = B),
                                   FUN = get_pair_dist,
                                   m = m,
                                   c = c,
@@ -26,7 +26,7 @@ get_dist <- function(B,
 get_ph_support <- function(main_ph,
                            x) {
   boot_ph <- c()
-  for(i in 1:max(x$B)) {
+  for(i in base::seq_len(length.out = max(x$B))) {
     d <- reshape2::acast(data = x[x$B == i,],
                          formula = c_i~c_j,
                          value.var = "M")
@@ -51,22 +51,6 @@ get_ph_support <- function(main_ph,
                               rooted = ape::is.rooted(main_ph))
 
 
-  # some checks
-  # # tips
-  # tips <- main_ph$tip.label
-  # branches <- setdiff(unique(as.vector(main_ph$edge)), tips)
-  # #
-  # root <- unique(main_ph$edge[which(!main_ph$edge[, 1] %in% main_ph$edge[, 2]), 1])
-  # branch_composition <- c()
-  # for(branch in branches) {
-  #   w <- get_node_descendents_in_phylo(tree = main_ph, node = branch)
-  #   w <- sort(w[w %in% tips])
-  #   branch_composition <- rbind(branch_composition,
-  #     data.frame(branch_node = branch, descendent_tip_nodes = paste0(w, collapse = ',')))
-  # }
-  # branch_composition$is_root <- ifelse(test = branch_composition$branch == root, yes = TRUE, no = FALSE)
-
-
   # add bootstrap
   main_ph$node.label <- clade_b
 
@@ -74,24 +58,6 @@ get_ph_support <- function(main_ph,
               boot_ph = boot_ph))
 }
 
-
-
-get_node_descendents_in_phylo <- function(tree,
-                                          node,
-                                          curr = NULL) {
-  if (is.null(curr)) {
-    curr <- vector()
-  }
-  daughters <- tree$edge[which(tree$edge[, 1] == node), 2]
-  curr <- c(curr, daughters)
-  if (length(curr) == 0 && node <= Ntip(tree))
-    curr <- node
-  w <- which(daughters > Ntip(tree))
-  if (length(w) > 0)
-    for (i in 1:length(w)) curr <- get_node_descendents_in_phylo(
-      tree, daughters[w[i]], curr)
-  return(curr)
-}
 
 
 
@@ -162,7 +128,8 @@ get_dendrogram <- function(ph,
   q <- tree$data
   q <- q[order(q$y, decreasing = FALSE), ]
   tips <- q$label[q$isTip==TRUE]
-  tips <- data.frame(label = tips, tree_order = 1:length(tips))
+  tips <- data.frame(label = tips,
+                     tree_order = base::seq_len(length.out = length(tips)))
   km_meta <- base::merge(x = km_meta, y = tips, by = "label")
   km_meta <- km_meta[order(km_meta$tree_order, decreasing = TRUE), ]
   rm(q, tips)
@@ -171,89 +138,6 @@ get_dendrogram <- function(ph,
   t <- list(tree = tree, tree_meta = km_meta)
 
   return(t)
-}
-
-
-
-get_pair_dist_2 <- function(x, m, c, N_eff) {
-
-  get_euc <- function(x, y) {
-    for(i in 1:ncol(y)) {
-      y[,i] <- (x[i]-y[,i])^2
-    }
-    y <- base::apply(X = y,
-                     MARGIN = 1,
-                     FUN = sum)
-    y <- sqrt(y)
-    return(y)
-  }
-
-  cs <- unique(c)
-  stats <- c()
-  len_cs <- length(cs)
-
-  for(i in 1:(len_cs-1)) {
-
-    x_i <- m[which(c == cs[i]), ]
-    if(is.vector(x_i)) {
-      x_i <- matrix(data = x_i, nrow = 1)
-    }
-
-    # efficiency
-    if(is.na(N_eff) ==FALSE) {
-      if(nrow(x_i)>N_eff) {
-        x_i <- x_i[base::sample(x = 1:nrow(x_i),
-                                size = N_eff,
-                                replace = TRUE), ]
-      }
-    }
-
-    for(j in (i+1):len_cs) {
-
-      x_j <- m[which(c == cs[j]), ]
-      if(is.vector(x_j)) {
-        x_j <- matrix(data = x_j, nrow = 1)
-      }
-
-      # efficiency
-      if(is.na(N_eff) ==FALSE) {
-        if(nrow(x_j)>N_eff) {
-          x_j <- x_j[base::sample(x = 1:nrow(x_j),
-                                  size = N_eff,
-                                  replace = TRUE), ]
-        }
-      }
-
-
-      # just in case check
-      if(is.vector(x_i)) {
-        x_i <- matrix(data = x_i, nrow = 1)
-      }
-      if(is.vector(x_j)) {
-        x_j <- matrix(data = x_j, nrow = 1)
-      }
-
-
-
-      # speed-up this part
-      w <- matrix(data = 0, nrow = nrow(x_i), ncol = nrow(x_j))
-      for(k in 1:nrow(x_i)) {
-        w[k, ] <- get_euc(x = x_i[k, ], y = x_j)
-      }
-
-      # symmetric distances
-      stats <- rbind(stats, data.frame(c_i = cs[i],
-                                       c_j = cs[j],
-                                       B = x,
-                                       M = mean(w)))
-      stats <- rbind(stats, data.frame(c_i = cs[j],
-                                       c_j = cs[i],
-                                       B = x,
-                                       M = mean(w)))
-    }
-  }
-
-  return(stats)
 }
 
 
@@ -272,7 +156,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
   stats <- c()
   len_cs <- length(cs)
 
-  for(i in 1:(len_cs-1)) {
+  for(i in base::seq_len(length.out = len_cs-1)) {
 
     x_i <- m[which(c == cs[i]), ]
     if(is.vector(x_i)) {
@@ -282,7 +166,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
     # efficiency
     if(is.na(N_eff)==FALSE) {
       if(nrow(x_i)>N_eff) {
-        x_i <- x_i[base::sample(x = 1:nrow(x_i),
+        x_i <- x_i[base::sample(x = base::seq_len(length.out=base::nrow(x_i)),
                                 size = N_eff,
                                 replace = FALSE), ]
       }
@@ -298,7 +182,7 @@ get_pair_dist <- function(x, m, c, N_eff) {
       # efficiency
       if(is.na(N_eff)==FALSE) {
         if(nrow(x_j)>N_eff) {
-          x_j <- x_j[base::sample(x = 1:nrow(x_j),
+          x_j <- x_j[base::sample(x = base::seq_len(length.out=base::nrow(x_j)),
                                   size = N_eff,
                                   replace = FALSE), ]
         }
@@ -349,7 +233,7 @@ get_hc_dist <- function(pair_dist) {
   B <- base::max(pair_dist$B)
 
   hc_dist <- c()
-  for(i in 1:B) {
+  for(i in base::seq_len(length.out=B)) {
     # get pairwise distances for B
     d <- pair_dist[pair_dist$B==i, ]
 

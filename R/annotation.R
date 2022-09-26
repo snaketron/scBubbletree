@@ -36,9 +36,9 @@ get_cat_tiles <- function(btd,
        base::is.null(btd)||
        base::any(base::is.na(base::class(btd)))||
        base::is.null(base::class(btd))||
-       !base::class(btd)%in%c("bubbletree_kmeans",
-                              "bubbletree_dummy",
-                              "bubbletree_louvain")) {
+       (methods::is(btd, "bubbletree_kmeans")==FALSE&
+        methods::is(btd, "bubbletree_louvain")==FALSE&
+        methods::is(btd, "bubbletree_dummy")==FALSE)) {
       stop("NA/NULL elements or wrong class detected in the bubbletree")
     }
     if(base::is.vector(btd$cluster)==FALSE||
@@ -88,10 +88,10 @@ get_cat_tiles <- function(btd,
     if(btd$k%%1!=0) {
       stop("problem in btd: btd$k must be a positive integer (k>=2)")
     }
-    if(base::class(btd$ph$main_ph)!="phylo") {
+    if(methods::is(btd$ph$main_ph, "phylo")==FALSE) {
       stop("problem in btd: btd$ph$main_ph is not phylo class")
     }
-    if(base::class(btd$ph$boot_ph)!="multiPhylo") {
+    if(methods::is(btd$ph$boot_ph, "multiPhylo")==FALSE) {
       stop("problem in btd: btd$ph$boot_ph is not multiPhylo class")
     }
     if(base::length(btd$cluster)!=base::nrow(btd$A)) {
@@ -426,9 +426,9 @@ get_num_tiles <- function(btd,
        base::is.null(btd)||
        base::any(base::is.na(base::class(btd)))||
        base::is.null(base::class(btd))||
-       !base::class(btd)%in%c("bubbletree_kmeans",
-                              "bubbletree_dummy",
-                              "bubbletree_louvain")) {
+       (methods::is(btd, "bubbletree_kmeans")==FALSE&
+        methods::is(btd, "bubbletree_louvain")==FALSE&
+        methods::is(btd, "bubbletree_dummy")==FALSE)) {
       stop("problem with the input bubbletree")
     }
 
@@ -739,9 +739,9 @@ get_num_violins <- function(btd,
        base::is.null(btd)||
        base::any(base::is.na(base::class(btd)))||
        base::is.null(base::class(btd))||
-       !base::class(btd)%in%c("bubbletree_kmeans",
-                              "bubbletree_dummy",
-                              "bubbletree_louvain")) {
+       (methods::is(btd, "bubbletree_kmeans")==FALSE&
+        methods::is(btd, "bubbletree_louvain")==FALSE&
+        methods::is(btd, "bubbletree_dummy")==FALSE)) {
       stop("problem with the input bubbletree")
     }
 

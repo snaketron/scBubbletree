@@ -23,7 +23,7 @@ get_k <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)[1]=="SummarizedExperiment") {
+    if(methods::is(x, "SummarizedExperiment")) {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -255,7 +255,7 @@ get_k <- function(x,
     m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
     rng.x1 <- base::apply(xs, 2L, base::range)
     logWks <- base::matrix(0, B_gap, 1)
-    for (b in 1:B_gap) {
+    for (b in base::seq_len(length.out = B_gap)) {
       z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
         nn, min = M[1], max = M[2]), nn = n)
       z <- z1 + m.x
@@ -346,7 +346,7 @@ get_k <- function(x,
   wcss_vec <- base::numeric(length = base::length(ks))
 
   # loop over ks
-  for(j in 1:base::length(ks)) {
+  for(j in base::seq_len(length.out = base::length(ks))) {
     gap_vec[j] <- boot_obj$gap[[j]]$gap
     wcss_vec[j] <- boot_obj$wcss[[j]]
     gap_matrix[,j] <- boot_obj$gap[[j]]$logWks-boot_obj$gap[[j]]$logW
@@ -415,7 +415,7 @@ get_r <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)[1]=="SummarizedExperiment") {
+    if(methods::is(x, "SummarizedExperiment")) {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -617,7 +617,7 @@ get_r <- function(x,
 
     wcss <- 0
     cs <- base::unique(c)
-    for(i in 1:base::length(cs)) {
+    for(i in base::seq_len(length.out = base::length(cs))) {
       j <- base::which(c == cs[i])
 
       mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
@@ -657,11 +657,12 @@ get_r <- function(x,
     m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
     rng.x1 <- base::apply(xs, 2L, base::range)
     logWks <- base::matrix(0, B_gap, 1)
-    for (b in 1:B_gap) {
+    for (b in base::seq_len(length.out = B_gap)) {
       z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
         nn, min = M[1], max = M[2]), nn = n)
       z <- z1 + m.x
-      base::rownames(z) <- base::paste0("z_", 1:base::nrow(z))
+      base::rownames(z) <- base::paste0("z_", base::seq_len(
+        length.out = base::nrow(z)))
 
       # simpler
       logWks[b, 1] <- get_Wk(X = z)
@@ -727,11 +728,12 @@ get_r <- function(x,
     m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
     rng.x1 <- base::apply(xs, 2L, base::range)
     logWks <- base::matrix(0, B_gap, 1)
-    for (b in 1:B_gap) {
+    for (b in base::seq_len(length.out = B_gap)) {
       z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
         nn, min = M[1], max = M[2]), nn = n)
       z <- z1 + m.x
-      base::rownames(z) <- base::paste0("z_", 1:nrow(z))
+      base::rownames(z) <- base::paste0("z_", base::seq_len(
+        length.out = nrow(z)))
 
       # simpler
       logWks[b, 1] <- get_Wk(X = z, r = r)
@@ -766,7 +768,7 @@ get_r <- function(x,
 
   # add cell ids if needed
   if(is.null(rownames(x))) {
-    rownames(x) <- 1:nrow(x)
+    rownames(x) <- base::seq_len(length.out = nrow(x))
   }
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
@@ -802,7 +804,7 @@ get_r <- function(x,
 
   # Gap stats
   base::cat("2) gap statistic \n")
-  q <- parallel::mclapply(X = 1:length(louvain_obj),
+  q <- parallel::mclapply(X = base::seq_len(length.out = length(louvain_obj)),
                           FUN = get_gap_r,
                           l = louvain_obj,
                           x = x,
@@ -848,7 +850,7 @@ get_r <- function(x,
 
 
   # loop over rs
-  for(j in 1:base::length(rs)) {
+  for(j in base::seq_len(length.out = base::length(rs))) {
     gap_vec[j] <- boot_obj$gap[[j]]$gap
     wcss_vec[j] <- boot_obj$wcss[[j]]
     gap_matrix[,j] <- boot_obj$gap[[j]]$logWks-boot_obj$gap[[j]]$logW
@@ -906,7 +908,6 @@ get_bubbletree_kmeans <- function(x,
                                   iter_max = 300,
                                   kmeans_algorithm = "MacQueen",
                                   cores = 1,
-                                  seed = NULL,
                                   round_digits = 2,
                                   show_simple_count = FALSE) {
 
@@ -918,7 +919,6 @@ get_bubbletree_kmeans <- function(x,
                           B,
                           N_eff,
                           cores,
-                          seed,
                           round_digits,
                           show_simple_count,
                           kmeans_algorithm) {
@@ -928,7 +928,7 @@ get_bubbletree_kmeans <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)[1]=="SummarizedExperiment") {
+    if(methods::is(x, "SummarizedExperiment")) {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -1133,27 +1133,6 @@ get_bubbletree_kmeans <- function(x,
 
 
 
-    # check seed
-    if(base::is.null(seed)==FALSE) {
-      if(base::is.numeric(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(base::length(seed)!=1) {
-        stop("seed must be a positive integer")
-      }
-      if(seed<=0) {
-        stop("seed must be a positive integer")
-      }
-      if(base::is.finite(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(seed%%1!=0) {
-        stop("seed must be a positive integer")
-      }
-    }
-
-
-
     # check round_digits
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
@@ -1202,20 +1181,9 @@ get_bubbletree_kmeans <- function(x,
               B = B,
               N_eff = N_eff,
               cores = cores,
-              seed = seed,
               round_digits = round_digits,
               show_simple_count = show_simple_count,
               kmeans_algorithm = kmeans_algorithm)
-
-
-  # set seed for reproducibility
-  if(base::is.null(seed)==FALSE) {
-    base::set.seed(seed = seed)
-  }
-  else {
-    seed <- base::sample(x = 1:10^6, size = 1)
-    base::set.seed(seed = seed)
-  }
 
 
 
@@ -1279,7 +1247,6 @@ get_bubbletree_kmeans <- function(x,
                     iter_max = iter_max,
                     N_eff = N_eff,
                     B = B,
-                    seed = seed,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
                     kmeans_algorithm = kmeans_algorithm,
@@ -1311,7 +1278,6 @@ get_bubbletree_louvain <- function(x,
                                    iter_max = 100,
                                    louvain_algorithm = "original",
                                    cores = 1,
-                                   seed = NULL,
                                    round_digits = 2,
                                    show_simple_count = FALSE) {
 
@@ -1323,7 +1289,6 @@ get_bubbletree_louvain <- function(x,
                           B,
                           N_eff,
                           cores,
-                          seed,
                           round_digits,
                           show_simple_count,
                           louvain_algorithm) {
@@ -1333,7 +1298,7 @@ get_bubbletree_louvain <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)[1]=="SummarizedExperiment") {
+    if(methods::is(x, "SummarizedExperiment")) {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -1537,26 +1502,6 @@ get_bubbletree_louvain <- function(x,
 
 
 
-    # check seed
-    if(base::is.null(seed)==FALSE) {
-      if(base::is.numeric(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(base::length(seed)!=1) {
-        stop("seed must be a positive integer")
-      }
-      if(seed<=0) {
-        stop("seed must be a positive integer")
-      }
-      if(base::is.finite(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(seed%%1!=0) {
-        stop("seed must be a positive integer")
-      }
-    }
-
-
 
     # check round_digits
     if(base::missing(round_digits)==TRUE) {
@@ -1605,22 +1550,9 @@ get_bubbletree_louvain <- function(x,
               B = B,
               N_eff = N_eff,
               cores = cores,
-              seed = seed,
               round_digits = round_digits,
               show_simple_count = show_simple_count,
               louvain_algorithm = louvain_algorithm)
-
-
-
-
-  # set seed for reproducibility
-  if(base::is.null(seed)==FALSE) {
-    base::set.seed(seed = seed)
-  }
-  else {
-    seed <- base::sample(x = 1:10^6, size = 1)
-    base::set.seed(seed = seed)
-  }
 
 
 
@@ -1629,7 +1561,7 @@ get_bubbletree_louvain <- function(x,
 
   # add cell ids if needed
   if(is.null(rownames(x))) {
-    rownames(x) <- 1:nrow(x)
+    rownames(x) <- base::seq_len(length.out = base::nrow(x))
   }
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
@@ -1698,7 +1630,6 @@ get_bubbletree_louvain <- function(x,
                     iter_max = iter_max,
                     N_eff = N_eff,
                     B = B,
-                    seed = seed,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
                     louvain_algorithm = louvain_algorithm,
@@ -1726,7 +1657,6 @@ get_bubbletree_dummy <- function(x,
                                  B = 100,
                                  N_eff = 100,
                                  cores = 1,
-                                 seed = NA,
                                  round_digits = 2,
                                  show_simple_count = FALSE) {
 
@@ -1737,7 +1667,6 @@ get_bubbletree_dummy <- function(x,
                           B,
                           N_eff,
                           cores,
-                          seed,
                           round_digits,
                           show_simple_count) {
 
@@ -1745,7 +1674,8 @@ get_bubbletree_dummy <- function(x,
     if(base::missing(x)==TRUE) {
       stop("x input not found")
     }
-    if(base::class(x)[1]=="SummarizedExperiment") {
+
+    if(methods::is(x, 'SummarizedExperiment')) {
       x <- x@assays@data@listData
     }
     if(base::is.numeric(x)==FALSE) {
@@ -1865,27 +1795,6 @@ get_bubbletree_dummy <- function(x,
 
 
 
-    # check seed
-    if(base::is.null(seed)==FALSE) {
-      if(base::is.numeric(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(base::length(seed)!=1) {
-        stop("seed must be a positive integer")
-      }
-      if(seed<=0) {
-        stop("seed must be a positive integer")
-      }
-      if(base::is.finite(seed)==FALSE) {
-        stop("seed must be a positive integer")
-      }
-      if(seed%%1!=0) {
-        stop("seed must be a positive integer")
-      }
-    }
-
-
-
     # check round_digits
     if(base::missing(round_digits)==TRUE) {
       stop("round_digits input not found")
@@ -1923,14 +1832,7 @@ get_bubbletree_dummy <- function(x,
   }
 
 
-  # set seed for reproducibility
-  if(is.na(seed) == FALSE) {
-    base::set.seed(seed = seed)
-  }
-  else {
-    seed <- base::sample(x = 1:10^6, size = 1)
-    base::set.seed(seed = seed)
-  }
+
 
 
   # check inputs
@@ -1939,7 +1841,6 @@ get_bubbletree_dummy <- function(x,
               B = B,
               N_eff = N_eff,
               cores = cores,
-              seed = seed,
               round_digits = round_digits,
               show_simple_count = show_simple_count)
 
@@ -1976,7 +1877,6 @@ get_bubbletree_dummy <- function(x,
                     iter_max = NA,
                     N_eff = N_eff,
                     B = B,
-                    seed = seed,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
                     kmeans_algorithm = NA)
@@ -2063,7 +1963,7 @@ get_gini <- function(labels, clusters) {
     ls <- base::unique(l)
     l_len <- base::length(l)
     s <- 0
-    for(i in 1:base::length(ls)) {
+    for(i in base::seq_len(length.out = length(ls))) {
       s <- s + (base::sum(l == ls[i])/l_len)^2
     }
     return(s)
@@ -2085,7 +1985,7 @@ get_gini <- function(labels, clusters) {
   wgi <- base::numeric(length = base::length(cs))
   base::names(wgi) <- cs
 
-  for(i in 1:base::length(cs)) {
+  for(i in base::seq_len(length.out = base::length(cs))) {
     j <- base::which(clusters == cs[i])
     wgi[i] <- base::length(j)/base::length(clusters)
     gi[i] <- 1-get_gi(c = clusters[j], l = labels[j])
@@ -2138,7 +2038,8 @@ get_gini_k <- function(labels, obj) {
     }
     if(base::any(base::is.na(obj))|base::is.null(obj)|base::is.na(class(obj))|
        base::is.null(class(obj))|
-       base::class(obj) %in% c("boot_k", "boot_r")==FALSE) {
+       (methods::is(obj, "boot_k")==FALSE&
+        methods::is(obj, "boot_r")==FALSE)) {
       stop("problem with obj")
     }
 
@@ -2160,7 +2061,7 @@ get_gini_k <- function(labels, obj) {
   total_o <- base::vector(mode = "list", length = base::length(ks))
   cluster_o <- base::vector(mode = "list", length = base::length(ks))
   counter <- 1
-  for(j in 1:length(ks)) {
+  for(j in base::seq_len(length.out = length(ks))) {
     cs <- obj$boot_obj$obj[[ks[j]]]
 
     gini <- get_gini(clusters = cs, labels = labels)
