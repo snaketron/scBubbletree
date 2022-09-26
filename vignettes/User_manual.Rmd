@@ -746,3 +746,11 @@ pipelines using mixture control experiments." Nature methods 16.6 (2019):
 479-487.
 [^2]: https://github.com/LuyiTian/sc_mixology/blob/master/data/
 sincell_with_class_5cl.RData
+
+
+### Session Info
+
+```{r}
+sessionInfo()
+```
+
