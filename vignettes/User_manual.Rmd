@@ -16,8 +16,8 @@ knitr::opts_chunk$set(comment = FALSE,
                       message = FALSE)
 ```
 
-This vignette introduces `scBubbletree`, a transparent workflow for quantitative 
-exploration of single cell RNA-seq data. 
+This vignette introduces `scBubbletree`, a transparent workflow for 
+quantitative exploration of single cell RNA-seq data. 
 
 To run this vignette we need to load a few R-packages:
 
@@ -27,6 +27,12 @@ library(ggplot2)
 library(ggtree)
 library(patchwork)
 ```
+
+
+```{r}
+set.seed(seed = 1234)
+```
+
 
 
 ## Data[^1]
@@ -62,8 +68,8 @@ dir.create(path = "case_study/")
 
 
 # download the data from: 
-https://github.com/LuyiTian/sc_mixology/raw/master/data/sincell_with_class_5cl.RData
-
+https://github.com/LuyiTian/sc_mixology/raw/master/data/
+  sincell_with_class_5cl.RData
 
 # load the data
 load(file = "case_study/sincell_with_class_5cl.RData")
@@ -78,7 +84,7 @@ rm(sc_Celseq2_5cl_p1, sc_Celseq2_5cl_p2, sc_Celseq2_5cl_p3, sce_sc_10x_5cl_qc)
 
 
 # get the meta data for each cell
-meta <- colData(d)[, c("cell_line_demuxlet", "non_mt_percent", "total_features")]
+meta <- colData(d)[, c("cell_line_demuxlet","non_mt_percent","total_features")]
 
 
 # create Seurat object from the raw counts and append the meta data to it
@@ -356,7 +362,6 @@ Steps 2.1 and 3. are performed next
 k5_kmeans <- get_bubbletree_kmeans(
   x = A,
   k = 5,
-  seed = 1234,
   cores = 1,
   B = 200,
   N_eff = 200,
@@ -416,7 +421,6 @@ k5_louvain <- get_bubbletree_louvain(x = A,
                                      n_start = 20,
                                      iter_max = 100,
                                      louvain_algorithm = "original",
-                                     seed = 1234,
                                      cores = 1,
                                      B = 200,
                                      N_eff = 200,
@@ -508,10 +512,10 @@ frequencies of different cell types in a specific bubble (with parameter
 
 Interpretation of the figure below: 
   
-  * the bubbles appear to be "pure" $\rightarrow$ made up of cells from distinct 
-    cell lines
-  * the cell line composition of bubble 2 is: 0.1% H838, 99.9% H2228, 0.1% A549, 
-    0.1% H1975 and 0% HCC827 cells
+  * the bubbles appear to be "pure" $\rightarrow$ made up of cells from 
+    distinct cell lines
+  * the cell line composition of bubble 2 is: 0.1% H838, 99.9% H2228, 0.1% 
+    A549, 0.1% H1975 and 0% HCC827 cells
   * rows integrate to 100%
 
 ```{r, fig.width=7, fig.height=4, fig.align='center'}
@@ -556,8 +560,8 @@ close to zero. In `impure' clusters cells carry a mixture of different labels.
 In this case most $\pi$ are far from either 1 or 0, and *GI* diverges from 0 
 and approaches 1. If the relative frequencies of the different labels in cluster
 $i$ are equal to the (background) relative frequencies of the labels in the 
-sample, then cluster $i$ is completely `impure'. 
-	
+sample, then cluster $i$ is completely `impure'.
+
 To compute the overall Gini impurity of a bubbletree, which represents a 
 clustering solution with $k$ bubbles, we estimated the weighted Gini impurity 
 (*WGI*) by computing the weighted (by the cluster size) average of the 
@@ -727,7 +731,7 @@ dummy_k5_pam$tree|
 
 ### Summary
 
-`scBubbletree` promotes simple and transparent visual exploration of scRNA-seq. 
+`scBubbletree` promotes simple and transparent visual exploration of scRNA-seq.
 It is *not a black-box* approach and the user *is encouraged* to explore the 
 data with different values of $k$ and $r$ or custom clustering solutions. 
 Attaching of cell features to the bubbletree is necessary for biological 
@@ -740,4 +744,5 @@ described by the bubbletree topology.
 [^1]: Tian, Luyi, et al. "Benchmarking single cell RNA-sequencing analysis 
 pipelines using mixture control experiments." Nature methods 16.6 (2019): 
 479-487.
-[^2]: https://github.com/LuyiTian/sc_mixology/blob/master/data/sincell_with_class_5cl.RData
+[^2]: https://github.com/LuyiTian/sc_mixology/blob/master/data/
+sincell_with_class_5cl.RData
