@@ -90,4 +90,4 @@ b$gap_stats_summary
 
 \seealso{get_k, get_bubbletree_dummy, get_bubbletree_louvain,
 get_bubbletree_kmeans, get_gini, get_gini_k, d_500, get_num_tiles,
-get_num_violins, get_cat_tiles}
+get_num_violins, get_cat_tiles, d_ccl}

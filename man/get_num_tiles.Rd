@@ -114,4 +114,4 @@ b$tree|g$plot
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
 get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_violins,
-d_500}
+d_500, d_ccl}
