@@ -88,7 +88,7 @@ resolution \eqn{k} or \eqn{r}}
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 f <- d_500$f
 

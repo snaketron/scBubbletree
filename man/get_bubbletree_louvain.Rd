@@ -40,7 +40,6 @@ get_bubbletree_louvain(x,
                        iter_max = 100,
                        louvain_algorithm = "original",
                        cores = 1,
-                       seed = NULL,
                        round_digits = 2,
                        show_simple_count = FALSE)
 }
@@ -58,7 +57,6 @@ for clusters that contain lower number of cells than N_eff}
 \item{n_start, iter_max, louvain_algorithm}{parameters for Louvain clustering,
 see documentation of function Louvain, R-package Seurat}
 \item{cores}{integer, number of PC cores for parallel execution}
-\item{seed}{number, for reproducing results}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
 \item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
@@ -118,7 +116,7 @@ hierarchical dendrogram the algorithm performs the following steps:
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 
 b <- get_bubbletree_louvain(x = A,
@@ -129,7 +127,6 @@ b <- get_bubbletree_louvain(x = A,
                             iter_max = 100,
                             louvain_algorithm = "original",
                             cores = 1,
-                            seed = 1234,
                             round_digits = 2,
                             show_simple_count = FALSE)
 

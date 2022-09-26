@@ -40,7 +40,6 @@ get_bubbletree_kmeans(x,
                       iter_max = 300,
                       kmeans_algorithm = "MacQueen",
                       cores = 1,
-                      seed = NULL,
                       round_digits = 2,
                       show_simple_count = FALSE)
 }
@@ -58,7 +57,6 @@ for clusters that contain lower number of cells than N_eff}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function k-means, R-package stats}
 \item{cores}{integer, number of PC cores for parallel execution}
-\item{seed}{number, for reproducing results}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
 \item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
@@ -119,12 +117,11 @@ in a hierarchical dendrogram the algorithm performs the following steps:
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 
 b <- get_bubbletree_kmeans(x = A,
                            k = 8,
-                           seed = 1234,
                            cores = 1,
                            N_eff = 100,
                            round_digits = 1,

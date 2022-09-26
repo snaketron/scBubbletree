@@ -72,7 +72,7 @@ estimates for each \eqn{k} and bootstrap iteration \eqn{b}}
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 
 b <- get_k(x = A,

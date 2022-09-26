@@ -35,7 +35,6 @@ get_bubbletree_dummy(x,
                      B = 100,
                      N_eff = 100,
                      cores = 1,
-                     seed = NA,
                      round_digits = 2,
                      show_simple_count = FALSE)
 }
@@ -51,7 +50,6 @@ generate bubbletree}
 computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}
 \item{cores}{integer, number of PC cores for parallel execution}
-\item{seed}{number, for reproducing results}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
 \item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
@@ -88,7 +86,7 @@ get_bubbletree_louvain.
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 f <- d_500$f
 

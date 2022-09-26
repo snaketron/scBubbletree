@@ -28,7 +28,7 @@ https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
 https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
 }
 \examples{
-data("d_500")
+data("d_500", package = "scBubbletree")
 
 A <- d_500$A
 base::dim(A)

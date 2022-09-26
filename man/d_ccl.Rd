@@ -38,7 +38,7 @@ pipelines using mixture control experiments." Nature methods 16.6 (2019):
 479-487
 }
 \examples{
-data("d_ccl")
+data("d_ccl", package = "scBubbletree")
 
 A <- d_ccl$A
 base::dim(A)

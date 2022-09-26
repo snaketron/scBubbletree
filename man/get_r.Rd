@@ -73,7 +73,7 @@ estimates for each \eqn{r} and \eqn{k'} and bootstrap iteration \eqn{b}}
 
 \examples{
 # input data
-data(d_500)
+data(d_500, package = "scBubbletree")
 A <- d_500$A
 
 
