@@ -37,6 +37,7 @@ Suggests:
     testthat,
     cluster
 Encoding: UTF-8
+LazyData: true
 NeedsCompilation: no
 biocViews: Visualization,Clustering,
     SingleCell,Transcriptomics,RNASeq
