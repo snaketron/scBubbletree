@@ -14,7 +14,7 @@ Description: Visual exploration is an integral part of scRNA-seq data
   such as overplotting, and to accurately preserve the local and global 
   structure of the data. scBubbletree is easy-to-use and allows seamless 
   integrate with popular approaches for scRNA-seq data analysis.
-License: file LICENSE
+License: GPL-3
 Depends: 
     R (>= 4.2.0)
 Imports:
