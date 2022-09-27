@@ -286,7 +286,7 @@ get_bubbletree_louvain <- function(x,
   
   
   # perform clustering
-  base::message("Clustering ... \n")
+  base::message("Clustering ...")
   
   # add cell ids if needed
   if(is.null(rownames(x))) {
@@ -310,7 +310,7 @@ get_bubbletree_louvain <- function(x,
   
   
   # pairwise distances
-  base::message("Bubbletree construction ... \n")
+  base::message("Bubbletree construction ...")
   pair_dist <- get_dist(B = B,
                         m = x,
                         c = cs,

@@ -287,7 +287,7 @@ get_bubbletree_kmeans <- function(x,
   
   
   # perform k-means clustering
-  base::message("Clustering ... \n")
+  base::message("Clustering ...")
   km <- stats::kmeans(x = x,
                       centers = k,
                       nstart = n_start,
@@ -296,7 +296,7 @@ get_bubbletree_kmeans <- function(x,
   
   
   # pairwise distances
-  base::message("Bubbletree construction ... \n")
+  base::message("Bubbletree construction ...")
   pair_dist <- get_dist(B = B,
                         m = x,
                         c = km$cluster,

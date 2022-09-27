@@ -382,7 +382,7 @@ get_r <- function(x,
   
   
   # clustering
-  base::message("1) clustering \n")
+  base::message("1) clustering")
   louvain_obj <- parallel::mclapply(
     X = rs,
     FUN = Seurat::FindClusters,
@@ -409,7 +409,7 @@ get_r <- function(x,
   
   
   # Gap stats
-  base::message("2) gap statistic \n")
+  base::message("2) gap statistic")
   q <- parallel::mclapply(X = base::seq_len(length.out = length(louvain_obj)),
                           FUN = get_gap_r,
                           l = louvain_obj,
@@ -434,7 +434,7 @@ get_r <- function(x,
   
   
   # within cluster sum of squares
-  base::message("3) WCSS \n")
+  base::message("3) WCSS")
   wcss_data <- lapply(X = louvain_obj,
                       FUN = get_wcss,
                       x = x)

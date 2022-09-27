@@ -289,7 +289,7 @@ get_k <- function(x,
   
   
   # clustering
-  base::message("1) clustering \n")
+  base::message("1) clustering")
   kmeans_obj <- parallel::mclapply(X = ks,
                                    FUN = stats::kmeans,
                                    x = x,
@@ -301,7 +301,7 @@ get_k <- function(x,
   
   
   
-  base::message("2) gap-stat \n")
+  base::message("2) gap-stat")
   gap_stats <- parallel::mclapply(X = kmeans_obj,
                                   FUN = get_gap_k,
                                   x = x,
@@ -314,7 +314,7 @@ get_k <- function(x,
   
   
   # within cluster sum of squares
-  base::message("3) WCSS \n")
+  base::message("3) WCSS")
   wcss_data <- lapply(X = kmeans_obj, FUN =  function(x) {
     return(x$tot.withinss)
   })

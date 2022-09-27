@@ -193,7 +193,7 @@ get_bubbletree_dummy <- function(x,
   
   
   # pairwise distances
-  base::message("Generating bubbletree ... \n")
+  base::message("Generating bubbletree ...")
   pair_dist <- get_dist(B = B,
                         m = x,
                         c = cs,
