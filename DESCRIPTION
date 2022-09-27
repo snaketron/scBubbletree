@@ -41,5 +41,6 @@ NeedsCompilation: no
 biocViews: Visualization,Clustering,
     SingleCell,Transcriptomics,RNASeq
 BugReports: https://github.com/snaketron/scBubbletree/issues
+SystemRequirements: Python (>= 3.6), leidenalg (>= 0.8.2)
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
