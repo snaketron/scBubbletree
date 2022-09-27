@@ -84,7 +84,7 @@ projections (embeddings) in 15-dimensional feature space, $A^{3,918\times 15}$.
 # 
 # 
 # # get the meta data for each cell
-# meta <- colData(d)[, c("cell_line_demuxlet","non_mt_percent","total_features")]
+# meta <- colData(d)[,c("cell_line_demuxlet","non_mt_percent","total_features")]
 # 
 # 
 # # create Seurat object from the raw counts and append the meta data to it
