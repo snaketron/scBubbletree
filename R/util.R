@@ -55,9 +55,10 @@ get_dist <- function(B,
         # efficiency
         if(is.na(N_eff)==FALSE) {
           if(nrow(x_j)>N_eff) {
-            x_j <- x_j[base::sample(x = base::seq_len(length.out=base::nrow(x_j)),
-                                    size = N_eff,
-                                    replace = FALSE), ]
+            x_j <- x_j[base::sample(
+              x = base::seq_len(length.out=base::nrow(x_j)),
+              size = N_eff,
+              replace = FALSE), ]
           }
         }
         
@@ -224,11 +225,17 @@ get_dendrogram <- function(ph,
   
   
   # build ggtree
-  tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
-    geom_point2(aes(subset=isTip==FALSE), size = 0.5, col = "black")+
+  tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta
+  tree_data <- tree$data
+  tree <- tree +
+    geom_point2(data = tree_data,
+                mapping = aes(subset=tree_data$isTip==FALSE), 
+                size = 0.65, col = "black")+
     layout_rectangular()+
-    # geom_tippoint(aes(size = c, fill = c), shape = 21)+ # old bubble coloring
-    geom_tippoint(aes(size = c), fill = "white", shape = 21)+
+    geom_tippoint(data = tree_data,
+                  aes(size = tree_data$c), 
+                  fill = "white", 
+                  shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
@@ -239,25 +246,34 @@ get_dendrogram <- function(ph,
   
   if(show_simple_count) {
     tree <- tree+
-      geom_tiplab(aes(label=paste0(label, " (",
-                                   paste0(round(c/1000, digits = round_digits),
-                                          'K'), ', ', pct, "%)")),
+      ggtree::geom_tiplab(data = tree_data,
+                  ggtree::aes(label=paste0(tree_data$label, " (",
+                                   paste0(round(tree_data$c/1000, 
+                                                digits = round_digits),
+                                          'K'), ', ', tree_data$pct, "%)")),
                   color='black', size = 2.75, hjust=-0.25,
                   align = TRUE)
   } else {
     tree <- tree+
-      geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
-                  color='black', size = 2.75, hjust=-0.25,
+      ggtree::geom_tiplab(data = tree_data, 
+                  ggtree::aes(label=paste0(tree_data$label,
+                                           " (", tree_data$c, ', ', 
+                                           tree_data$pct, "%)")),
+                  color='black', 
+                  size = 2.75, 
+                  hjust=-0.25,
                   align = TRUE)
   }
   
   
-  tree_data <- tree$data
   tree <- tree+
-    geom_nodelab(geom='text',
-                 color = "#4c4c4c", # previously red
-                 aes(label=label, subset=isTip==FALSE),
-                 size = 2.75, hjust=-0.2)
+    geom_nodelab(data = tree_data,
+                 geom='text',
+                 color = "#4c4c4c",
+                 ggtree::aes(label=tree_data$label, 
+                             subset=tree_data$isTip==FALSE),
+                 size = 2.75, 
+                 hjust=-0.2)
   
   tree <- tree+
     # scale_radius
@@ -272,7 +288,7 @@ get_dendrogram <- function(ph,
   
   
   # merge order of tips in the tree with metadata
-  q <- tree$data
+  q <- tree_data
   q <- q[order(q$y, decreasing = FALSE), ]
   tips <- q$label[q$isTip==TRUE]
   tips <- data.frame(label = tips,
@@ -318,45 +334,46 @@ get_weighted_feature_dist_num <- function(main_ph,
                           value.var = value_var)
   
   dist_feature <- matrix(data = 0,
-                         nrow = nrow(w_df),
-                         ncol = nrow(w_df))
-  rownames(dist_feature) <- rownames(w_df)
-  colnames(dist_feature) <- rownames(w_df)
+                         nrow = base::nrow(w_df),
+                         ncol = base::nrow(w_df))
+  base::rownames(dist_feature) <- base::rownames(w_df)
+  base::colnames(dist_feature) <- base::rownames(w_df)
   
   
-  for(i in 1:(nrow(w_df)-1)) {
-    for(j in (i+1):nrow(w_df)) {
-      d <- abs(w_df[i, ]-w_df[j,])
-      d <- d[order(as.numeric(names(d)), decreasing = FALSE)]
+  for(i in base::seq(from = 1, to = base::nrow(w_df)-1, by = 1)) {
+    for(j in base::seq(from = i+1, to = base::nrow(w_df), by = 1)) {
+      d <- base::abs(w_df[i, ]-w_df[j,])
+      d <- d[base::order(base::as.numeric(base::names(d)), decreasing = FALSE)]
       
       tree_dist <- ape::cophenetic.phylo(main_ph)
-      for(k1 in 1:(length(d)-1)) {
-        for(k2 in (k1+1):length(d)) {
-          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*max(d[k1], d[k2])
-          tree_dist[names(d)[k1], names(d)[k2]] <- tmp
-          tree_dist[names(d)[k2], names(d)[k1]] <- tmp
+      for(k1 in base::seq(from = 1, to = base::length(d)-1, by = 1)) {
+        for(k2 in base::seq(from = k1+1, to = base::length(d), by = 1)) {
+          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*base::max(d[k1], d[k2])
+          tree_dist[base::names(d)[k1], base::names(d)[k2]] <- tmp
+          tree_dist[base::names(d)[k2], base::names(d)[k1]] <- tmp
         }
       }
-      dist_feature[i,j] <- sum(tree_dist)
+      dist_feature[i,j] <- base::sum(tree_dist)
       dist_feature[j,i] <- dist_feature[i,j]
     }
   }
   
   
-  for(i in 1:(nrow(w_df)-1)) {
-    for(j in (i+1):nrow(w_df)) {
-      d <- abs(w_df[i, ]-w_df[j,])
-      d <- d[order(as.numeric(names(d)), decreasing = FALSE)]
+  for(i in base::seq(from = 1, to = base::nrow(w_df)-1, by = 1)) {
+    for(j in base::seq(from = i+1, to = base::nrow(w_df), by = 1)) {
+      d <- base::abs(w_df[i, ]-w_df[j,])
+      d <- d[base::order(base::as.numeric(base::names(d)), decreasing = FALSE)]
       
       tree_dist <- ape::cophenetic.phylo(main_ph)
-      for(k1 in 1:(length(d)-1)) {
-        for(k2 in (k1+1):length(d)) {
-          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*max(d[k1], d[k2])
-          tree_dist[names(d)[k1], names(d)[k2]] <- tmp
-          tree_dist[names(d)[k2], names(d)[k1]] <- tmp
+      for(k1 in base::seq(from = 1, to = base::length(d)-1, by = 1)) {
+        for(k2 in base::seq(from = k1+1, to = base::length(d), by = 1)) {
+          tmp <- tree_dist[base::names(d)[k1], 
+                           base::names(d)[k2]]*base::max(d[k1], d[k2])
+          tree_dist[base::names(d)[k1], base::names(d)[k2]] <- tmp
+          tree_dist[base::names(d)[k2], base::names(d)[k1]] <- tmp
         }
       }
-      dist_feature[i,j] <- sum(tree_dist)
+      dist_feature[i,j] <- base::sum(tree_dist)
       dist_feature[j,i] <- dist_feature[i,j]
     }
   }
@@ -368,20 +385,17 @@ get_weighted_feature_dist_num <- function(main_ph,
   
   # build ggtree
   tree <- ggtree::ggtree(hc, linetype='solid')+
-    theme_dendrogram()+
-    coord_flip()+
-    geom_tippoint()+
-    theme(legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-10,-10,-10,-10))
+    ggtree::theme_dendrogram()+
+    ggplot2::coord_flip()+
+    ggtree::geom_tippoint()+
+    ggplot2::theme(legend.margin=margin(0,0,0,0),
+                   legend.box.margin=margin(-10,-10,-10,-10))
   
-  tree_data <- tree$data
   tree_data <- tree_data[tree_data$isTip==TRUE,]
-  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = FALSE)]
+  ordered_labels <- tree_data$label[base::order(tree_data$y, 
+                                                decreasing = FALSE)]
   
-  return(list(tree = tree,
-              labels = ordered_labels))
-  
-  
+  return(base::list(tree = tree, labels = ordered_labels))
 }
 
 
@@ -395,34 +409,34 @@ get_weighted_feature_dist <- function(main_ph,
     stop("Only one feature, cannot compute dendrogram.\n")
   }
   
-  w$cluster <- as.character(w$cluster)
-  features <- unique(as.character(w$feature))
+  w$cluster <- base::as.character(w$cluster)
+  features <- base::unique(base::as.character(w$feature))
   tree_dist <- ape::cophenetic.phylo(main_ph)
-  tree_dist <- tree_dist[order(rownames(tree_dist)),
-                         order(rownames(tree_dist))]
+  tree_dist <- tree_dist[base::order(base::rownames(tree_dist)),
+                         base::order(base::rownames(tree_dist))]
   
   weighted_dist <- matrix(data = 0,
-                          nrow = length(features),
-                          ncol = length(features))
-  rownames(weighted_dist) <- features
-  colnames(weighted_dist) <- features
+                          nrow = base::length(features),
+                          ncol = base::length(features))
+  base::rownames(weighted_dist) <- features
+  base::colnames(weighted_dist) <- features
   
-  for(i in 1:length(features)) {
-    for(j in 1:length(features)) {
-      w_i <- w[which(w$feature == features[i]), ]
-      w_j <- w[which(w$feature == features[j]), ]
-      w_i <- w_i[order(w_i$cluster), ]
-      w_j <- w_j[order(w_j$cluster), ]
+  for(i in base::seq(from = 1, to = base::length(features), by = 1)) {
+    for(j in base::seq(from = 1, to = base::length(features), by = 1)) {
+      w_i <- w[base::which(w$feature == features[i]), ]
+      w_j <- w[base::which(w$feature == features[j]), ]
+      w_i <- w_i[base::order(w_i$cluster), ]
+      w_j <- w_j[base::order(w_j$cluster), ]
       
-      w_d <- abs(w_i$prob_feature-w_j$prob_feature)
-      names(w_d) <- w_i$cluster
+      w_d <- base::abs(w_i$prob_feature-w_j$prob_feature)
+      base::names(w_d) <- w_i$cluster
       
       d <- 0
-      for(k1 in 1:(length(w_d)-1)) {
-        for(k2 in (k1+1):length(w_d)) {
-          p <- min(max(w_d[k1], w_d[k2]), w_d[k1], w_d[k2])
+      for(k1 in base::seq(from = 1, to = base::length(w_d)-1, by = 1)) {
+        for(k2 in base::seq(from = k1+1, to = base::length(w_d), by = 1)) {
+          p <- base::min(base::max(w_d[k1], w_d[k2]), w_d[k1], w_d[k2])
           # p <- max(w_d[k1], w_d[k2])
-          d <- d+(p*tree_dist[names(w_d)[k1], names(w_d)[k2]])
+          d <- d+(p*tree_dist[base::names(w_d)[k1], base::names(w_d)[k2]])
           
         }
       }
@@ -440,21 +454,19 @@ get_weighted_feature_dist <- function(main_ph,
   
   # build ggtree
   tree <- ggtree::ggtree(hc, linetype='solid')+
-    theme_dendrogram()+
-    coord_flip()+
-    geom_tippoint()+
-    theme(legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-10,-10,-10,-10))
+    ggtree::theme_dendrogram()+
+    ggplot2::coord_flip()+
+    ggtree::geom_tippoint()+
+    ggplot2::theme(legend.margin=ggplot2::margin(0,0,0,0),
+                   legend.box.margin=ggplot2::margin(-10,-10,-10,-10))
   
   tree_data <- tree$data
   tree_data <- tree_data[tree_data$isTip==TRUE,]
-  ordered_labels <- tree_data$label[order(tree_data$y, decreasing = FALSE)]
+  ordered_labels <- tree_data$label[base::order(tree_data$y, 
+                                                decreasing = FALSE)]
   
-  return(list(tree = tree,
-              labels = ordered_labels))
-  
-  
-}
+  return(base::list(tree = tree, labels = ordered_labels))
+i}
 
 
 # Short description:
