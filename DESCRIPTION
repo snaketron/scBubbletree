@@ -6,7 +6,7 @@ Authors@R:
     person(given = "Simo",  
            family = "Kitanovski",
            role = c("aut", "cre"),
-           email = "simo.kitanovski@uni-due.de")
+           email = "simokitanovski@gmail.com")
 Description: Visual exploration is an integral part of scRNA-seq data 
   analysis. scBubbletree is a quantitative method for visual exploration 
   of scRNA-seq data. scBubbletree was designed to overcome challenges 
