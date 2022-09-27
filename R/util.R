@@ -209,6 +209,7 @@ get_ph_support <- function(main_ph,
 
 
 
+
 get_dendrogram <- function(ph,
                            cluster,
                            round_digits,
@@ -216,26 +217,19 @@ get_dendrogram <- function(ph,
   
   
   # compute meta summary
-  km_meta <- data.frame(table(cluster))
+  km_meta <- base::data.frame(base::table(cluster))
   base::colnames(km_meta) <- c("label", "c")
-  km_meta$n <- sum(km_meta$c)
+  km_meta$n <- base::sum(km_meta$c)
   km_meta$p <- km_meta$c/km_meta$n
-  km_meta$pct <- round(x = km_meta$p*100,
-                       digits = round_digits)
+  km_meta$pct <- base::round(x = km_meta$p*100,
+                             digits = round_digits)
   
   
   # build ggtree
-  tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta
-  tree_data <- tree$data
-  tree <- tree +
-    geom_point2(data = tree_data,
-                mapping = aes(subset=tree_data$isTip==FALSE), 
-                size = 0.65, col = "black")+
+  tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
+    geom_point2(aes(subset=isTip==FALSE), size = 0.5, col = "black")+
     layout_rectangular()+
-    geom_tippoint(data = tree_data,
-                  aes(size = tree_data$c), 
-                  fill = "white", 
-                  shape = 21)+
+    geom_tippoint(aes(size = c), fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
@@ -246,34 +240,25 @@ get_dendrogram <- function(ph,
   
   if(show_simple_count) {
     tree <- tree+
-      ggtree::geom_tiplab(data = tree_data,
-                  ggtree::aes(label=paste0(tree_data$label, " (",
-                                   paste0(round(tree_data$c/1000, 
-                                                digits = round_digits),
-                                          'K'), ', ', tree_data$pct, "%)")),
+      geom_tiplab(aes(label=paste0(label, " (",
+                                   paste0(round(c/1000, digits = round_digits),
+                                          'K'), ', ', pct, "%)")),
                   color='black', size = 2.75, hjust=-0.25,
                   align = TRUE)
   } else {
     tree <- tree+
-      ggtree::geom_tiplab(data = tree_data, 
-                  ggtree::aes(label=paste0(tree_data$label,
-                                           " (", tree_data$c, ', ', 
-                                           tree_data$pct, "%)")),
-                  color='black', 
-                  size = 2.75, 
-                  hjust=-0.25,
+      geom_tiplab(aes(label=paste0(label, " (", c, ', ', pct, "%)")),
+                  color='black', size = 2.75, hjust=-0.25,
                   align = TRUE)
   }
   
   
+  tree_data <- tree$data
   tree <- tree+
-    geom_nodelab(data = tree_data,
-                 geom='text',
-                 color = "#4c4c4c",
-                 ggtree::aes(label=tree_data$label, 
-                             subset=tree_data$isTip==FALSE),
-                 size = 2.75, 
-                 hjust=-0.2)
+    geom_nodelab(geom='text',
+                 color = "#4c4c4c", # previously red
+                 aes(label=label, subset=isTip==FALSE),
+                 size = 2.75, hjust=-0.2)
   
   tree <- tree+
     # scale_radius
@@ -288,7 +273,7 @@ get_dendrogram <- function(ph,
   
   
   # merge order of tips in the tree with metadata
-  q <- tree_data
+  q <- tree$data
   q <- q[order(q$y, decreasing = FALSE), ]
   tips <- q$label[q$isTip==TRUE]
   tips <- data.frame(label = tips,
@@ -302,6 +287,7 @@ get_dendrogram <- function(ph,
   
   return(t)
 }
+
 
 
 
@@ -385,12 +371,13 @@ get_weighted_feature_dist_num <- function(main_ph,
   
   # build ggtree
   tree <- ggtree::ggtree(hc, linetype='solid')+
-    ggtree::theme_dendrogram()+
-    ggplot2::coord_flip()+
-    ggtree::geom_tippoint()+
-    ggplot2::theme(legend.margin=margin(0,0,0,0),
-                   legend.box.margin=margin(-10,-10,-10,-10))
+    theme_dendrogram()+
+    coord_flip()+
+    geom_tippoint()+
+    theme(legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-10,-10))
   
+  tree_data <- tree$data
   tree_data <- tree_data[tree_data$isTip==TRUE,]
   ordered_labels <- tree_data$label[base::order(tree_data$y, 
                                                 decreasing = FALSE)]
@@ -446,24 +433,23 @@ get_weighted_feature_dist <- function(main_ph,
   
   
   # build hclust
-  # hc_dist <- stats::dist(x = weighted_dist, method = "euclidean")
   hc_dist <- stats::as.dist(m = weighted_dist)
   hc <- stats::hclust(d = hc_dist, method = "average")
-  # hc <- stats::hclust(d = hc_dist, method = "single")
   hc <- ape::as.phylo(x = hc)
   
   # build ggtree
   tree <- ggtree::ggtree(hc, linetype='solid')+
-    ggtree::theme_dendrogram()+
-    ggplot2::coord_flip()+
-    ggtree::geom_tippoint()+
-    ggplot2::theme(legend.margin=ggplot2::margin(0,0,0,0),
-                   legend.box.margin=ggplot2::margin(-10,-10,-10,-10))
+    theme_dendrogram()+
+    coord_flip()+
+    geom_tippoint()+
+    theme(legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-10,-10,-10,-10))
   
   tree_data <- tree$data
   tree_data <- tree_data[tree_data$isTip==TRUE,]
   ordered_labels <- tree_data$label[base::order(tree_data$y, 
                                                 decreasing = FALSE)]
+  
   
   return(base::list(tree = tree, labels = ordered_labels))
 i}
