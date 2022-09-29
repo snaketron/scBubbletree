@@ -9,7 +9,7 @@ get_bubbletree_kmeans <- function(x,
                                   cores = 1,
                                   round_digits = 2,
                                   show_simple_count = FALSE) {
-  
+
   # check input param
   check_input <- function(x,
                           k,
@@ -21,8 +21,8 @@ get_bubbletree_kmeans <- function(x,
                           round_digits,
                           show_simple_count,
                           kmeans_algorithm) {
-    
-    
+
+
     # check x
     if(base::missing(x)) {
       stop("x input not found")
@@ -51,9 +51,9 @@ get_bubbletree_kmeans <- function(x,
     if(base::ncol(x)>base::nrow(x)) {
       warning("more columns (features) than rows (cells) in x")
     }
-    
-    
-    
+
+
+
     # check k
     if(base::missing(k)) {
       stop("k input not found")
@@ -73,8 +73,8 @@ get_bubbletree_kmeans <- function(x,
     if(k%%1!=0) {
       stop("k must be a positive integer (k>=2) to build a bubbletree")
     }
-    
-    
+
+
     # check B
     if(base::missing(B)) {
       stop("B input not found")
@@ -97,8 +97,8 @@ get_bubbletree_kmeans <- function(x,
     if(B%%1!=0) {
       stop("B must be a positive integer > 0")
     }
-    
-    
+
+
     # check cores
     if(base::missing(cores)) {
       stop("cores input not found")
@@ -121,10 +121,10 @@ get_bubbletree_kmeans <- function(x,
     if(cores%%1!=0) {
       stop("cores must be a positive integer")
     }
-    
-    
-    
-    
+
+
+
+
     # n_start
     if(base::missing(n_start)) {
       stop("n_start input not found")
@@ -150,9 +150,9 @@ get_bubbletree_kmeans <- function(x,
     if(n_start%%1!=0) {
       stop("n_start must be a positive integer")
     }
-    
-    
-    
+
+
+
     # iter_max
     if(base::missing(iter_max)) {
       stop("iter_max input not found")
@@ -178,10 +178,10 @@ get_bubbletree_kmeans <- function(x,
     if(iter_max%%1!=0) {
       stop("iter_max must be a positive integer")
     }
-    
-    
-    
-    
+
+
+
+
     # kmeans_algorithm
     if(base::missing(kmeans_algorithm)) {
       stop("kmeans_algorithm input not found")
@@ -199,11 +199,11 @@ get_bubbletree_kmeans <- function(x,
       stop("see ?kmeans: kmeans_algorithm must be one of: Hartigan-Wong,
       Lloyd, Forgy, MacQueen")
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     # check N_eff
     if(base::missing(N_eff)) {
       stop("N_eff input not found")
@@ -229,9 +229,9 @@ get_bubbletree_kmeans <- function(x,
     if(N_eff%%1!=0) {
       stop("N_eff must be a positive integer")
     }
-    
-    
-    
+
+
+
     # check round_digits
     if(base::missing(round_digits)) {
       stop("round_digits input not found")
@@ -251,9 +251,9 @@ get_bubbletree_kmeans <- function(x,
     if(round_digits%%1!=0) {
       stop("round_digits must be a positive integer")
     }
-    
-    
-    
+
+
+
     # show_simple_count
     if(base::missing(show_simple_count)) {
       stop("show_simple_count input not found")
@@ -267,12 +267,13 @@ get_bubbletree_kmeans <- function(x,
     if(base::is.na(show_simple_count)==TRUE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    
-    
+
+
   }
-  
-  
+
+
   # check inputs
+  base::message("Checking inputs ...")
   check_input(x = x,
               k = k,
               n_start = n_start,
@@ -283,9 +284,9 @@ get_bubbletree_kmeans <- function(x,
               round_digits = round_digits,
               show_simple_count = show_simple_count,
               kmeans_algorithm = kmeans_algorithm)
-  
-  
-  
+
+
+
   # perform k-means clustering
   base::message("Clustering ...")
   km <- stats::kmeans(x = x,
@@ -293,8 +294,8 @@ get_bubbletree_kmeans <- function(x,
                       nstart = n_start,
                       iter.max = iter_max,
                       algorithm = kmeans_algorithm)
-  
-  
+
+
   # pairwise distances
   base::message("Bubbletree construction ...")
   pair_dist <- get_dist(B = B,
@@ -302,9 +303,9 @@ get_bubbletree_kmeans <- function(x,
                         c = km$cluster,
                         N_eff = N_eff,
                         cores = cores)
-  
-  
-  
+
+
+
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(data = pair_dist$pca_pair_dist,
                        formula = c_i~c_j,
@@ -312,35 +313,35 @@ get_bubbletree_kmeans <- function(x,
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
   ph <- ape::as.phylo(x = hc)
-  
+
   if(k<=2) {
-    
+
     # build treetree
     t <- get_dendrogram(ph = ph,
                         cluster = km$cluster,
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
-    
+
   }
   else {
-    
+
     ph <- ape::unroot(phy = ph)
-    
+
     # get branch support
     ph <- get_ph_support(main_ph = ph,
                          x = pair_dist$raw_pair_dist)
-    
+
     # build bubbletree
     t <- get_dendrogram(ph = ph$main_ph,
                         cluster = km$cluster,
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
-    
+
   }
-  
-  
-  
-  
+
+
+
+
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
                     iter_max = iter_max,
@@ -350,8 +351,8 @@ get_bubbletree_kmeans <- function(x,
                     show_simple_count = show_simple_count,
                     kmeans_algorithm = kmeans_algorithm,
                     update_iteration = 0)
-  
-  
+
+
   return(base::structure(class = "bubbletree_kmeans",
                          list(A = x,
                               k = k,
@@ -362,5 +363,5 @@ get_bubbletree_kmeans <- function(x,
                               input_par = input_par,
                               tree = t$tree,
                               tree_meta = t$tree_meta)))
-  
+
 }
