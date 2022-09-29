@@ -6,10 +6,11 @@ get_bubbletree_louvain <- function(x,
                                    n_start = 20,
                                    iter_max = 100,
                                    louvain_algorithm = "original",
+                                   knn_k = 50,
                                    cores = 1,
                                    round_digits = 2,
                                    show_simple_count = FALSE) {
-  
+
   # check input param
   check_input <- function(x,
                           r,
@@ -20,9 +21,10 @@ get_bubbletree_louvain <- function(x,
                           cores,
                           round_digits,
                           show_simple_count,
-                          louvain_algorithm) {
-    
-    
+                          louvain_algorithm,
+                          knn_k) {
+
+
     # check x
     if(base::missing(x)) {
       stop("x input not found")
@@ -51,9 +53,9 @@ get_bubbletree_louvain <- function(x,
     if(base::ncol(x)>base::nrow(x)) {
       warning("more columns (features) than rows (cells) in x")
     }
-    
-    
-    
+
+
+
     # check B
     if(base::missing(B)) {
       stop("B input not found")
@@ -76,9 +78,9 @@ get_bubbletree_louvain <- function(x,
     if(B%%1!=0) {
       stop("B must be a positive integer > 0")
     }
-    
-    
-    
+
+
+
     # check r
     if(base::missing(r)) {
       stop("r input not found")
@@ -95,10 +97,10 @@ get_bubbletree_louvain <- function(x,
     if(is.infinite(r)==TRUE) {
       stop("r must be a positive number (r>0) to build a bubbletree")
     }
-    
-    
-    
-    
+
+
+
+
     # check cores
     if(base::missing(cores)) {
       stop("cores input not found")
@@ -121,10 +123,10 @@ get_bubbletree_louvain <- function(x,
     if(cores%%1!=0) {
       stop("cores must be a positive integer")
     }
-    
-    
-    
-    
+
+
+
+
     # n_start
     if(base::missing(n_start)) {
       stop("n_start input not found")
@@ -150,9 +152,9 @@ get_bubbletree_louvain <- function(x,
     if(n_start%%1!=0) {
       stop("n_start must be a positive integer")
     }
-    
-    
-    
+
+
+
     # iter_max
     if(base::missing(iter_max)) {
       stop("iter_max input not found")
@@ -178,10 +180,10 @@ get_bubbletree_louvain <- function(x,
     if(iter_max%%1!=0) {
       stop("iter_max must be a positive integer")
     }
-    
-    
-    
-    
+
+
+
+
     # louvain_algorithm
     if(base::missing(louvain_algorithm)) {
       stop("louvain_algorithm input not found")
@@ -198,11 +200,11 @@ get_bubbletree_louvain <- function(x,
       stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
       one of: original, LMR, SLM or Leiden")
     }
-    
-    
-    
-    
-    
+
+
+
+
+
     # check N_eff
     if(base::missing(N_eff)) {
       stop("N_eff input not found")
@@ -228,10 +230,10 @@ get_bubbletree_louvain <- function(x,
     if(N_eff%%1!=0) {
       stop("N_eff must be a positive integer")
     }
-    
-    
-    
-    
+
+
+
+
     # check round_digits
     if(base::missing(round_digits)) {
       stop("round_digits input not found")
@@ -251,9 +253,9 @@ get_bubbletree_louvain <- function(x,
     if(round_digits%%1!=0) {
       stop("round_digits must be a positive integer")
     }
-    
-    
-    
+
+
+
     # show_simple_count
     if(base::missing(show_simple_count)) {
       stop("show_simple_count input not found")
@@ -267,11 +269,35 @@ get_bubbletree_louvain <- function(x,
     if(base::is.na(show_simple_count)==TRUE) {
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
-    
-    
+
+
+
+    # check knn_k
+    if(base::missing(knn_k)) {
+      stop("knn_k input not found")
+    }
+    if(base::is.numeric(knn_k)==FALSE) {
+      stop("knn_k must be a positive integer")
+    }
+    if(base::length(knn_k)!=1) {
+      stop("knn_k must be a positive integer")
+    }
+    if(base::is.infinite(knn_k)==TRUE) {
+      stop("knn_k must be a positive integer")
+    }
+    if(base::is.na(knn_k)==TRUE) {
+      stop("knn_k must be a positive integer")
+    }
+    if(knn_k<1) {
+      stop("knn_k must be a positive integer")
+    }
+    if(knn_k%%1!=0) {
+      stop("knn_k must be a positive integer")
+    }
   }
-  
+
   # check inputs
+  base::message("Checking inputs ...")
   check_input(x = x,
               r = r,
               n_start = n_start,
@@ -281,34 +307,35 @@ get_bubbletree_louvain <- function(x,
               cores = cores,
               round_digits = round_digits,
               show_simple_count = show_simple_count,
-              louvain_algorithm = louvain_algorithm)
-  
-  
-  
-  # perform clustering
-  base::message("Clustering ...")
-  
+              louvain_algorithm = louvain_algorithm,
+              knn_k = knn_k)
+
+
+
+
+
   # add cell ids if needed
   if(is.null(rownames(x))) {
     rownames(x) <- base::seq_len(length.out = base::nrow(x))
   }
   # create Knn graph
   knn <- Seurat::FindNeighbors(object = x,
-                               k.param = 50)
-  
+                               k.param = knn_k)
+
   # clustering
+  base::message("Clustering ...")
   lc <- Seurat::FindClusters(object = knn$snn,
                              resolution = r,
                              n.start = n_start,
                              n.iter = iter_max,
                              algorithm = map_louvain_algname(louvain_algorithm),
                              verbose = FALSE)
-  
+
   # clusters
   cs <- as.character(lc[,1])
-  
-  
-  
+
+
+
   # pairwise distances
   base::message("Bubbletree construction ...")
   pair_dist <- get_dist(B = B,
@@ -316,9 +343,9 @@ get_bubbletree_louvain <- function(x,
                         c = cs,
                         N_eff = N_eff,
                         cores = cores)
-  
-  
-  
+
+
+
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(data = pair_dist$pca_pair_dist,
                        formula = c_i~c_j,
@@ -326,34 +353,34 @@ get_bubbletree_louvain <- function(x,
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = "average")
   ph <- ape::as.phylo(x = hc)
-  
+
   if(length(unique(cs)) <= 2) {
-    
+
     t <- get_dendrogram(ph = ph,
                         cluster = cs,
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
-    
+
   }
   else {
-    
+
     ph <- ape::unroot(phy = ph)
-    
+
     # get branch support
     ph <- get_ph_support(main_ph = ph,
                          x = pair_dist$raw_pair_dist)
-    
+
     # build bubbletree
     t <- get_dendrogram(ph = ph$main_ph,
                         cluster = cs,
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
-    
+
   }
-  
-  
-  
-  
+
+
+
+
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
                     iter_max = iter_max,
@@ -363,8 +390,8 @@ get_bubbletree_louvain <- function(x,
                     show_simple_count = show_simple_count,
                     louvain_algorithm = louvain_algorithm,
                     update_iteration = 0)
-  
-  
+
+
   return(base::structure(class = "bubbletree_louvain",
                          list(A = x,
                               k = length(unique(cs)),
@@ -375,5 +402,5 @@ get_bubbletree_louvain <- function(x,
                               input_par = input_par,
                               tree = t$tree,
                               tree_meta = t$tree_meta)))
-  
+
 }
