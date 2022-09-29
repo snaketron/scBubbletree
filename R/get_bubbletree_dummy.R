@@ -6,8 +6,8 @@ get_bubbletree_dummy <- function(x,
                                  cores = 1,
                                  round_digits = 2,
                                  show_simple_count = FALSE) {
-  
-  
+
+
   # check input param
   check_input <- function(x,
                           cs,
@@ -16,12 +16,12 @@ get_bubbletree_dummy <- function(x,
                           cores,
                           round_digits,
                           show_simple_count) {
-    
+
     # check x
     if(base::missing(x)) {
       stop("x input not found")
     }
-    
+
     if(methods::is(x, 'SummarizedExperiment')) {
       x <- x@assays@data@listData
     }
@@ -46,8 +46,8 @@ get_bubbletree_dummy <- function(x,
     if(base::ncol(x)>base::nrow(x)) {
       warning("more columns (features) than rows (cells) in x")
     }
-    
-    
+
+
     # check cs
     if(is.vector(cs)==FALSE) {
       stop("cs must be a vector")
@@ -64,8 +64,8 @@ get_bubbletree_dummy <- function(x,
     if(any(is.na(cs)|is.null(cs))==TRUE) {
       stop("NA or NULL elements are found in cs")
     }
-    
-    
+
+
     # check B
     if(base::missing(B)) {
       stop("B input not found")
@@ -88,8 +88,8 @@ get_bubbletree_dummy <- function(x,
     if(B%%1!=0) {
       stop("B must be a positive integer > 0")
     }
-    
-    
+
+
     # check N_eff
     if(base::missing(N_eff)) {
       stop("N_eff input not found")
@@ -115,8 +115,8 @@ get_bubbletree_dummy <- function(x,
     if(N_eff%%1!=0) {
       stop("N_eff must be a positive integer")
     }
-    
-    
+
+
     # check cores
     if(base::missing(cores)) {
       stop("cores input not found")
@@ -139,9 +139,9 @@ get_bubbletree_dummy <- function(x,
     if(cores%%1!=0) {
       stop("cores must be a positive integer")
     }
-    
-    
-    
+
+
+
     # check round_digits
     if(base::missing(round_digits)) {
       stop("round_digits input not found")
@@ -161,8 +161,8 @@ get_bubbletree_dummy <- function(x,
     if(round_digits%%1!=0) {
       stop("round_digits must be a positive integer")
     }
-    
-    
+
+
     # show_simple_count
     if(base::missing(show_simple_count)) {
       stop("show_simple_count input not found")
@@ -177,12 +177,13 @@ get_bubbletree_dummy <- function(x,
       stop("show_simple_count is a logical parameter (TRUE or FALSE)")
     }
   }
-  
-  
-  
-  
-  
+
+
+
+
+
   # check inputs
+  base::message("Checking inputs ...")
   check_input(x = x,
               cs = cs,
               B = B,
@@ -190,16 +191,16 @@ get_bubbletree_dummy <- function(x,
               cores = cores,
               round_digits = round_digits,
               show_simple_count = show_simple_count)
-  
-  
+
+
   # pairwise distances
-  base::message("Generating bubbletree ...")
+  base::message("Bubbletree construction ...")
   pair_dist <- get_dist(B = B,
                         m = x,
                         c = cs,
                         N_eff = N_eff,
                         cores = cores)
-  
+
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(data = pair_dist$pca_pair_dist,
                        formula = c_i~c_j,
@@ -208,17 +209,17 @@ get_bubbletree_dummy <- function(x,
   hc <- stats::hclust(d, method = "average")
   ph <- ape::as.phylo(x = hc)
   ph <- ape::unroot(phy = ph)
-  
+
   # get branch support
   ph <- get_ph_support(main_ph = ph,
                        x = pair_dist$raw_pair_dist)
-  
+
   # build treetree
   t <- get_dendrogram(ph = ph$main_ph,
                       cluster = cs,
                       round_digits = round_digits,
                       show_simple_count = show_simple_count)
-  
+
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = NA,
                     iter_max = NA,
@@ -227,8 +228,8 @@ get_bubbletree_dummy <- function(x,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
                     kmeans_algorithm = NA)
-  
-  
+
+
   return(base::structure(class = "bubbletree_dummy",
                          list(A = x,
                               k = length(unique(cs)),
