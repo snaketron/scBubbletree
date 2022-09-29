@@ -60,7 +60,7 @@ of function FindClusters, R-package Seurat}
 \item{louvain_algorithm}{character, four clustering algorithms: 'original',
 'LMR', 'SLM' and 'Leiden', see documentation of function FindClusters,
 R-package Seurat}
-\item{knn_k}{Defines k for the k-nearest neighbor algorithm, see
+\item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
 documentation of function FindClusters, R-package Seurat}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
