@@ -31,6 +31,7 @@ get_r(x,
      n_start = 20,
      iter_max = 100,
      louvain_algorithm = "original",
+     knn_k = 50,
      cores = 1)
 }
 
@@ -47,7 +48,7 @@ of function FindClusters, R-package Seurat}
 \item{louvain_algorithm}{character, four clustering algorithms: 'original',
 'LMR', 'SLM' and 'Leiden', see documentation of function FindClusters,
 R-package Seurat}
-\item{knn_k}{Defines k for the k-nearest neighbor algorithm, see
+\item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
 documentation of function FindClusters, R-package Seurat}
 \item{cores}{integer, number of PC cores for parallel execution}
 }
