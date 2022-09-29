@@ -4,7 +4,7 @@ author: "Simo Kitanovski (simo.kitanovski@uni-due.de)"
 output:
   BiocStyle::html_document
 vignette: >
-  %\VignetteIndexEntry{User Manual: IgGeneUsage}
+  %\VignetteIndexEntry{User Manual: scBubbletree}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -35,7 +35,7 @@ set.seed(seed = 1234)
 
 
 
-## Data[^1]
+# Data[^1]
 
 Here we will analyze a scRNA-seq dataset containing a mixture of 3,918 cells 
 from five human lung adenocarcinoma cell lines (HCC827, H1975, A549, H838 and 
@@ -47,7 +47,7 @@ The tool demuxlet has been used to predict the identity of each cell based on
 known genetic differences between the different cell lines. 
 
 
-## Data processing
+# Data processing
 
 Data processing was performed with R-package Seurat. Gene expressions were 
 normalized with the function *SCTransform* using default parameters, and 
@@ -150,7 +150,7 @@ e <- d_ccl$e
 
 
 
-## scBubbletree
+# scBubbletree
    
 We will analyze this data with `scBubbletree`. 
 
@@ -180,13 +180,13 @@ The `scBubbletree` workflow performs the following steps:
   3. hierarchical organization of clusters (bubbles)
   4. visualization
 
-### 1. determine the clustering resolution
+## 1. determine the clustering resolution
 If we want to use the k-means clustering algorithm for this step we need to 
 find a reasonable value of the number of clusters $k$. We can also the
 Louvain algorithm in which case we need to find an appropriate value for the 
 resolution parameter $r$.
 
-#### 1.1 determining the number of clusters $k$
+### 1.1 determining the number of clusters $k$
 How many clusters (cell types) are there are in the data? Can we guess a 
 reasonable value of $k$? 
 
@@ -237,7 +237,7 @@ g0
 ```
 
 
-#### 1.2 determining the resolution parameter $r$
+### 1.2 determining the resolution parameter $r$
 For Louvain clustering we need to select a clustering resolution $r$. Higher 
 resolutions lead to more communities and lower resolutions lead to fewer 
 communities. We can use the same strategy as before to find a reasonable 
@@ -255,6 +255,7 @@ b_r <- get_r(B_gap = 5,
              n_start = 10, 
              iter_max = 50,
              louvain_algorithm = "original",
+             knn_k = 50,
              cores = 1)
 ```
 
@@ -317,9 +318,9 @@ knitr::kable(x = b_r$gap_stats_summary[b_r$gap_stats_summary$k == 5, ],
 ```
 
 
-### 2. clustering
+## 2. clustering
 
-#### 2.1 with k-means
+### 2.1 with k-means
 Now that we found out that $k=5$ is a reasonable choice based on the data, we 
 will perform k-means clustering with $k=5$ and $A$ as inputs. For this we will 
 use the function kmeans (R-package stats) which offers various variants of 
@@ -332,7 +333,7 @@ and $n_{iter} = 300$ are unnecessarily high, however for larger datasets this
 is necessary to make sure that k-means converges.
 
 
-### 3. hierarchical grouping
+## 3. hierarchical grouping
 After the clustering is complete we will organize the bubbles in a natural
 hierarchy. For this we perform $B$ bootstrap iterations (default $B=200$). 
 In iteration $b$ the algorithm draws a random subset of $N_{eff}$ (default 
@@ -403,7 +404,7 @@ robust.
 
 
 
-#### 2.2 with Louvain
+### 2.2 with Louvain
 Lets also perform clustering with the Louvain algorithm (R-package Seurat) and 
 resolution parameter $r=0.1$. There are numerous variants of the Louvain 
 algorithm. Here we will use the original implementation. We will do clustering
@@ -418,6 +419,7 @@ k5_louvain <- get_bubbletree_louvain(x = A,
                                      n_start = 20,
                                      iter_max = 100,
                                      louvain_algorithm = "original",
+                                     knn_k = 50,
                                      cores = 1,
                                      B = 200,
                                      N_eff = 200,
@@ -448,7 +450,7 @@ proceed in the next with the k-means results.
 
 
 
-### 4. visualization
+## 4. visualization
 
 To extract biologically useful information from the bubbletree (and also for 
 2D UMAP or t-SNE plots) we need to adorn it with biologically relevant cell 
@@ -475,7 +477,7 @@ In the next two paragraph we will explain how to 'attach' numeric and
 categorical features to the bubbletree using `scBubbletree`.
 
 
-### attaching categorical features
+## Attaching categorical features
 
 Categorical cell features can be 'attached' to the bubbletree using the function
 `get_cat_tiles`. Here we will show the relative frequency of cell type labels 
@@ -542,7 +544,7 @@ used to combine plots.
 
 
 
-### Gini impurity index
+## Gini impurity index
 
 To quantify the purity of a cluster (or bubble) $i$ with $n_i$ number of cells, 
 each of which carries one of $L$ possible labels (e.g. cell lines), we can 
@@ -600,7 +602,7 @@ g1
 ```
 
 
-### attaching numeric features
+## Attaching numeric features
 
 We can also "attach" numeric cell features to the bubbletree. We will "attach" 
 the expression of five marker genes, i.e. one marker gene for each of the five 
@@ -641,7 +643,7 @@ w4 <- get_num_violins(btd = k5_kmeans,
   patchwork::plot_annotation(tag_levels = 'A')
 ```
 
-### quality control with `scBubbletree`
+## Quality control with `scBubbletree`
 What is the percent of UMIs coming from mitochondrial genes in each bubble? 
 
 ```{r, fig.width=9, fig.height=4, fig.align='center'}
@@ -688,7 +690,7 @@ separable.
 
 
 
-### scBubbletree can incorporate results from other clustering approaches
+## scBubbletree can incorporate results from other clustering approaches
 
 Wide range of clustering approaches are used for clustering of scRNA-seq data. 
 `scBubbletree` implements the function `get_bubbletree_dummy` to allow users
@@ -726,7 +728,7 @@ dummy_k5_pam$tree|
 
 
 
-### Summary
+## Summary
 
 `scBubbletree` promotes simple and transparent visual exploration of scRNA-seq.
 It is *not a black-box* approach and the user *is encouraged* to explore the 
@@ -745,7 +747,7 @@ pipelines using mixture control experiments." Nature methods 16.6 (2019):
 sincell_with_class_5cl.RData
 
 
-### Session Info
+## Session Info
 
 ```{r}
 sessionInfo()
