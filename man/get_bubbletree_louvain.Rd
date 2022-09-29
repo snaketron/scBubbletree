@@ -39,6 +39,7 @@ get_bubbletree_louvain(x,
                        n_start = 20,
                        iter_max = 100,
                        louvain_algorithm = "original",
+                       knn_k = 50,
                        cores = 1,
                        round_digits = 2,
                        show_simple_count = FALSE)
@@ -54,8 +55,13 @@ generate bubbletree}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
 computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}
-\item{n_start, iter_max, louvain_algorithm}{parameters for Louvain clustering,
-see documentation of function Louvain, R-package Seurat}
+\item{n_start, iter_max}{parameters for Louvain clustering, see documentation
+of function FindClusters, R-package Seurat}
+\item{louvain_algorithm}{character, four clustering algorithms: 'original',
+'LMR', 'SLM' and 'Leiden', see documentation of function FindClusters,
+R-package Seurat}
+\item{knn_k}{Defines k for the k-nearest neighbor algorithm, see
+documentation of function FindClusters, R-package Seurat}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
@@ -66,10 +72,11 @@ samples that are composed of millions of cells.}
 
 
 \details{
-For Louvain clustering get_bubbletree uses the function FindClusters implemented
-in R-package Seurat. For additional information on the clustering procedure see
-the documentation of FindClusters. To organize the resulting clusters in a
-hierarchical dendrogram the algorithm performs the following steps:
+For Louvain clustering get_bubbletree_louvain uses the function FindClusters
+implemented in R-package Seurat. For additional information on the clustering
+procedure see the documentation of FindClusters. To organize the resulting
+clusters in a hierarchical dendrogram the algorithm performs the following
+steps:
 
 1. In bootrap iteration \eqn{b} from \eqn{1:B}
 
@@ -126,6 +133,7 @@ b <- get_bubbletree_louvain(x = A,
                             n_start = 20,
                             iter_max = 100,
                             louvain_algorithm = "original",
+                            knn_k = 50,
                             cores = 1,
                             round_digits = 2,
                             show_simple_count = FALSE)
