@@ -1,7 +1,7 @@
 Package: scBubbletree
 Type: Package
 Title: Quantitative visual exploration of scRNA-seq data
-Version: 0.99.10
+Version: 0.99.11
 Authors@R: 
     person(given = "Simo",  
            family = "Kitanovski",
@@ -41,6 +41,7 @@ NeedsCompilation: no
 biocViews: Visualization,Clustering,
     SingleCell,Transcriptomics,RNASeq
 BugReports: https://github.com/snaketron/scBubbletree/issues
+URL: https://github.com/snaketron/scBubbletree
 SystemRequirements: Python (>= 3.6), leidenalg (>= 0.8.2)
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
