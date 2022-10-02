@@ -1,2 +1,9 @@
 Changes in version 0.99.0 (23 Sep, 2022)
 + Submitted to Bioconductor
+
+Changes in version 0.99.9 (28 Sep, 2022)
++ Passed checks
+
+Changes in version 0.99.10-11 (30 Sep, 2022)
++ Addressed notes/review raised by Bioconductor reviewer, 1st round (link: 
+  https://github.com/Bioconductor/Contributions/issues/2781)
