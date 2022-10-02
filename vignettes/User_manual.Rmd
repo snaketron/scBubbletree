@@ -19,6 +19,13 @@ knitr::opts_chunk$set(comment = FALSE,
 
 # Background
 
+Over the last decade, we have seen exponential growth of the scale of scRNA-seq 
+datasets to millions of cells sequenced in a single study. This has enabled 
+researchers to characterize the gene expression profiles of various cell types 
+across tissues. The rapid growth of scRNA-seq data has also created an unique 
+set of challenges, for instance, there is a pressing need for scalable 
+approaches for scRNA-seq data visualization.
+
 This vignette introduces `r Biocpkg("scBubbletree")`, a transparent workflow 
 for quantitative exploration of single cell RNA-seq data. 
 
@@ -27,7 +34,8 @@ to identify clusters (bubbles) of transcriptionally similar cells, and then
 visualizes these clusters as leafs in a hierarchical dendrogram (bubbletree) 
 which describes their natural relationships. The workflow comprises four 
 steps: 1. determining the clustering resolution, 2. clustering, 3. hierarchical 
-cluster grouping and 4. visualization. We explain each step in the following.
+cluster grouping and 4. visualization. We explain each step in the following
+using real scRNA-seq dataset of five cancer cell lines.
 
 To run this vignette we need to load a few R-packages:
 
