@@ -34,4 +34,4 @@ Multiple case studies are provided in the directory /vignettes
 
 ## Workflow & output 
 
-![alt text](logo.png)
+![alt text](inst/extdata/logo.png)
