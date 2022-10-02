@@ -32,7 +32,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "bubbletree \\(btd\\) input is missing")
+    "bubbletree \\(btd\\) input not found")
 
   expect_error(get_cat_tiles(
     btd = btd,
@@ -45,7 +45,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "f input is missing")
+    "f input not found")
 
   expect_error(get_cat_tiles(
     btd = btd,
@@ -58,7 +58,7 @@ test_that("missing argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "integrate_vertical input is missing")
+    "integrate_vertical input not found")
 
   expect_error(get_cat_tiles(
     btd = btd,

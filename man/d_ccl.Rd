@@ -27,6 +27,8 @@ The library has been prepared with 10x Chromium platform and sequenced with
 Illumina NextSeq 500 platform. Raw data has been processed with Cellranger.
 The tool demuxlet has been used to predict the identity of each cell based on
 known genetic differences between the different cell lines.
+
+See R script inst/script/get_d_ccl.R to see how this dataset was created.
 }
 \source{
 https://github.com/LuyiTian/sc_mixology/blob/master/data/

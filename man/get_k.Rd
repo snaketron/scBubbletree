@@ -30,7 +30,8 @@ get_k(x,
      n_start = 100,
      iter_max = 200,
      kmeans_algorithm = "MacQueen",
-     cores = 1)
+     cores = 1,
+     verbose = TRUE)
 }
 
 
@@ -44,6 +45,7 @@ cluster)}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function k-means, R-package stats}
 \item{cores}{integer, number of PC cores for parallel execution}
+\item{verbose}{logical, progress messages}
 }
 
 
@@ -81,7 +83,8 @@ b <- get_k(x = A,
            n_start = 100,
            iter_max = 200,
            kmeans_algorithm = "MacQueen",
-           cores = 1)
+           cores = 1,
+           verbose = TRUE)
 
 b$gap_stats_summary
 }

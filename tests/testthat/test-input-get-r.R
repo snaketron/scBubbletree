@@ -547,7 +547,7 @@ test_that("rs argument", {
                      louvain_algorithm = "original",
                      cores = 1,
                      knn_k = 50),
-               "rs must be a positive number or vector of positive numbers")
+               NA)
 
 
 
@@ -1041,8 +1041,8 @@ test_that("louvain_algorithm argument", {
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
                      B_gap = 5,
-                     n_start = 20,
-                     iter_max = 100,
+                     n_start = 5,
+                     iter_max = 50,
                      louvain_algorithm = "original",
                      cores = 1,
                      knn_k = 50),
@@ -1055,8 +1055,8 @@ test_that("louvain_algorithm argument", {
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
                      B_gap = 5,
-                     n_start = 20,
-                     iter_max = 100,
+                     n_start = 5,
+                     iter_max = 50,
                      louvain_algorithm = "LMR",
                      cores = 1,
                      knn_k = 50),
@@ -1069,8 +1069,8 @@ test_that("louvain_algorithm argument", {
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
                      B_gap = 5,
-                     n_start = 20,
-                     iter_max = 100,
+                     n_start = 5,
+                     iter_max = 50,
                      louvain_algorithm = "SLM",
                      cores = 1,
                      knn_k = 50),
@@ -1082,8 +1082,8 @@ test_that("louvain_algorithm argument", {
                                 nrow = 300, ncol = 10),
                      rs = c(0.1, 0.5, 1),
                      B_gap = 5,
-                     n_start = 20,
-                     iter_max = 100,
+                     n_start = 5,
+                     iter_max = 50,
                      louvain_algorithm = "Leiden",
                      cores = 1,
                      knn_k = 50),

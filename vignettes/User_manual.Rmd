@@ -16,8 +16,18 @@ knitr::opts_chunk$set(comment = FALSE,
                       message = FALSE)
 ```
 
-This vignette introduces `scBubbletree`, a transparent workflow for 
-quantitative exploration of single cell RNA-seq data. 
+
+# Background
+
+This vignette introduces `r Biocpkg("scBubbletree")`, a transparent workflow 
+for quantitative exploration of single cell RNA-seq data. 
+
+In short, the algorithm of `r Biocpkg("scBubbletree")` performs clustering 
+to identify clusters (bubbles) of transcriptionally similar cells, and then 
+visualizes these clusters as leafs in a hierarchical dendrogram (bubbletree) 
+which describes their natural relationships. The workflow comprises four 
+steps: 1. determining the clustering resolution, 2. clustering, 3. hierarchical 
+cluster grouping and 4. visualization. We explain each step in the following.
 
 To run this vignette we need to load a few R-packages:
 
@@ -49,11 +59,11 @@ known genetic differences between the different cell lines.
 
 # Data processing
 
-Data processing was performed with R-package Seurat. Gene expressions were 
-normalized with the function *SCTransform* using default parameters, and 
-principal component analysis (PCA) was performed with function *RunPCA* 
-based on the 5,000 most variable genes in the dataset identified with the 
-function *FindVariableFeatures*. 
+Data processing was performed with R-package `r CRANpkg("Seurat")`. Gene 
+expressions were normalized with the function `r CRANpkg("SCTransform")` 
+using default parameters, and principal component analysis (PCA) was performed 
+with function *RunPCA* based on the 5,000 most variable genes in the dataset 
+identified with the function *FindVariableFeatures*. 
 
 In both datasets we saw that the first 15 principal components capture most 
 of the variance in the data, and the proportion of variance explained by each 
@@ -61,78 +71,69 @@ subsequent principal component was negligible. Thus, we used the single cell
 projections (embeddings) in 15-dimensional feature space, $A^{3,918\times 15}$.
 
 ```{r}
-# # This is how we generated the data used in this vignette
+# # This script can be used to generate data("d_ccl", package = "scBubbletree")
 # 
 # # create directory
 # dir.create(path = "case_study/")
 # 
-# 
-# # download the data from: 
+# # download the data from:
 # https://github.com/LuyiTian/sc_mixology/raw/master/data/
 #   sincell_with_class_5cl.RData
 # 
 # # load the data
 # load(file = "case_study/sincell_with_class_5cl.RData")
 # 
-# 
 # # we are only interested in the 10x data object 'sce_sc_10x_5cl_qc'
 # d <- sce_sc_10x_5cl_qc
-# 
 # 
 # # remove the remaining objects (cleanup)
 # rm(sc_Celseq2_5cl_p1, sc_Celseq2_5cl_p2, sc_Celseq2_5cl_p3, sce_sc_10x_5cl_qc)
 # 
-# 
 # # get the meta data for each cell
 # meta <- colData(d)[,c("cell_line_demuxlet","non_mt_percent","total_features")]
-# 
 # 
 # # create Seurat object from the raw counts and append the meta data to it
 # d <- Seurat::CreateSeuratObject(counts = d@assays$data$counts,
 #                                 project = '')
 # 
-# 
 # # check if all cells are matched between d and meta
 # # table(rownames(d@meta.data) == meta@rownames)
 # d@meta.data <- cbind(d@meta.data, meta@listData)
 # 
-# 
 # # cell type predictions are provided as part of the meta data
 # table(d@meta.data$cell_line)
-# 
 # 
 # # select 5,000 most variable genes
 # d <- Seurat::FindVariableFeatures(object = d,
 #                                   selection.method = "vst",
 #                                   nfeatures = 5000)
 # 
-# # Preprocessing with Seurat: SCT transformation + PCA + UMAP
+# # Preprocessing with Seurat: SCT transformation + PCA
 # d <- SCTransform(object = d,
 #                  variable.features.n = 5000)
-# d <- RunPCA(object = d, 
+# d <- RunPCA(object = d,
 #             npcs = 50,
 #             features = VariableFeatures(object = d))
 # 
+# # perform UMAP + t-SNE
 # d <- RunUMAP(d, dims = 1:15)
 # d <- RunTSNE(d, dims = 1:15)
 # 
 # # save the preprocessed data
 # save(d, file = "case_study/d.RData")
 # 
-# 
-# # save the PCA matrix 'A', meta data 'm' and 
+# # save the PCA matrix 'A', meta data 'm' and
 # # marker genes matrix 'e'
 # d <- get(load(file ="case_study/d.RData"))
 # A <- d@reductions$pca@cell.embeddings[, 1:15]
 # m <- d@meta.data
 # e <- t(as.matrix(d@assays$SCT@data[
-#   rownames(d@assays$SCT@data) %in% 
-#     c("ALDH1A1", 
-#       "PIP4K2C", 
+#   rownames(d@assays$SCT@data) %in%
+#     c("ALDH1A1",
+#       "PIP4K2C",
 #       "SLPI",
 #       "CT45A2",
 #       "CD74"), ]))
-# 
 # 
 # d_ccl <- list(A = A, m = m, e = e)
 # save(d_ccl, file = "data/d_ccl.RData")
@@ -150,19 +151,17 @@ e <- d_ccl$e
 
 
 
-# scBubbletree
+# scBubbletree workflow
    
-We will analyze this data with `scBubbletree`. 
+We will analyze this data with `r Biocpkg("scBubbletree")`. 
 
-As first input `scBubbletree` uses matrix $A^{n\times f}$ which represents a 
-low-dimensional projection of the original scRNA-seq data, with $n$ rows as 
-cells and $f$ columns as low-dimension features. 
+As first input `r Biocpkg("scBubbletree")` uses matrix $A^{n\times f}$ which 
+represents a low-dimensional projection of the original scRNA-seq data, with 
+$n$ rows as cells and $f$ columns as low-dimension features. 
 
-We will use the PCA data generated by `Seurat` as $A$. In particular, we will 
-use the first 15 principal components (PCs) as every additional PC explains 
-negligible amount of variance in the data.
-
-
+We will use the PCA data generated by `r CRANpkg("Seurat")` as $A$. In 
+particular, we will use the first 15 principal components (PCs) as every 
+additional PC explains negligible amount of variance in the data.
 
 
 ```{r}
@@ -173,7 +172,7 @@ dim(A)
 
 
 
-The `scBubbletree` workflow performs the following steps:
+The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   
   1. determine the clustering resolution (clusters $k$ or resolution $r$)
   2. Louvain or k-means clustering
@@ -243,10 +242,10 @@ resolutions lead to more communities and lower resolutions lead to fewer
 communities. We can use the same strategy as before to find a reasonable 
 reasonable value of $r$.
 
-Lets use the function `get_r` for data-driven estimation of $r$ based on the
-Gap statistic and WCSS. As input we need to provide the matrix $A$ and a vector 
-of $r$s. The output will be the Gap statistic and WCSS estimate for each $r$ 
-(or the number of communities $k'$ detected at resolution $r$).
+Lets use the function `get_r` for data-driven estimation of $r$ based on 
+the Gap statistic and WCSS. As input we need to provide the matrix $A$ and 
+a vector of $r$s. The output will be the Gap statistic and WCSS estimate 
+for each $r$ (or the number of communities $k'$ detected at resolution $r$).
 
 ```{r}
 b_r <- get_r(B_gap = 5,
@@ -260,7 +259,7 @@ b_r <- get_r(B_gap = 5,
 ```
 
 
-The Gap statistic and WCSS curves have a noticeable knee (elbow) at $k'=5$ 
+The Gap statistic and WCSS curves have noticeable knees (elbows) at $k'=5$ 
 ($r=0.0025$). Means (points) and 95% confidence intervals are shown for the 
 Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
 
@@ -321,12 +320,12 @@ knitr::kable(x = b_r$gap_stats_summary[b_r$gap_stats_summary$k == 5, ],
 ## 2. clustering
 
 ### 2.1 with k-means
-Now that we found out that $k=5$ is a reasonable choice based on the data, we 
-will perform k-means clustering with $k=5$ and $A$ as inputs. For this we will 
-use the function kmeans (R-package stats) which offers various variants of 
-k-means. Here we will use MacQueen's k-means variant and perform 
-$n_{start} = 1000$ (default in scBubbletree) random starts and a maximum 
-number of iterations $iter_{max}=300$. 
+Now that we found out that $k=5$ is a reasonable choice based on the data, 
+we will perform k-means clustering with $k=5$ and $A$ as inputs. For this 
+we will use the function kmeans (R-package stats) which offers various 
+variants of k-means. Here we will use MacQueen's k-means variant and 
+perform $n_\textit{start} = 1000$ (default in `r Biocpkg("scBubbletree")`) 
+random starts and a maximum number of iterations $iter_\textit{max}=300$. 
 
 **Important remark**: for smaller datasets (e.g. $n<50,000$) $n_{start}=1000$ 
 and $n_{iter} = 300$ are unnecessarily high, however for larger datasets this 
@@ -336,12 +335,12 @@ is necessary to make sure that k-means converges.
 ## 3. hierarchical grouping
 After the clustering is complete we will organize the bubbles in a natural
 hierarchy. For this we perform $B$ bootstrap iterations (default $B=200$). 
-In iteration $b$ the algorithm draws a random subset of $N_{eff}$ (default 
-$N_{eff}=200$) cells with replacement from each cluster and computes the 
-average inter-cluster Euclidean distances. This data is used to populate the 
-distance matrix ($D^{k\times k}_b$), which is provided as input for hierarchical
-clustering with average linkage to generate a hierarchical clustering dendrogram
-$H_b$. 
+In iteration $b$ the algorithm draws a random subset of $N_\textit{eff}$ 
+(default $N_\textit{eff}=200$) cells with replacement from each cluster and 
+computes the average inter-cluster Euclidean distances. This data is used to 
+populate the distance matrix ($D^{k\times k}_b$), which is provided as input 
+for hierarchical clustering with average linkage to generate a hierarchical 
+clustering dendrogram $H_b$. 
 
 The collection of distance matrices that are computed during $B$ iterations are 
 used to compute a consensus (average) distance matrix ($\hat{D}^{k\times k}$) 
@@ -351,8 +350,8 @@ the robustness of the bubbletree topology, i.e. to count the number of times
 each branch in the bubbletree is found among the topologies of the bootstrap 
 dendrograms. Branches can have has variable degrees of support ranging between 
 0 (no support) and $B$ (complete support). Distances between bubbles (inter-
-bubble relationships) are described quantitatively in the bubbletree as sums of 
-branch lengths. 
+bubble relationships) are described quantitatively in the bubbletree as sums 
+of branch lengths. 
 
 Steps 2.1 and 3. are performed next
 
@@ -393,23 +392,23 @@ knitr::kable(k5_kmeans$tree_meta,
              digits = 2, row.names = FALSE)
 ```
 
-**topology**: inter-bubble distances are represented by sums of branch lengths 
-in the dendrogram. Branches of the bubbletree are annotated with their bootstrap
-support values (red branch labels). The branch support value tells us how many
-times a given branch from the bubbletree was found among the $B$ bootstrap 
-dendrograms. We ran `get_bubbletree` with $B=200$. All but one branch have 
-complete (200 out of 200) support, and one branch has lower support of 179 
-(85%). This tells us that the branch between bubbles (3, 4) and 1 is not as 
-robust.
+**topology**: inter-bubble distances are represented by sums of branch 
+lengths in the dendrogram. Branches of the bubbletree are annotated with 
+their bootstrap support values (red branch labels). The branch support 
+value tells us how manytimes a given branch from the bubbletree was found 
+among the $B$ bootstrap dendrograms. We ran `get_bubbletree_kmeans` with 
+$B=200$. All but one branch have complete (200 out of 200) support, and 
+one branch has lower support of 179 (85%). This tells us that the branch 
+between bubbles (3, 4) and 1 is not as robust.
 
 
 
 ### 2.2 with Louvain
-Lets also perform clustering with the Louvain algorithm (R-package Seurat) and 
-resolution parameter $r=0.1$. There are numerous variants of the Louvain 
-algorithm. Here we will use the original implementation. We will do clustering
-with $n_{start} = 20$ random starts and a maximum number of iterations 
-$iter_{max} = 100$. 
+Lets also perform clustering with the Louvain algorithm (function FindClusters, 
+R-package `r CRANpkg("Seurat")`) and resolution parameter $r=0.1$. There are 
+numerous variants of the Louvain algorithm. Here we will use the original 
+implementation. We will do clustering with $n_\textit{start} = 20$ random 
+starts and a maximum number of iterations $iter_\textit{max} = 100$. 
 
 Steps 2.2 and 3. (hierarchical clustering) are performed next
 
@@ -474,7 +473,7 @@ Categorical cell features:
 
 
 In the next two paragraph we will explain how to 'attach' numeric and 
-categorical features to the bubbletree using `scBubbletree`.
+categorical features to the bubbletree using `r Biocpkg("scBubbletree")`.
 
 
 ## Attaching categorical features
@@ -532,9 +531,10 @@ w2 <- get_cat_tiles(btd = k5_kmeans,
   patchwork::plot_layout(widths = c(1, 1))
 ```
 
-`scBubbletree` uses R-package `ggtree` to visualize the bubbletree, and 
-`ggplot2` to visualize annotations. Furthermore, R-package `patchwork` is 
-used to combine plots.
+`r Biocpkg("scBubbletree")` uses R-package `r Biocpkg("ggtree")` to 
+visualize the bubbletree, and `r CRANpkg("ggplot2")` to visualize 
+annotations. Furthermore, R-package `r CRANpkg("patchwork")` is used to 
+combine plots.
 
 ```{r, fig.width=9, fig.height=4, fig.align='center'}
 (k5_kmeans$tree|w1$plot|w2$plot)+
@@ -553,13 +553,13 @@ compute the Gini impurity index:
 $\textit{GI}_i=\sum_{j=1}^{L} \pi_{ij}(1-\pi_{ij})$,
 
 with $\pi_{ij}$ as the relative frequency of label $j$ in cluster $i$. In 
-homogeneous (`pure`) clusters most cells carry a distinct label. Hence, 
-the $\pi$'s are close to either 1 or 0, and *GI* takes on a small value 
-close to zero. In `impure' clusters cells carry a mixture of different labels. 
-In this case most $\pi$ are far from either 1 or 0, and *GI* diverges from 0 
-and approaches 1. If the relative frequencies of the different labels in cluster
-$i$ are equal to the (background) relative frequencies of the labels in the 
-sample, then cluster $i$ is completely `impure'.
+homogeneous (`pure`) clusters most cells carry a distinct label. Hence, the 
+$\pi$'s are close to either 1 or 0, and *GI* takes on a small value close to 
+zero. In `impure` clusters cells carry a mixture of different labels. In 
+this case most $\pi$ are far from either 1 or 0, and *GI* diverges from 0 
+and approaches 1. If the relative frequencies of the different labels in 
+cluster $i$ are equal to the (background) relative frequencies of the labels 
+in the sample, then cluster $i$ is completely `impure`.
 
 To compute the overall Gini impurity of a bubbletree, which represents a 
 clustering solution with $k$ bubbles, we estimated the weighted Gini impurity 
@@ -610,8 +610,8 @@ cancer cell lines.
 
 We can visualize numeric features in *two* ways.
 
-First, we can show numeric feature aggregates (e.g. "mean", "median" or "sum")
-in the different bubbles with `get_num_tiles`
+First, we can show numeric feature aggregates (e.g. "mean", "median", "sum",
+"pct nonzero" or "pct zero") in the different bubbles with `get_num_tiles`
 
 ```{r, fig.width=8, fig.height=4, fig.align='center'}
 w3 <- get_num_tiles(btd = k5_kmeans,
@@ -643,7 +643,7 @@ w4 <- get_num_violins(btd = k5_kmeans,
   patchwork::plot_annotation(tag_levels = 'A')
 ```
 
-## Quality control with `scBubbletree`
+## Quality control with `r Biocpkg("scBubbletree")`
 What is the percent of UMIs coming from mitochondrial genes in each bubble? 
 
 ```{r, fig.width=9, fig.height=4, fig.align='center'}
@@ -693,14 +693,14 @@ separable.
 ## scBubbletree can incorporate results from other clustering approaches
 
 Wide range of clustering approaches are used for clustering of scRNA-seq data. 
-`scBubbletree` implements the function `get_bubbletree_dummy` to allow users
-to incorporate results from various clustering approaches together with our 
-workflow. With this function we skip the k-means clustering portion of the 
-workflow and proceed with computing distances between the clusters and 
+`r Biocpkg("scBubbletree")` implements the function `get_bubbletree_dummy` to 
+allow users to incorporate results from various clustering approaches together
+with our workflow. With this function we skip the k-means clustering portion of 
+the workflow and proceed with computing distances between the clusters and 
 generation of the bubbletree.
 
 Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering with
-R-package pam and then generate the bubbletree:
+R-package `r CRANpkg("cluster")` and then generate the bubbletree:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center'}
 pam_k5 <- cluster::pam(x = A, 
@@ -730,12 +730,12 @@ dummy_k5_pam$tree|
 
 ## Summary
 
-`scBubbletree` promotes simple and transparent visual exploration of scRNA-seq.
-It is *not a black-box* approach and the user *is encouraged* to explore the 
-data with different values of $k$ and $r$ or custom clustering solutions. 
-Attaching of cell features to the bubbletree is necessary for biological 
-interpretation of the individual bubbles and their relationships which are 
-described by the bubbletree topology.
+`r Biocpkg("scBubbletree")` promotes simple and transparent visual exploration 
+of scRNA-seq. It is *not a black-box* approach and the user *is encouraged* to 
+explore the data with different values of $k$ and $r$ or custom clustering 
+solutions. Attaching of cell features to the bubbletree is necessary for 
+biological interpretation of the individual bubbles and their relationships 
+which are described by the bubbletree topology.
 
 
 

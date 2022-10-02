@@ -36,7 +36,8 @@ get_bubbletree_dummy(x,
                      N_eff = 100,
                      cores = 1,
                      round_digits = 2,
-                     show_simple_count = FALSE)
+                     show_simple_count = FALSE,
+                     verbose = TRUE)
 }
 
 
@@ -55,6 +56,7 @@ relative frequency of cells in each bubble}
 \item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
 bubble will be divided by 1,000 to improve readability. This is only useful for
 samples that are composed of millions of cells.}
+\item{verbose}{logical, progress messages}
 }
 
 

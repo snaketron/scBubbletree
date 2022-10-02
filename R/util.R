@@ -215,28 +215,25 @@ get_dendrogram <- function(ph,
                            round_digits,
                            show_simple_count) {
 
-
-  # # trick note
-  # isTip<-label<-pct<-NULL
-
-
   # compute meta summary
   km_meta <- base::data.frame(base::table(cluster))
-  base::colnames(km_meta) <- c("label", "c")
-  km_meta$n <- base::sum(km_meta$c)
-  km_meta$p <- km_meta$c/km_meta$n
+  base::colnames(km_meta) <- c("label", "Cells")
+  km_meta$n <- base::sum(km_meta$Cells)
+  km_meta$p <- km_meta$Cells/km_meta$n
   km_meta$pct <- base::round(x = km_meta$p*100,
                              digits = round_digits)
-
-
-
+  km_meta$lab_short <- paste0(km_meta$label, " (", 
+                              round(km_meta$Cells/1000, digits = round_digits),
+                              'K, ', km_meta$pct, "%)")
+  km_meta$lab_long <- paste0(km_meta$label, " (", km_meta$Cells, ', ', 
+                             km_meta$pct, "%)")
+  
   # build ggtree
   tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
-    geom_point2(mapping = ggplot2::aes(subset=isTip==FALSE),
-                size = 0.5,
-                col = "black")+
-    layout_rectangular()+
-    geom_tippoint(mapping = ggplot2::aes(size = c),
+    geom_point2(mapping = ggplot2::aes_string(subset="isTip==FALSE"),
+                size = 0.5, col = "black")+
+    ggtree::layout_rectangular()+
+    ggtree::geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
                   fill = "white",
                   shape = 21)+
     theme_bw(base_size = 10)+
@@ -249,49 +246,40 @@ get_dendrogram <- function(ph,
 
   if(show_simple_count) {
     tree <- tree+
-      geom_tiplab(mapping = ggplot2::aes(
-        label=paste0(label, " (",
-                     paste0(round(c/1000, digits = round_digits),
-                            'K'), ', ', pct, "%)")),
+      geom_tiplab(mapping = ggplot2::aes_string(label="lab_short"),
         color='black', size = 2.75, hjust=-0.25, align = TRUE)
   } else {
     tree <- tree+
-      geom_tiplab(mapping = ggplot2::aes(
-        label=paste0(label, " (", c, ', ', pct, "%)")),
-        color='black', size = 2.75, hjust=-0.25,
-        align = TRUE)
+      geom_tiplab(mapping = ggplot2::aes_string(label="lab_long"),
+        color='black', size = 2.75, hjust=-0.25, align = TRUE)
   }
 
-
-  tree_data <- tree$data
   tree <- tree+
     geom_nodelab(geom='text',
                  color = "#4c4c4c",
-                 mapping = ggplot2::aes(label=label, subset=isTip==FALSE),
+                 mapping = ggplot2::aes_string(label="label", 
+                                        subset="isTip==FALSE"),
                  size = 2.75,
                  hjust=-0.2)
-
+  
   tree <- tree+
-    scale_radius(range = c(1, 4),
-                 limits = c(0, max(km_meta$c)))+
-    guides(size = guide_legend(title = "cells",
-                               nrow = 2,
-                               byrow = TRUE))
-
-
+    ggplot2::scale_radius(range = c(1, 4),
+                          limits = c(0, max(km_meta$Cells)))+
+    ggplot2::guides(size = ggplot2::guide_legend(
+      title = "Cells", nrow = 2, byrow = TRUE))
+  
   # merge order of tips in the tree with metadata
   q <- tree$data
-  q <- q[order(q$y, decreasing = FALSE), ]
+  q <- q[base::order(q$y, decreasing = FALSE), ]
   tips <- q$label[q$isTip==TRUE]
-  tips <- data.frame(label = tips,
-                     tree_order = base::seq_len(length.out = length(tips)))
+  tips <- base::data.frame(label = tips,
+                           tree_order = base::seq_len(length.out=length(tips)))
   km_meta <- base::merge(x = km_meta, y = tips, by = "label")
-  km_meta <- km_meta[order(km_meta$tree_order, decreasing = TRUE), ]
+  km_meta <- km_meta[base::order(km_meta$tree_order, decreasing = TRUE), ]
   rm(q, tips)
 
   # format output
-  t <- list(tree = tree, tree_meta = km_meta)
-
+  t <- base::list(tree = tree, tree_meta = km_meta)
   return(t)
 }
 

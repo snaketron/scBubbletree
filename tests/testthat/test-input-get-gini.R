@@ -10,11 +10,11 @@ test_that("missing argument", {
   labels <- base::sample(x = base::LETTERS[1:3],
                          size = 500, replace = T)
 
-  expect_error(get_gini(clusters = clusters), "labels is missing")
+  expect_error(get_gini(clusters = clusters), "labels input not found")
 
-  expect_error(get_gini(labels = labels), "clusters is missing")
+  expect_error(get_gini(labels = labels), "clusters input not found")
 
-  expect_error(get_gini(), "labels is missing")
+  expect_error(get_gini(), "labels input not found")
 
 })
 
@@ -232,3 +232,4 @@ test_that("clusters argument", {
                "clusters can only contain characters or numbers")
 
 })
+

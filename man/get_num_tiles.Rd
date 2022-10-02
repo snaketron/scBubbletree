@@ -24,7 +24,7 @@ gene) in each bubble of a bubbletree
 \usage{
 get_num_tiles(btd,
               fs,
-              summary_function = "mean",
+              summary_function,
               round_digits = 2,
               show_hclust = FALSE,
               disable_hclust = FALSE,

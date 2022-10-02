@@ -32,7 +32,8 @@ get_r(x,
      iter_max = 100,
      louvain_algorithm = "original",
      knn_k = 50,
-     cores = 1)
+     cores = 1,
+     verbose = TRUE)
 }
 
 
@@ -51,6 +52,7 @@ R-package Seurat}
 \item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
 documentation of function FindClusters, R-package Seurat}
 \item{cores}{integer, number of PC cores for parallel execution}
+\item{verbose}{logical, progress messages}
 }
 
 
@@ -89,7 +91,8 @@ b <- get_r(x = A,
            n_start = 20,
            iter_max = 100,
            louvain_algorithm = "original",
-           cores = 1)
+           cores = 1,
+           verbose = TRUE)
 
 b$gap_stats_summary
 }

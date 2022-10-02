@@ -23,6 +23,8 @@ This data is a sample drawn from a larger dataset of 2,700 PBMCs. The original
 dataset was processed as described in vignette (accessed 23, Sep, 2022):
 
 https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
+
+See R script inst/script/get_d_500.R to see how this dataset was created.
 }
 \source{
 https://satijalab.org/seurat/articles/multimodal_reference_mapping.html
