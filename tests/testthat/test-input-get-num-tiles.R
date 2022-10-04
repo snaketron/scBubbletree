@@ -26,8 +26,6 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -39,8 +37,6 @@ test_that("missing argument", {
     # fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -52,8 +48,6 @@ test_that("missing argument", {
     fs = f,
     # summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -65,8 +59,6 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     # round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -78,34 +70,6 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    # show_hclust = F,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    NA)
-  
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    # disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    NA)
-  
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     # tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -117,8 +81,6 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     # tile_bw = F,
     x_axis_name = "",
@@ -130,8 +92,6 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     # x_axis_name = "",
@@ -143,14 +103,11 @@ test_that("missing argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = ""),
     NA)
 })
-
 
 
 test_that("na/null argument", {
@@ -176,8 +133,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -188,8 +143,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -202,8 +155,6 @@ test_that("na/null argument", {
     fs = NA,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -214,8 +165,6 @@ test_that("na/null argument", {
     fs = NULL,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -228,8 +177,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = NA,
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -241,8 +188,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = NULL,
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -257,8 +202,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = NA,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -269,8 +212,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = NULL,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -283,60 +224,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = NA,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "show_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = NULL,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "show_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = NA,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "disable_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = NULL,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "disable_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  
-  expect_error(get_num_tiles(
-    btd = btd,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = NA,
     tile_bw = F,
     x_axis_name = "",
@@ -347,8 +234,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = NULL,
     tile_bw = F,
     x_axis_name = "",
@@ -361,8 +246,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = NA,
     x_axis_name = "",
@@ -373,8 +256,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = NULL,
     x_axis_name = "",
@@ -387,8 +268,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = NA,
@@ -399,8 +278,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = NULL,
@@ -413,8 +290,6 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -425,15 +300,12 @@ test_that("na/null argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = NULL),
     "rotate_x_axis_labels is a logical parameter \\(TRUE or FALSE\\)")
 })
-
 
 
 test_that("btd argument", {
@@ -494,8 +366,6 @@ test_that("btd argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -507,8 +377,6 @@ test_that("btd argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -520,8 +388,6 @@ test_that("btd argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -533,15 +399,12 @@ test_that("btd argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = T),
     "NA/NULL elements or wrong class detected in the bubbletree")
 })
-
 
 
 test_that("f argument", {
@@ -568,8 +431,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -584,8 +445,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -600,8 +459,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -616,8 +473,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -632,8 +487,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -648,8 +501,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -664,8 +515,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -680,8 +529,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -696,8 +543,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -712,8 +557,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -728,8 +571,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -744,8 +585,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -760,8 +599,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "sum",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -776,8 +613,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "median",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -792,8 +627,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "pct zero",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -808,8 +641,6 @@ test_that("f argument", {
     fs = f,
     summary_function = "pct nonzero",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -817,7 +648,6 @@ test_that("f argument", {
     "some features are NAs, they will be omitted")
   
 })
-
 
 
 test_that("summary_function argument", {
@@ -842,8 +672,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -855,8 +683,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "median",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -868,8 +694,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "sum",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -881,8 +705,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "pct nonzero",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -894,8 +716,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "pct zero",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -907,8 +727,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "pct",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -921,8 +739,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = "means",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -936,8 +752,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = c("mean", "median"),
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -951,8 +765,6 @@ test_that("summary_function argument", {
     fs = f,
     summary_function = c("mean", "mean"),
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -960,7 +772,6 @@ test_that("summary_function argument", {
     "summary_function is one of: 'mean', 'median', 'sum',
            'pct nonzero', 'pct zero'")
 })
-
 
 
 test_that("round_digits argument", {
@@ -985,8 +796,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -998,8 +807,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = -1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1011,8 +818,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 0,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1024,8 +829,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 0.5,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1037,8 +840,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = "1",
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1050,8 +851,6 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = c(1, 2),
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1063,193 +862,12 @@ test_that("round_digits argument", {
     fs = f,
     summary_function = "mean",
     round_digits = as.factor(1),
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = T),
     "round_digits must be a positive integer")
 })
-
-
-
-
-test_that("show_hclust argument", {
-  
-  data("d_500", package = "scBubbletree")
-  x <- d_500$A
-  f <- d_500$fs
-  btd_k <- get_bubbletree_kmeans(
-    x = x,
-    k = 5,
-    B = 20,
-    N_eff = 50,
-    n_start = 100,
-    iter_max = 100,
-    kmeans_algorithm = "MacQueen",
-    cores = 1,
-    round_digits = 2,
-    show_simple_count = F)
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    NA)
-  
-  expect_warning(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = T,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "hierarchical feature clustering is disabled \\(disable_hclust=T\\),
-              show_hclust=T has no effect \\(set disable_hclust=F to show
-              hierarchical dendrogram\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = 1,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "show\\_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = -1,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "show\\_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = "a",
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "show\\_hclust is a logical parameter \\(TRUE or FALSE\\)")
-})
-
-
-
-
-test_that("disable_hclust argument", {
-  
-  data("d_500", package = "scBubbletree")
-  x <- d_500$A
-  f <- d_500$fs
-  
-  btd_k <- get_bubbletree_kmeans(
-    x = x,
-    k = 5,
-    B = 20,
-    N_eff = 50,
-    n_start = 100,
-    iter_max = 100,
-    kmeans_algorithm = "MacQueen",
-    cores = 1,
-    round_digits = 2,
-    show_simple_count = F)
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    NA)
-  
-  expect_warning(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = T,
-    disable_hclust = T,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "hierarchical feature clustering is disabled \\(disable_hclust=T\\),
-              show_hclust=T has no effect \\(set disable_hclust=F to show
-              hierarchical dendrogram\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = 1,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "disable_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = -1,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "disable_hclust is a logical parameter \\(TRUE or FALSE\\)")
-  
-  expect_error(get_num_tiles(
-    btd = btd_k,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    show_hclust = F,
-    disable_hclust = "a",
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "disable_hclust is a logical parameter \\(TRUE or FALSE\\)")
-})
-
-
 
 
 test_that("tile_text_size argument", {
@@ -1275,8 +893,6 @@ test_that("tile_text_size argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1288,8 +904,6 @@ test_that("tile_text_size argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = -1,
     tile_bw = F,
     x_axis_name = "",
@@ -1301,8 +915,6 @@ test_that("tile_text_size argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 0,
     tile_bw = F,
     x_axis_name = "",
@@ -1314,16 +926,12 @@ test_that("tile_text_size argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = Inf,
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = T),
     "tile_text_size must be a number >0")
 })
-
-
 
 
 test_that("tile_bw argument", {
@@ -1349,8 +957,6 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1362,8 +968,6 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = T,
     x_axis_name = "",
@@ -1375,8 +979,6 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = 1,
     x_axis_name = "",
@@ -1388,8 +990,6 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = "a",
     x_axis_name = "",
@@ -1401,8 +1001,6 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = c(T, F),
     x_axis_name = "",
@@ -1414,16 +1012,12 @@ test_that("tile_bw argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = c(T, T),
     x_axis_name = "",
     rotate_x_axis_labels = T),
     "tile_bw is a logical parameter \\(TRUE or FALSE\\)")
 })
-
-
 
 
 test_that("x_axis_name argument", {
@@ -1449,8 +1043,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1462,8 +1054,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = 1,
@@ -1475,8 +1065,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = T,
@@ -1488,8 +1076,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = as.factor("A"),
@@ -1501,16 +1087,12 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = c('a', 'b'),
     rotate_x_axis_labels = T),
     "x_axis_name must be a character string")
 })
-
-
 
 
 test_that("x_axis_name argument", {
@@ -1536,8 +1118,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1549,8 +1129,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name = "",
@@ -1562,8 +1140,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name="",
@@ -1575,8 +1151,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name="",
@@ -1588,8 +1162,6 @@ test_that("x_axis_name argument", {
     fs = f,
     summary_function = "mean",
     round_digits = 1,
-    show_hclust = F,
-    disable_hclust = T,
     tile_text_size = 2,
     tile_bw = F,
     x_axis_name="",
@@ -1597,7 +1169,3 @@ test_that("x_axis_name argument", {
     "rotate_x_axis_labels is a logical parameter \\(TRUE or FALSE\\)")
   
 })
-
-
-
-
