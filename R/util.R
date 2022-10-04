@@ -5,12 +5,13 @@
 # c = cluster identities
 # N_eff = effective number of cells to draw from each cluster
 # cores = number -> multicore execution
-get_dist <- function(B,
-                     m,
-                     c,
-                     N_eff,
-                     cores) {
-
+get_dist <- function(
+    B,
+    m,
+    c,
+    N_eff,
+    cores) {
+  
   # Short description:
   # For b in 1:B computes inter-cluster distances
   get_dist_point <- function(x, m, c, N_eff) {
@@ -179,11 +180,11 @@ get_ph_support <- function(main_ph,
                          formula = c_i~c_j,
                          value.var = "M")
     d <- stats::as.dist(d)
-
+    
     hc <- stats::hclust(d, method = "average")
     ph <- ape::as.phylo(x = hc)
     ph <- ape::unroot(phy = ph)
-
+    
     if(i == 1) {
       boot_ph <- ph
     }
@@ -191,17 +192,17 @@ get_ph_support <- function(main_ph,
       boot_ph <- c(boot_ph, ph)
     }
   }
-
+  
   # compute clade proportions
   clade_b <- ape::prop.clades(phy = main_ph,
                               x = boot_ph,
                               part = NULL,
                               rooted = ape::is.rooted(main_ph))
-
-
+  
+  
   # add bootstrap
   main_ph$node.label <- clade_b
-
+  
   return(list(main_ph = main_ph,
               boot_ph = boot_ph))
 }
@@ -210,11 +211,19 @@ get_ph_support <- function(main_ph,
 
 
 
-get_dendrogram <- function(ph,
-                           cluster,
-                           round_digits,
-                           show_simple_count) {
-
+get_dendrogram <- function(
+    ph,
+    cluster,
+    round_digits,
+    show_simple_count) {
+  
+  # input checks
+  check_input_get_dendrogram(
+    ph = ph,
+    cluster = cluster,
+    round_digits = round_digits,
+    show_simple_count = show_simple_count)
+  
   # compute meta summary
   km_meta <- base::data.frame(base::table(cluster))
   base::colnames(km_meta) <- c("label", "Cells")
@@ -234,8 +243,7 @@ get_dendrogram <- function(ph,
                 size = 0.5, col = "black")+
     ggtree::layout_rectangular()+
     ggtree::geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
-                  fill = "white",
-                  shape = 21)+
+                  fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
@@ -255,16 +263,11 @@ get_dendrogram <- function(ph,
   }
 
   tree <- tree+
-    geom_nodelab(geom='text',
-                 color = "#4c4c4c",
-                 mapping = ggplot2::aes_string(label="label", 
-                                        subset="isTip==FALSE"),
-                 size = 2.75,
-                 hjust=-0.2)
+    geom_nodelab(geom='text', color = "#4c4c4c" ,size = 2.75, hjust=-0.2,
+              mapping=ggplot2::aes_string(label="label",subset="isTip==FALSE"))
   
   tree <- tree+
-    ggplot2::scale_radius(range = c(1, 4),
-                          limits = c(0, max(km_meta$Cells)))+
+    ggplot2::scale_radius(range = c(1, 4), limits = c(0, max(km_meta$Cells)))+
     ggplot2::guides(size = ggplot2::guide_legend(
       title = "Cells", nrow = 2, byrow = TRUE))
   
@@ -276,186 +279,24 @@ get_dendrogram <- function(ph,
                            tree_order = base::seq_len(length.out=length(tips)))
   km_meta <- base::merge(x = km_meta, y = tips, by = "label")
   km_meta <- km_meta[base::order(km_meta$tree_order, decreasing = TRUE), ]
-  rm(q, tips)
 
-  # format output
-  t <- base::list(tree = tree, tree_meta = km_meta)
-  return(t)
+  return(base::list(tree = tree, tree_meta = km_meta))
 }
 
 
 
-
-# Short description:
-# aux. function which computes standard error of num. vector x
-get_se <- function(x) {
-  if(length(x) == 1) {
-    se <- NA
-  }
-  else {
-    se <- stats::sd(x)/base::sqrt(base::length(x))
-  }
-  return(se)
-}
-
-
-
-
-get_weighted_feature_dist_num <- function(main_ph,
-                                          w,
-                                          value_var) {
-
-
-  if(length(unique(w$feature))<=1) {
-    stop("Only one feature, cannot compute dendrogram.\n")
-  }
-
-  w_df <- reshape2::acast(data = w,
-                          formula = feature~cluster,
-                          value.var = value_var)
-
-  dist_feature <- matrix(data = 0,
-                         nrow = base::nrow(w_df),
-                         ncol = base::nrow(w_df))
-  base::rownames(dist_feature) <- base::rownames(w_df)
-  base::colnames(dist_feature) <- base::rownames(w_df)
-
-
-  for(i in base::seq(from = 1, to = base::nrow(w_df)-1, by = 1)) {
-    for(j in base::seq(from = i+1, to = base::nrow(w_df), by = 1)) {
-      d <- base::abs(w_df[i, ]-w_df[j,])
-      d <- d[base::order(base::as.numeric(base::names(d)), decreasing = FALSE)]
-
-      tree_dist <- ape::cophenetic.phylo(main_ph)
-      for(k1 in base::seq(from = 1, to = base::length(d)-1, by = 1)) {
-        for(k2 in base::seq(from = k1+1, to = base::length(d), by = 1)) {
-          tmp <- tree_dist[names(d)[k1], names(d)[k2]]*base::max(d[k1], d[k2])
-          tree_dist[base::names(d)[k1], base::names(d)[k2]] <- tmp
-          tree_dist[base::names(d)[k2], base::names(d)[k1]] <- tmp
-        }
-      }
-      dist_feature[i,j] <- base::sum(tree_dist)
-      dist_feature[j,i] <- dist_feature[i,j]
-    }
-  }
-
-
-  for(i in base::seq(from = 1, to = base::nrow(w_df)-1, by = 1)) {
-    for(j in base::seq(from = i+1, to = base::nrow(w_df), by = 1)) {
-      d <- base::abs(w_df[i, ]-w_df[j,])
-      d <- d[base::order(base::as.numeric(base::names(d)), decreasing = FALSE)]
-
-      tree_dist <- ape::cophenetic.phylo(main_ph)
-      for(k1 in base::seq(from = 1, to = base::length(d)-1, by = 1)) {
-        for(k2 in base::seq(from = k1+1, to = base::length(d), by = 1)) {
-          tmp <- tree_dist[base::names(d)[k1],
-                           base::names(d)[k2]]*base::max(d[k1], d[k2])
-          tree_dist[base::names(d)[k1], base::names(d)[k2]] <- tmp
-          tree_dist[base::names(d)[k2], base::names(d)[k1]] <- tmp
-        }
-      }
-      dist_feature[i,j] <- base::sum(tree_dist)
-      dist_feature[j,i] <- dist_feature[i,j]
-    }
-  }
-
-  # build hclust
-  hc_dist <- stats::dist(x = dist_feature, method = "euclidean")
-  hc <- stats::hclust(d = hc_dist, method = "average")
-  hc <- ape::as.phylo(x = hc)
-
-  # build ggtree
-  tree <- ggtree::ggtree(hc, linetype='solid')+
-    theme_dendrogram()+
-    coord_flip()+
-    geom_tippoint()+
-    theme(legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-10,-10,-10,-10))
-
-  tree_data <- tree$data
-  tree_data <- tree_data[tree_data$isTip==TRUE,]
-  ordered_labels <- tree_data$label[base::order(tree_data$y,
-                                                decreasing = FALSE)]
-
-  return(base::list(tree = tree, labels = ordered_labels))
-}
-
-
-
-get_weighted_feature_dist <- function(main_ph,
-                                      w,
-                                      value_var) {
-
-
-  if(length(unique(w$feature))<=1) {
-    stop("Only one feature, cannot compute dendrogram.\n")
-  }
-
-  w$cluster <- base::as.character(w$cluster)
-  features <- base::unique(base::as.character(w$feature))
-  tree_dist <- ape::cophenetic.phylo(main_ph)
-  tree_dist <- tree_dist[base::order(base::rownames(tree_dist)),
-                         base::order(base::rownames(tree_dist))]
-
-  weighted_dist <- matrix(data = 0,
-                          nrow = base::length(features),
-                          ncol = base::length(features))
-  base::rownames(weighted_dist) <- features
-  base::colnames(weighted_dist) <- features
-
-  for(i in base::seq(from = 1, to = base::length(features), by = 1)) {
-    for(j in base::seq(from = 1, to = base::length(features), by = 1)) {
-      w_i <- w[base::which(w$feature == features[i]), ]
-      w_j <- w[base::which(w$feature == features[j]), ]
-      w_i <- w_i[base::order(w_i$cluster), ]
-      w_j <- w_j[base::order(w_j$cluster), ]
-
-      w_d <- base::abs(w_i$prob_feature-w_j$prob_feature)
-      base::names(w_d) <- w_i$cluster
-
-      d <- 0
-      for(k1 in base::seq(from = 1, to = base::length(w_d)-1, by = 1)) {
-        for(k2 in base::seq(from = k1+1, to = base::length(w_d), by = 1)) {
-          p <- base::min(base::max(w_d[k1], w_d[k2]), w_d[k1], w_d[k2])
-          # p <- max(w_d[k1], w_d[k2])
-          d <- d+(p*tree_dist[base::names(w_d)[k1], base::names(w_d)[k2]])
-
-        }
-      }
-      weighted_dist[features[i], features[j]] <- d
-    }
-  }
-
-
-  # build hclust
-  hc_dist <- stats::as.dist(m = weighted_dist)
-  hc <- stats::hclust(d = hc_dist, method = "average")
-  hc <- ape::as.phylo(x = hc)
-
-  # build ggtree
-  tree <- ggtree::ggtree(hc, linetype='solid')+
-    theme_dendrogram()+
-    coord_flip()+
-    geom_tippoint()+
-    theme(legend.margin=margin(0,0,0,0),
-          legend.box.margin=margin(-10,-10,-10,-10))
-
-  tree_data <- tree$data
-  tree_data <- tree_data[tree_data$isTip==TRUE,]
-  ordered_labels <- tree_data$label[base::order(tree_data$y,
-                                                decreasing = FALSE)]
-
-
-  return(base::list(tree = tree, labels = ordered_labels))
-}
 
 
 # Short description:
 # maps input louvain_algorithm to Seurat accepted names. If a
-# non-matching is provided main fun. checks will produce error.
+# non-matching is provided, main function input check will catch 
+# this and report error.
 map_louvain_algname <- function(x) {
 
-  if(is.numeric(x)) {
+  if(base::missing(x)) {
+    stop("x is missing")
+  }
+  if(base::is.numeric(x)) {
     return(x)
   }
 
@@ -473,3 +314,34 @@ map_louvain_algname <- function(x) {
   }
 }
 
+
+# Short description:
+# aux. function which computes standard error of num. vector x
+get_se <- function(x) {
+  if(base::missing(x)|base::length(x)==0) {
+    stop("x is missing or length(x)==0")
+  }
+  if(length(x) == 1) {
+    se <- NA
+  }
+  else {
+    se <- stats::sd(x)/base::sqrt(base::length(x))
+  }
+  return(se)
+}
+
+
+
+# Short description:
+# Checks inputs of get_dendrogram
+check_input_get_dendrogram <- function(
+    ph,
+    cluster,
+    round_digits,
+    show_simple_count) {
+  
+  check_cluster_dend(cluster = cluster)
+  check_ph_dend(ph = ph, cluster = cluster)
+  check_round_digits(round_digits = round_digits)
+  check_show_simple_count(show_simple_count = show_simple_count)
+}
