@@ -3,8 +3,6 @@ get_cat_tiles <- function(
     f,
     integrate_vertical,
     round_digits = 2,
-    show_hclust = FALSE,
-    disable_hclust = FALSE,
     tile_text_size = 3,
     tile_bw = FALSE,
     x_axis_name = "Feature",
@@ -17,8 +15,6 @@ get_cat_tiles <- function(
     f = f,
     integrate_vertical = integrate_vertical,
     round_digits = round_digits,
-    show_hclust = show_hclust,
-    disable_hclust = disable_hclust,
     tile_text_size = tile_text_size,
     tile_bw = tile_bw,
     x_axis_name = x_axis_name,
@@ -73,16 +69,6 @@ get_cat_tiles <- function(
   ws$cluster <- base::factor(x = ws$cluster,
                              levels = base::unique(ws$cluster))
   
-  # reorder features based on hclust
-  if(disable_hclust==FALSE) {
-    if(base::length(base::unique(ws$feature))>1) {
-      tree <- get_weighted_feature_dist(
-        main_ph = btd$ph$main_ph, w = ws, value_var = "prob_feature")
-      ws$feature <- base::as.character(ws$feature)
-      ws$feature <- base::factor(levels = tree$labels, x = ws$feature)
-    }
-  }
-  
   # draw
   w <- ggplot_cat_tiles(
     ws = ws, 
@@ -90,10 +76,7 @@ get_cat_tiles <- function(
     x_axis_name = x_axis_name, 
     tile_bw = tile_bw, 
     legend = legend,
-    rotate_x_axis_labels = rotate_x_axis_labels,
-    disable_hclust = disable_hclust, 
-    show_hclust = show_hclust,
-    tree = tree)
+    rotate_x_axis_labels = rotate_x_axis_labels)
   
   return(base::list(table = ws, plot = w))
 }
@@ -103,8 +86,6 @@ check_input_cat_tiles <- function(
     f,
     integrate_vertical,
     round_digits,
-    show_hclust,
-    disable_hclust,
     tile_text_size,
     tile_bw,
     x_axis_name,
@@ -114,9 +95,6 @@ check_input_cat_tiles <- function(
   check_f(f = f, btd = btd)
   check_integrate_vertical(integrate_vertical = integrate_vertical)
   check_round_digits(round_digits = round_digits)
-  check_show_hclust(show_hclust = show_hclust)
-  check_disable_hclust(disable_hclust = disable_hclust, 
-                       show_hclust = show_hclust)
   check_tile_text_size(tile_text_size = tile_text_size)
   check_tile_bw(tile_bw = tile_bw)
   check_x_axis_name(x_axis_name = x_axis_name)
@@ -130,10 +108,7 @@ ggplot_cat_tiles <- function(
     x_axis_name, 
     tile_bw, 
     legend,
-    rotate_x_axis_labels,
-    disable_hclust, 
-    show_hclust,
-    tree) {
+    rotate_x_axis_labels) {
   
   w <- ggplot2::ggplot(data = ws)+
     ggplot2::theme_bw(base_size = 10)+
@@ -164,13 +139,6 @@ ggplot_cat_tiles <- function(
   if(rotate_x_axis_labels==TRUE) {
     w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(
       angle = 90, vjust = 0.5, hjust=1))
-  }
-  if(disable_hclust==FALSE & show_hclust==TRUE) {
-    if(length(base::unique(w$feature))==1) {
-      warning("Can't do hierarchical clustering:feature has 1 category\n")
-    } else {
-      w <- (w/tree$tree)+patchwork::plot_layout(heights = c(0.7, 0.3))
-    }
   }
   return(w)
 }

@@ -3,8 +3,6 @@ get_num_tiles <- function(
     fs,
     summary_function,
     round_digits = 2,
-    show_hclust = FALSE,
-    disable_hclust = FALSE,
     tile_text_size = 3,
     tile_bw = FALSE,
     x_axis_name = "Feature",
@@ -16,8 +14,6 @@ get_num_tiles <- function(
     fs = fs,
     summary_function = summary_function,
     round_digits = round_digits,
-    show_hclust = show_hclust,
-    disable_hclust = disable_hclust,
     tile_text_size = tile_text_size,
     tile_bw = tile_bw,
     x_axis_name = x_axis_name,
@@ -54,26 +50,12 @@ get_num_tiles <- function(
   ws$feature <- base::as.character(ws$feature)
   ws$feature <- base::factor(x = ws$feature, levels = base::colnames(fs))
   
-  # reorder features based on hclust
-  if(disable_hclust==FALSE) {
-    if(ncol(fs)>1) {
-      tree <- get_weighted_feature_dist_num(
-        main_ph = btd$ph$main_ph,
-        w = ws,
-        value_var = "value")
-      ws$feature <- base::factor(levels = tree$labels, x = ws$feature)
-    }
-  }
-  
   w <- ggplot_num_tiles(
     ws = ws,
     tile_text_size = tile_text_size, 
     x_axis_name = x_axis_name, 
     tile_bw = tile_bw, 
-    rotate_x_axis_labels = rotate_x_axis_labels, 
-    disable_hclust = disable_hclust, 
-    show_hclust = show_hclust,
-    tree = tree)
+    rotate_x_axis_labels = rotate_x_axis_labels)
   
   return(base::list(table = ws, plot = w))
 }
@@ -84,8 +66,6 @@ check_input_num_tiles <- function(
     fs,
     summary_function,
     round_digits,
-    show_hclust,
-    disable_hclust,
     tile_text_size,
     tile_bw,
     x_axis_name,
@@ -95,9 +75,6 @@ check_input_num_tiles <- function(
   check_fs(fs = fs, btd = btd)
   check_summary_function(summary_function = summary_function)
   check_round_digits(round_digits = round_digits)
-  check_show_hclust(show_hclust)
-  check_disable_hclust(disable_hclust = disable_hclust, 
-                       show_hclust = show_hclust)
   check_tile_text_size(tile_text_size = tile_text_size)
   check_tile_bw(tile_bw = tile_bw)
   check_x_axis_name(x_axis_name = x_axis_name)
@@ -164,10 +141,7 @@ ggplot_num_tiles <- function(
     tile_text_size, 
     x_axis_name, 
     tile_bw, 
-    rotate_x_axis_labels, 
-    disable_hclust, 
-    show_hclust,
-    tree) {
+    rotate_x_axis_labels) {
   
   w <- ggplot2::ggplot(data = ws)+
     ggplot2::theme_bw(base_size = 10)+
@@ -198,9 +172,6 @@ ggplot_num_tiles <- function(
   if(rotate_x_axis_labels==TRUE) {
     w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(
       angle = 90, vjust = 0.5, hjust=1))
-  }
-  if(disable_hclust==FALSE & show_hclust==TRUE) {
-    w <- (w/tree$tree)+patchwork::plot_layout(heights = c(0.7, 0.3))
   }
   return(w)
 }

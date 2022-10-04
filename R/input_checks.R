@@ -628,57 +628,6 @@ check_summary_function <- function(summary_function) {
   }
 }
 
-check_show_hclust <- function(show_hclust) {
-  # show_hclust
-  if(base::missing(show_hclust)) {
-    stop("show_hclust input not found")
-  }
-  if(base::length(show_hclust)!=1) {
-    stop("show_hclust is a logical parameter (TRUE or FALSE)")
-  }
-  if(base::is.logical(show_hclust)==FALSE) {
-    stop("show_hclust is a logical parameter (TRUE or FALSE)")
-  }
-  if(base::is.na(show_hclust)==TRUE) {
-    stop("show_hclust is a logical parameter (TRUE or FALSE)")
-  }
-}
-
-check_disable_hclust <- function(disable_hclust, show_hclust) {
-  # disable_hclust
-  if(base::missing(disable_hclust)) {
-    stop("disable_hclust input not found")
-  }
-  if(base::length(disable_hclust)!=1) {
-    stop("disable_hclust is a logical parameter (TRUE or FALSE)")
-  }
-  if(base::is.logical(disable_hclust)==FALSE) {
-    stop("disable_hclust is a logical parameter (TRUE or FALSE)")
-  }
-  if(base::is.na(disable_hclust)==TRUE) {
-    stop("disable_hclust is a logical parameter (TRUE or FALSE)")
-  }
-  if(disable_hclust==TRUE & show_hclust==TRUE) {
-    warning("hierarchical feature clustering is disabled (disable_hclust=T),
-              show_hclust=T has no effect (set disable_hclust=F to show
-              hierarchical dendrogram)")
-  }
-  
-  
-  
-  
-  
-  # check disable_hclust
-  if(is.logical(disable_hclust)==FALSE) {
-    stop("disable_hclust must be a logical parameter")
-  }
-  if(length(disable_hclust)!=1) {
-    stop("disable_hclust must be a logical parameter (either TRUE or FALSE)")
-  }
-  
-  
-}
-
 check_tile_text_size <- function(tile_text_size) {
   if(base::missing(tile_text_size)) {
     stop("tile_text_size input not found")
@@ -823,5 +772,44 @@ check_obj_k_r <- function(obj) {
      base::is.null(obj$boot_obj)|
      base::length(obj)<=1) {
     stop("no boot_obj found in obj")
+  }
+}
+
+check_cluster_dend <- function(cluster) {
+  # check cluster
+  if(base::missing(cluster)) {
+    stop("cluster input not found")
+  }
+  if(base::length(cluster)<=1) {
+    stop("cluster must be a vector with more than one element")
+  }
+  if(base::is.character(cluster)==FALSE&
+     base::is.numeric(cluster)==FALSE) {
+    stop("cluster can only contain characters or numbers")
+  }
+  if(base::is.vector(cluster)==FALSE) {
+    stop("cluster must be a vector")
+  }
+  if(base::any(base::is.infinite(cluster))==TRUE) {
+    stop("cluster cannot have INF/NA/NULL values")
+  }
+  if(base::any(base::is.na(cluster))==TRUE) {
+    stop("cluster cannot have INF/NA/NULL values")
+  }
+  if(base::any(base::is.null(cluster))==TRUE) {
+    stop("cluster cannot have INF/NA/NULL values")
+  }
+}
+
+check_ph_dend <- function(ph, cluster) {
+  # check ph
+  if(base::missing(ph)) {
+    stop("ph input not found")
+  }
+  if(methods::is(ph, "phylo")==FALSE) {
+    stop("ph must be a phylo object")
+  }
+  if(base::any(cluster %in% ph$tip.label == FALSE)) {
+    stop("mismatch between tip.labels of ph and cluster IDs")
   }
 }
