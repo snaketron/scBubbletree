@@ -26,8 +26,6 @@ get_num_tiles(btd,
               fs,
               summary_function,
               round_digits = 2,
-              show_hclust = FALSE,
-              disable_hclust = FALSE,
               tile_text_size = 3,
               tile_bw = FALSE,
               x_axis_name = "Feature",
@@ -41,10 +39,6 @@ get_num_tiles(btd,
 "pct zero", summaries are allowed}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
-\item{show_hclust}{logical, show hierarchical dendrogram in which different
-feature classes are organized}
-\item{disable_hclust}{logical, if disable_hclust=TRUE hierarchical clustering
-of the feature classes will be performed}
 \item{tile_text_size}{integer, size of tile labels}
 \item{x_axis_name}{character, x-axis title}
 \item{rotate_x_axis_labels}{logical, should the x-axis labels be shown
@@ -101,8 +95,6 @@ g <- get_num_tiles(btd = b,
                    fs = fs,
                    summary_function = "mean",
                    round_digits = 2,
-                   show_hclust = FALSE,
-                   disable_hclust = FALSE,
                    tile_text_size = 3,
                    tile_bw = TRUE,
                    x_axis_name = "Gene expression",

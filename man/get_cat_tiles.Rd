@@ -25,8 +25,6 @@ get_cat_tiles(btd,
               f,
               integrate_vertical,
               round_digits = 2,
-              show_hclust = FALSE,
-              disable_hclust = FALSE,
               tile_text_size = 3,
               tile_bw = FALSE,
               x_axis_name = "Feature",
@@ -42,10 +40,6 @@ frequency of the features is shown in each bubble, if integrate_vertical=FALSE:
 relative frequencies of the features is shown within each bubble}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
-\item{show_hclust}{logical, show hierarchical dendrogram in which different
-feature classes are organized}
-\item{disable_hclust}{logical, if disable_hclust=TRUE hierarchical clustering
-of the feature classes will be performed}
 \item{tile_text_size}{integer, size of tile labels}
 \item{x_axis_name}{character, x-axis title}
 \item{rotate_x_axis_labels}{logical, should the x-axis labels be shown
@@ -103,8 +97,6 @@ g_v <- get_cat_tiles(btd = b,
                      f = f,
                      integrate_vertical = TRUE,
                      round_digits = 2,
-                     show_hclust = FALSE,
-                     disable_hclust = FALSE,
                      tile_text_size = 3,
                      x_axis_name = "Feature",
                      rotate_x_axis_labels = TRUE)
@@ -114,8 +106,6 @@ g_h <- get_cat_tiles(btd = b,
                     f = f,
                     integrate_vertical = FALSE,
                     round_digits = 2,
-                    show_hclust = FALSE,
-                    disable_hclust = FALSE,
                     tile_text_size = 3,
                     x_axis_name = "Feature",
                     rotate_x_axis_labels = TRUE)
