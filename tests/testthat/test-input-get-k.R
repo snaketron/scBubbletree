@@ -2,7 +2,6 @@ context("Tests input rules of get_k")
 cat("Tests input rules of get_k \n")
 
 
-
 test_that("missing argument", {
 
 
@@ -113,7 +112,6 @@ test_that("missing argument", {
 
 
 })
-
 
 
 
@@ -253,7 +251,6 @@ test_that("null/na argument", {
 
 
 
-
 test_that("x argument", {
 
 
@@ -350,7 +347,6 @@ test_that("x argument", {
 
 
 })
-
 
 
 
@@ -523,7 +519,6 @@ test_that("ks argument", {
 
 
 
-
 test_that("B_gap argument", {
 
 
@@ -594,9 +589,6 @@ test_that("B_gap argument", {
                "B_gap must be a positive integer > 0")
 
 })
-
-
-
 
 
 
@@ -684,7 +676,6 @@ test_that("n_start argument", {
 
 
 
-
 test_that("iter_max argument", {
 
 
@@ -769,9 +760,6 @@ test_that("iter_max argument", {
 
 
 
-
-
-
 test_that("cores argument", {
 
 
@@ -842,7 +830,6 @@ test_that("cores argument", {
                "cores must be a positive integer")
 
 })
-
 
 
 

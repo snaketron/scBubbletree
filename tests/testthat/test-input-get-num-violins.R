@@ -1,7 +1,6 @@
 context("Tests input rules of get_num_violins")
 cat("Tests input rules of get_num_violins \n")
 
-
 test_that("missing argument", {
   # build bubbletree
   btd <- get_bubbletree_kmeans(
@@ -49,8 +48,6 @@ test_that("missing argument", {
                                #rotate_x_axis_labels = TRUE),
                NA)
 })
-
-
 
 test_that("na/null argument", {
   # build bubbletree
@@ -129,8 +126,6 @@ test_that("na/null argument", {
   
 })
 
-
-
 test_that("btd argument", {
   
   data("d_500", package = "scBubbletree")
@@ -205,8 +200,6 @@ test_that("btd argument", {
                                rotate_x_axis_labels = TRUE),
                NA)
 })
-
-
 
 test_that("fs argument", {
   
