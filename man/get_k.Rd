@@ -27,8 +27,8 @@ computes the Gap statistic and WCSS for a number of clusters \eqn{ks}.
 get_k(x,
      ks,
      B_gap = 20,
-     n_start = 100,
-     iter_max = 200,
+     n_start = 1000,
+     iter_max = 300,
      kmeans_algorithm = "MacQueen",
      cores = 1,
      verbose = TRUE)
