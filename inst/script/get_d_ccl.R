@@ -1,14 +1,19 @@
 # This scripts can be used to generate data("d_ccl", package = "scBubbletree")
 
-# create directory
-dir.create(path = "case_study/")
+# necessary R-packages
+# install.packages("Seurat")
+library(Seurat)
 
-# download the data from:
-https://github.com/LuyiTian/sc_mixology/raw/master/data/
-  sincell_with_class_5cl.RData
+# create temporary directory and download the scRNA-seq data:
+if(dir.exists("temp_folder")==FALSE) {
+  dir.create(path = "temp_folder")
+}
+utils::download.file(
+  url = "https://github.com/LuyiTian/sc_mixology/raw/master/data/sincell_with_class_5cl.RData",
+  destfile = "temp_folder/ccl.RData")
 
 # load the data
-load(file = "case_study/sincell_with_class_5cl.RData")
+load(file = "temp_folder/ccl.RData")
 
 # we are only interested in the 10x data object 'sce_sc_10x_5cl_qc'
 d <- sce_sc_10x_5cl_qc
@@ -36,22 +41,22 @@ d <- Seurat::FindVariableFeatures(object = d,
                                   nfeatures = 5000)
 
 # Preprocessing with Seurat: SCT transformation + PCA
-d <- SCTransform(object = d,
-                 variable.features.n = 5000)
-d <- RunPCA(object = d,
-            npcs = 50,
-            features = VariableFeatures(object = d))
+d <- Seurat::SCTransform(object = d,
+                         variable.features.n = 5000)
+d <- Seurat::RunPCA(object = d,
+                    npcs = 50,
+                    features = Seurat::VariableFeatures(object = d))
 
 # perform UMAP + t-SNE
-d <- RunUMAP(d, dims = 1:15)
-d <- RunTSNE(d, dims = 1:15)
+d <- Seurat::RunUMAP(d, dims = 1:15)
+d <- Seurat::RunTSNE(d, dims = 1:15)
 
 # save the preprocessed data
-save(d, file = "case_study/d.RData")
+save(d, file = "temp_folder/d.RData")
 
 # save the PCA matrix 'A', meta data 'm' and
 # marker genes matrix 'e'
-d <- get(load(file ="case_study/d.RData"))
+d <- get(load(file ="temp_folder/d.RData"))
 A <- d@reductions$pca@cell.embeddings[, 1:15]
 m <- d@meta.data
 e <- t(as.matrix(d@assays$SCT@data[
@@ -62,5 +67,6 @@ e <- t(as.matrix(d@assays$SCT@data[
       "CT45A2",
       "CD74"), ]))
 
+# package the data into a list and save
 d_ccl <- list(A = A, m = m, e = e)
-save(d_ccl, file = "data/d_ccl.RData")
+save(d_ccl, file = "temp_folder/d_ccl.RData")
