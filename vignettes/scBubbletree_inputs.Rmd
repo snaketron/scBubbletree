@@ -81,23 +81,13 @@ may be used as input of scBubbletree
 
 ```{r}
 # we need the R-package SeuratData to download a Seurat object
-require(SeuratData)
+require(Seurat)
 
-# download and load Seurat's data pbmc3k
-SeuratData::InstallData('pbmc3k')
-data("pbmc3k")
-
-# normalize the data e.g. with SCTransform
-pbmc3k <- Seurat::SCTransform(pbmc3k, verbose = FALSE)
-
-# compute PCA using Seurat's function RunPCA
-pbmc3k <- Seurat::RunPCA(
-  object = pbmc3k,
-  npcs = 20,
-  features = Seurat::VariableFeatures(object = pbmc3k))
+# get SeuratObject pbmc_small
+data("pbmc_small")
 
 # the numeric matrix A is the main input of scBubbletree
-A <- Seurat::Embeddings(object = pbmc3k[["pca"]])
+A <- Seurat::Embeddings(object = pbmc_small[["pca"]])
 ```
 
 ```{r}
