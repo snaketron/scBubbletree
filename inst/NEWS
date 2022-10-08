@@ -8,7 +8,11 @@ Changes in version 0.99.10-12 (30 Sep-2 Oct, 2022)
 + Addressed notes/review raised by Bioconductor reviewer, 1st round (link: 
   https://github.com/Bioconductor/Contributions/issues/2781)
 
-Changes in version 0.99.13 (04 Oct, 2022)
+Changes in version 0.99.13-0.99.14 (04 Oct, 2022)
 + More unit tests
 + Automatic x-axis ordering (by hclust) of labels in get_cat_tiles and 
   get_num_tiles turned off 
+
+Changes in version 0.99.15 (09 Oct, 2022)
++ remove unnecessary dependency from DESCRIPTION
++ added vignette demonstrating how to get the main input of scBubbletree
