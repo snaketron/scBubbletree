@@ -1,0 +1,166 @@
+---
+title: "Understanding scBubbletree's main inputs"
+author: "Simo Kitanovski (simo.kitanovski@uni-due.de)"
+output:
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Understanding scBubbletree's main inputs}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include = FALSE, warning = FALSE}
+knitr::opts_chunk$set(comment = FALSE, 
+                      warning = FALSE, 
+                      message = FALSE)
+```
+
+
+# Main input: numeric matrix $A$ with low-dimentional cell embeddings
+
+The `r Biocpkg("scBubbletree")` pipeline takes as first input a *numeric* 
+matrix $A^{n\times f}$ that represents a low-dimensional projection of the 
+high-dimensional scRNA-seq data, with $n$ rows as cells and $f$ columns as 
+low-dimensional features. 
+
+In the main vignette (User_manual.Rmd) we used principal component analysis 
+(PCA) for dimensionality reduction. Other approaches for dimensionality 
+reduction can be used to generate $A^{n\times f}$, as long as the local and 
+global structure of the data is preserved. For this we recommend the use of 
+linear approaches, such as PCA, non-negative matrix factorization (NMF) and 
+multi-dimensional scaling (MDS), while *non-linear* dimensionality reduction 
+techniques, such as t-SNE and UMAP, should be avoided as these approaches 
+tend to distort long-range distances.
+
+Two such matrices are provided as part of scBubbletree' datasets:
+
+```{r}
+library(scBubbletree)
+```
+
+Lets look at dataset `d_500` now
+
+```{r}
+data("d_500", package = "scBubbletree")
+A <- d_500$A
+```
+
+... object `A` is a matrix 
+
+```{r}
+class(A)
+```
+... the matrix contains numbers
+
+```{r}
+is.numeric(A)
+```
+... the matrix has $n=500$ rows (cells) and $f=15$ columns (low-resolution 
+features, here principal components)
+
+```{r}
+dim(d_500$A)
+```
+... lets look at the data of `A`
+
+```{r}
+head(d_500$A)
+```
+
+
+
+# Extracting low-dimensional cell embeddings from **SeuratObject**
+
+Seurat is a popular R-package for scRNA-seq data analysis. Data processed by
+Seurat are stored in SeuratObject, and this includes data of low-resolution 
+cell embeddings.
+
+Here we demonstrate how to extract this data from SeuratObject such that it 
+may be used as input of scBubbletree
+
+```{r}
+# we need the R-package SeuratData to download a Seurat object
+require(SeuratData)
+
+# download and load Seurat's data pbmc3k
+SeuratData::InstallData('pbmc3k')
+data("pbmc3k")
+
+# normalize the data e.g. with SCTransform
+pbmc3k <- Seurat::SCTransform(pbmc3k, verbose = FALSE)
+
+# compute PCA using Seurat's function RunPCA
+pbmc3k <- Seurat::RunPCA(
+  object = pbmc3k,
+  npcs = 20,
+  features = Seurat::VariableFeatures(object = pbmc3k))
+
+# the numeric matrix A is the main input of scBubbletree
+A <- Seurat::Embeddings(object = pbmc3k[["pca"]])
+
+# ... or alternatively you can use
+A <- pbmc3k@reductions$pca@cell.embeddings
+```
+
+```{r}
+btd <- scBubbletree::get_bubbletree_kmeans(
+  x = A,
+  k = 4,
+  B = 100,
+  N_eff = 100,
+  n_start = 10,
+  iter_max = 100,
+  kmeans_algorithm = "Hartigan-Wong",
+  cores = 1,
+  round_digits = 1,
+  show_simple_count = F,
+  verbose = F)
+```
+
+
+# Extracting low-dimensional cell embeddings from **SingleCellExperiment**
+
+```{r}
+require(SingleCellExperiment)
+
+# lets run the R-code provided by R-package SingleCellExperiment
+ncells <- 100
+u <- matrix(rpois(20000, 5), ncol=ncells)
+v <- log2(u + 1)
+
+pca <- matrix(runif(ncells*5), ncells)
+tsne <- matrix(rnorm(ncells*2), ncells)
+
+sce <- SingleCellExperiment(assays=list(counts=u, logcounts=v),
+    reducedDims=SimpleList(PCA=pca, tSNE=tsne))
+
+# the numeric matrix A is the main input of scBubbletree
+A <- SingleCellExperiment::reducedDim(sce, "PCA")
+```
+
+
+
+```{r}
+btd <- scBubbletree::get_bubbletree_kmeans(
+  x = A,
+  k = 4,
+  B = 100,
+  N_eff = 100,
+  n_start = 10,
+  iter_max = 100,
+  kmeans_algorithm = "Hartigan-Wong",
+  cores = 1,
+  round_digits = 1,
+  show_simple_count = F,
+  verbose = F)
+```
+
+
+
+# Session Info
+
+```{r}
+sessionInfo()
+```
+
