@@ -3,9 +3,6 @@ check_x <- function(x) {
   if(base::missing(x)) {
     stop("x input not found")
   }
-  if(methods::is(x, "SummarizedExperiment")) {
-    x <- x@assays@data@listData
-  }
   if(base::is.numeric(x)==FALSE) {
     stop("x must be numeric matrix")
   }
