@@ -98,9 +98,6 @@ pbmc3k <- Seurat::RunPCA(
 
 # the numeric matrix A is the main input of scBubbletree
 A <- Seurat::Embeddings(object = pbmc3k[["pca"]])
-
-# ... or alternatively you can use
-A <- pbmc3k@reductions$pca@cell.embeddings
 ```
 
 ```{r}
@@ -114,8 +111,8 @@ btd <- scBubbletree::get_bubbletree_kmeans(
   kmeans_algorithm = "Hartigan-Wong",
   cores = 1,
   round_digits = 1,
-  show_simple_count = F,
-  verbose = F)
+  show_simple_count = FALSE,
+  verbose = FALSE)
 ```
 
 
@@ -132,8 +129,9 @@ v <- log2(u + 1)
 pca <- matrix(runif(ncells*5), ncells)
 tsne <- matrix(rnorm(ncells*2), ncells)
 
-sce <- SingleCellExperiment(assays=list(counts=u, logcounts=v),
-    reducedDims=SimpleList(PCA=pca, tSNE=tsne))
+sce <- SingleCellExperiment::SingleCellExperiment(
+  assays=list(counts=u, logcounts=v),
+  reducedDims=SimpleList(PCA=pca, tSNE=tsne))
 
 # the numeric matrix A is the main input of scBubbletree
 A <- SingleCellExperiment::reducedDim(sce, "PCA")
@@ -152,8 +150,8 @@ btd <- scBubbletree::get_bubbletree_kmeans(
   kmeans_algorithm = "Hartigan-Wong",
   cores = 1,
   round_digits = 1,
-  show_simple_count = F,
-  verbose = F)
+  show_simple_count = FALSE,
+  verbose = FALSE)
 ```
 
 
