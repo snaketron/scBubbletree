@@ -22,7 +22,6 @@ Imports:
     parallel,
     ape,
     scales,
-    SummarizedExperiment,
     Seurat,
     ggplot2,
     ggtree,
