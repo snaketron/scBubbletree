@@ -1,7 +1,7 @@
 Package: scBubbletree
 Type: Package
 Title: Quantitative visual exploration of scRNA-seq data
-Version: 0.99.15
+Version: 0.99.16
 Authors@R: 
     person(given = "Simo",  
            family = "Kitanovski",
@@ -34,7 +34,9 @@ Suggests:
     BiocStyle,
     knitr,
     testthat,
-    cluster
+    cluster,
+    SeuratData,
+    SingleCellExperiment
 Encoding: UTF-8
 NeedsCompilation: no
 biocViews: Visualization,Clustering,
