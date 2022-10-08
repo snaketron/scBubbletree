@@ -47,11 +47,6 @@ library(patchwork)
 ```
 
 
-```{r}
-set.seed(seed = 1234)
-```
-
-
 
 # Data[^1]
 
