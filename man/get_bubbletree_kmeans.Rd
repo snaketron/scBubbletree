@@ -133,5 +133,5 @@ b <- get_bubbletree_kmeans(x = A,
 b$tree
 }
 
-\seealso{get_k, get_bubbletree_dummy, get_bubbletree_louvain, get_gini,
+\seealso{get_k, get_bubbletree_dummy, get_bubbletree_graph, get_gini,
 get_gini_k, d_500, get_num_tiles, get_num_violins, get_cat_tiles}

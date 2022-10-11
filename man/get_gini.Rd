@@ -89,4 +89,4 @@ get_gini(labels = base::sample(x = LETTERS[1:4], size = 100, replace = TRUE),
 }
 
 \seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_dummy,
-get_bubbletree_louvain, get_gini_k, d_500}
+get_bubbletree_graph, get_gini_k, d_500}

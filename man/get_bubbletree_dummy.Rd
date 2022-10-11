@@ -61,9 +61,9 @@ samples that are composed of millions of cells.}
 
 
 \details{
-This function is similar to get_bubbletree_kmeans and get_bubbletree_louvain.
+This function is similar to get_bubbletree_kmeans and get_bubbletree_graph.
 It skips the clustering step. See documentation of get_bubbletree_kmeans and
-get_bubbletree_louvain.
+get_bubbletree_graph.
 }
 
 
@@ -102,6 +102,6 @@ db <- get_bubbletree_dummy(x = A,
 
 }
 
-\seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_louvain,
+\seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_graph,
 get_gini, get_gini_k, get_num_tiles, get_num_violins, get_cat_tiles,
 d_500}

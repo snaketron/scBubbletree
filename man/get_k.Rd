@@ -89,6 +89,6 @@ b <- get_k(x = A,
 b$gap_stats_summary
 }
 
-\seealso{get_r, get_bubbletree_dummy, get_bubbletree_louvain,
+\seealso{get_r, get_bubbletree_dummy, get_bubbletree_graph,
 get_bubbletree_kmeans, get_gini, get_gini_k, d_500, get_num_tiles,
 get_num_violins, get_cat_tiles}

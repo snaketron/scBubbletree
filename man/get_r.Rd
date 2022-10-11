@@ -30,7 +30,7 @@ get_r(x,
      B_gap = 20,
      n_start = 20,
      iter_max = 100,
-     louvain_algorithm = "original",
+     algorithm = "original",
      knn_k = 50,
      cores = 1,
      verbose = TRUE)
@@ -46,7 +46,7 @@ computing the Gap statistic (see documentation of function clusGap, R-package
 cluster)}
 \item{n_start, iter_max}{parameters for Louvain clustering, see documentation
 of function FindClusters, R-package Seurat}
-\item{louvain_algorithm}{character, four clustering algorithms: 'original',
+\item{algorithm}{character, four clustering algorithms: 'original',
 'LMR', 'SLM' and 'Leiden', see documentation of function FindClusters,
 R-package Seurat}
 \item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
@@ -90,13 +90,13 @@ b <- get_r(x = A,
            B_gap = 10,
            n_start = 20,
            iter_max = 100,
-           louvain_algorithm = "original",
+           algorithm = "original",
            cores = 1,
            verbose = TRUE)
 
 b$gap_stats_summary
 }
 
-\seealso{get_k, get_bubbletree_dummy, get_bubbletree_louvain,
+\seealso{get_k, get_bubbletree_dummy, get_bubbletree_graph,
 get_bubbletree_kmeans, get_gini, get_gini_k, d_500, get_num_tiles,
 get_num_violins, get_cat_tiles, d_ccl}

@@ -107,12 +107,12 @@ b_r <- get_r(x = A,
             B_gap = 5,
             n_start = 20,
             iter_max = 100,
-            louvain_algorithm = "original",
+            algorithm = "original",
             cores = 1)
 
 get_gini_k(labels = f, obj = b_k)
 get_gini_k(labels = f, obj = b_r)
 }
 
-\seealso{get_k, get_r, get_gini, get_bubbletree_kmeans, get_bubbletree_louvain,
+\seealso{get_k, get_r, get_gini, get_bubbletree_kmeans, get_bubbletree_graph,
 get_bubbletree_dummy, d_500, get_num_tiles, get_num_violins, get_cat_tiles}

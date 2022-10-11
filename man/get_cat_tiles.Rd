@@ -88,9 +88,9 @@ A <- d_500$A
 f <- d_500$f
 
 
-b <- get_bubbletree_louvain(x = A,
-                    r = 0.8,
-                    N_eff = 100)
+b <- get_bubbletree_graph(x = A,
+                          r = 0.8,
+                          N_eff = 100)
 
 
 g_v <- get_cat_tiles(btd = b,
@@ -114,5 +114,5 @@ b$tree|g_v$plot|g_h$plot
 }
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
-get_bubbletree_louvain, get_gini, get_gini_k, get_num_tile, get_num_violins,
+get_bubbletree_graph, get_gini, get_gini_k, get_num_tile, get_num_violins,
 d_500}

@@ -72,10 +72,10 @@ data("d_500", package = "scBubbletree")
 A <- d_500$A
 fs <- d_500$fs
 
-b <- get_bubbletree_louvain(x = A,
-                            r = 0.8,
-                            N_eff = 100,
-                            B = 100)
+b <- get_bubbletree_graph(x = A,
+                          r = 0.8,
+                          N_eff = 100,
+                          B = 100)
 
 g <- get_num_violins(btd = b,
                      fs = fs,
@@ -87,5 +87,5 @@ b$tree|g$plot
 }
 
 \seealso{get_k, get_r get_bubbletree_dummy, get_bubbletree_kmeans,
-get_bubbletree_louvain, get_gini, get_gini_k, get_cat_tile, get_num_tiles,
+get_bubbletree_graph, get_gini, get_gini_k, get_cat_tile, get_num_tiles,
 d_500}
