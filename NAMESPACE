@@ -1,7 +1,7 @@
 export(get_k)
 export(get_r)
 export(get_bubbletree_kmeans)
-export(get_bubbletree_louvain)
+export(get_bubbletree_graph)
 export(get_bubbletree_dummy)
 export(get_gini)
 export(get_gini_k)
