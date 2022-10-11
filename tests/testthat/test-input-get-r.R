@@ -10,7 +10,7 @@ test_that("missing argument", {
     B_gap = 5,
     n_start = 5,
     iter_max = 30,
-    louvain_algorithm = "original",
+    algorithm = "original",
     cores = 1,
     knn_k = 50),
     "x input not found")
@@ -21,7 +21,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs input not found")
@@ -32,7 +32,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -44,7 +44,7 @@ test_that("missing argument", {
                      # B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -55,7 +55,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -66,7 +66,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      # n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -77,7 +77,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      # iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -88,7 +88,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     # louvain_algorithm = "original",
+                     # algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -100,7 +100,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      # cores = 1,
                      knn_k = 50),
                NA)
@@ -111,7 +111,7 @@ test_that("missing argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1),
                #knn_k = 50),
                NA)
@@ -127,7 +127,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix")
@@ -136,7 +136,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix")
@@ -147,7 +147,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -156,7 +156,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -167,7 +167,7 @@ test_that("null/na argument", {
                      B_gap = NULL,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -176,7 +176,7 @@ test_that("null/na argument", {
                      B_gap = NA,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -188,7 +188,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = NULL,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -197,7 +197,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = NA,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -208,7 +208,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = NULL,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -217,7 +217,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = NA,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -229,20 +229,20 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = NULL,
+                     algorithm = NULL,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10), ncol = 10),
                      rs = c(0.2, 0.4, 0.8),
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = NA,
+                     algorithm = NA,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -252,7 +252,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = NULL,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -261,7 +261,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = NA,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -273,7 +273,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = NULL),
                "knn_k must be a positive integer")
@@ -282,7 +282,7 @@ test_that("null/na argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = NA),
                "knn_k must be a positive integer")
@@ -297,7 +297,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix")
@@ -309,7 +309,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix")
@@ -322,7 +322,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix")
@@ -334,7 +334,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix, infinite values not allowed")
@@ -347,7 +347,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix, NAs not allowed")
@@ -360,7 +360,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "x must be numeric matrix, infinite values not allowed")
@@ -373,7 +373,7 @@ test_that("x argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "all elements in x are identical")
@@ -386,7 +386,7 @@ test_that("x argument", {
                        B_gap = 5,
                        n_start = 5,
                        iter_max = 30,
-                       louvain_algorithm = "original",
+                       algorithm = "original",
                        cores = 1,
                        knn_k = 50),
                  "more columns \\(features\\) than rows \\(cells\\) in x")
@@ -404,7 +404,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -416,7 +416,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -428,7 +428,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -440,7 +440,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -453,7 +453,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers,
@@ -466,7 +466,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers,
@@ -479,7 +479,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -493,7 +493,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -507,7 +507,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers,
@@ -523,7 +523,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "rs must be a positive number or vector of positive numbers")
@@ -537,7 +537,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -550,7 +550,7 @@ test_that("rs argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -566,7 +566,7 @@ test_that("B_gap argument", {
                      B_gap = -1,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -579,7 +579,7 @@ test_that("B_gap argument", {
                      B_gap = -1.5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -591,7 +591,7 @@ test_that("B_gap argument", {
                      B_gap = 0.2,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -603,7 +603,7 @@ test_that("B_gap argument", {
                      B_gap = Inf,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -615,7 +615,7 @@ test_that("B_gap argument", {
                      B_gap = 1.5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -627,7 +627,7 @@ test_that("B_gap argument", {
                      B_gap = "100",
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "B_gap must be a positive integer > 0")
@@ -644,7 +644,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = -1,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -657,7 +657,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = Inf,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -669,7 +669,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = -Inf,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -681,7 +681,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = 0.5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -693,7 +693,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = 1:10,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -705,7 +705,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = "100",
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -717,7 +717,7 @@ test_that("n_start argument", {
                      B_gap = 5,
                      n_start = 1.5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "n_start must be a positive integer")
@@ -734,7 +734,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = -1,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -747,7 +747,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = Inf,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -759,7 +759,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = -Inf,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -771,7 +771,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max  = 0.5,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -783,7 +783,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 1:10,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -795,7 +795,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = "100",
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -807,7 +807,7 @@ test_that("iter_max argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 1.5,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                "iter_max must be a positive integer")
@@ -824,7 +824,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = -1,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -837,7 +837,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = Inf,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -849,7 +849,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 0.5,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -861,7 +861,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1:5,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -873,7 +873,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = "2",
                      knn_k = 50),
                "cores must be a positive integer")
@@ -885,7 +885,7 @@ test_that("cores argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1.5,
                      knn_k = 50),
                "cores must be a positive integer")
@@ -893,7 +893,7 @@ test_that("cores argument", {
 })
 
 
-test_that("louvain_algorithm argument", {
+test_that("algorithm argument", {
 
 
   expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
@@ -902,7 +902,7 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -915,10 +915,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "o",
+                     algorithm = "o",
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -928,10 +928,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = c("o", "a"),
+                     algorithm = c("o", "a"),
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -941,10 +941,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "A",
+                     algorithm = "A",
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -954,10 +954,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "L",
+                     algorithm = "L",
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -967,10 +967,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = Inf,
+                     algorithm = Inf,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -980,10 +980,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = NA,
+                     algorithm = NA,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -994,10 +994,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = 1,
+                     algorithm = 1,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -1007,10 +1007,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = FALSE,
+                     algorithm = FALSE,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 
 
@@ -1022,21 +1022,7 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
-                     cores = 1,
-                     knn_k = 50),
-               NA)
-
-
-
-
-  expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
-                                nrow = 300, ncol = 10),
-                     rs = c(0.2, 0.4, 0.8),
-                     B_gap = 5,
-                     n_start = 5,
-                     iter_max = 30,
-                     louvain_algorithm = "LMR",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -1050,7 +1036,21 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "SLM",
+                     algorithm = "LMR",
+                     cores = 1,
+                     knn_k = 50),
+               NA)
+
+
+
+
+  expect_error(get_r(x = matrix(data = rnorm(n = 300*10),
+                                nrow = 300, ncol = 10),
+                     rs = c(0.2, 0.4, 0.8),
+                     B_gap = 5,
+                     n_start = 5,
+                     iter_max = 30,
+                     algorithm = "SLM",
                      cores = 1,
                      knn_k = 50),
                NA)
@@ -1063,7 +1063,7 @@ test_that("louvain_algorithm argument", {
                                       B_gap = 5,
                                       n_start = 5,
                                       iter_max = 30,
-                                      louvain_algorithm = "Leiden",
+                                      algorithm = "Leiden",
                                       cores = 1,
                                       knn_k = 50)),
                NA)
@@ -1077,10 +1077,10 @@ test_that("louvain_algorithm argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = base::unique,
+                     algorithm = base::unique,
                      cores = 1,
                      knn_k = 50),
-               "see \\?FindClusters from R-package Seurat: louvain_algorithm must be
+               "see \\?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
 })
 
@@ -1094,7 +1094,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = -1),
                "knn_k must be a positive integer")
@@ -1107,7 +1107,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = Inf),
                "knn_k must be a positive integer")
@@ -1119,7 +1119,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 0.5),
                "knn_k must be a positive integer")
@@ -1131,7 +1131,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 1:5),
                "knn_k must be a positive integer")
@@ -1143,7 +1143,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = "50"),
                "knn_k must be a positive integer")
@@ -1155,7 +1155,7 @@ test_that("knn_k argument", {
                      B_gap = 5,
                      n_start = 5,
                      iter_max = 30,
-                     louvain_algorithm = "original",
+                     algorithm = "original",
                      cores = 1,
                      knn_k = 1.5),
                "knn_k must be a positive integer")

@@ -326,26 +326,26 @@ test_that("btd argument", {
     round_digits = 2,
     show_simple_count = F)
   
-  btd_r <- get_bubbletree_louvain(
+  btd_r <- get_bubbletree_graph(
     x = x,
     r = 0.1,
     B = 20,
     N_eff = 50,
     n_start = 100,
     iter_max = 100,
-    louvain_algorithm = "original",
+    algorithm = "original",
     cores = 1,
     round_digits = 2,
     show_simple_count = F)
   
-  btd_r_0 <- expect_warning(get_bubbletree_louvain(
+  btd_r_0 <- expect_warning(get_bubbletree_graph(
     x = x,
     r = 10^(-5),
     B = 20,
     N_eff = 50,
     n_start = 100,
     iter_max = 100,
-    louvain_algorithm = "original",
+    algorithm = "original",
     cores = 1,
     round_digits = 2,
     show_simple_count = F),

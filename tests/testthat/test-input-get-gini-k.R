@@ -165,7 +165,7 @@ test_that("obj input", {
                B_gap = 5,
                n_start = 10,
                iter_max = 50,
-               louvain_algorithm = "original")
+               algorithm = "original")
   
   
   labels <- d_500$f
@@ -192,7 +192,7 @@ test_that("obj input", {
                B_gap = 5,
                n_start = 10,
                iter_max = 50,
-               louvain_algorithm = "original")
+               algorithm = "original")
   
   
   labels <- d_500$f
