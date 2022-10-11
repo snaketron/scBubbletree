@@ -17,3 +17,13 @@ Changes in version 0.99.15-0.99.16 (09 Oct, 2022)
 + remove unnecessary dependency from DESCRIPTION
 + added vignette demonstrating how to get the main input of scBubbletree
 + minor bugfixes
+
+Changes in version 0.99.17 (10 Oct, 2022)
++ package passed review, added to devel
+
+Changes in version 0.99.18 (11 Oct, 2022)
++ renaming function get_bubbletree_louvain -> get_bubbletree_graph
++ renaming parameter louvain_algorithm -> algorithm
++ contact email changed
++ vignette adjusted -> inputs vignette removed
++ function name changed in unit tests, namespace, man files, etc.
