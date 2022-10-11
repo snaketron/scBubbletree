@@ -5,7 +5,7 @@ get_r <- function(
     B_gap = 20,
     n_start = 20,
     iter_max = 100,
-    louvain_algorithm = "original",
+    algorithm = "original",
     knn_k = 50,
     cores = 1, 
     verbose = TRUE) {
@@ -22,7 +22,7 @@ get_r <- function(
     n_start = n_start,
     iter_max = iter_max,
     cores = cores,
-    louvain_algorithm = louvain_algorithm,
+    algorithm = algorithm,
     knn_k = knn_k,
     verbose = verbose)
   
@@ -53,7 +53,7 @@ get_r <- function(
     n.start = n_start,
     n.iter = iter_max,
     mc.cores = cores,
-    algorithm = map_louvain_algname(louvain_algorithm),
+    algorithm = map_louvain_algname(algorithm),
     modularity.fxn = 1,
     initial.membership = NULL,
     node.sizes = NULL,
@@ -84,7 +84,7 @@ get_r <- function(
     B_gap = B_gap,
     n_start = n_start,
     iter_max = iter_max,
-    louvain_algorithm = louvain_algorithm,
+    algorithm = algorithm,
     mc.cores = cores,
     knn_k = knn_k)
   
@@ -184,7 +184,7 @@ check_input_get_r <- function(
     n_start,
     iter_max,
     cores,
-    louvain_algorithm,
+    algorithm,
     knn_k,
     verbose) {
   
@@ -194,7 +194,7 @@ check_input_get_r <- function(
   check_cores(cores = cores)
   check_n_start(n_start = n_start)
   check_iter_max(iter_max = iter_max)
-  check_louvain_algorithm(louvain_algorithm = louvain_algorithm)
+  check_louvain_algorithm(algorithm = algorithm)
   check_knn_k(knn_k)
   check_verbose(verbose = verbose)
 }
@@ -209,7 +209,7 @@ get_gap_r <- function(
     B_gap,
     n_start,
     iter_max,
-    louvain_algorithm,
+    algorithm,
     knn_k) {
   
   spaceH0 <- "original"
@@ -231,7 +231,7 @@ get_gap_r <- function(
       resolution = r,
       n.start = n_start,
       n.iter = iter_max,
-      algorithm = map_louvain_algname(louvain_algorithm),
+      algorithm = map_louvain_algname(algorithm),
       verbose = FALSE)
     
     wcss <- get_wcss_get_r(x = X, l = lc[,1])
