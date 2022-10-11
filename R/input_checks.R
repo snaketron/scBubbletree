@@ -167,21 +167,21 @@ check_iter_max <- function(iter_max) {
   }
 }
 
-check_louvain_algorithm <- function(louvain_algorithm) {
-  # louvain_algorithm
-  if(base::missing(louvain_algorithm)) {
-    stop("louvain_algorithm input not found")
+check_louvain_algorithm <- function(algorithm) {
+  # algorithm
+  if(base::missing(algorithm)) {
+    stop("algorithm input not found")
   }
-  if(base::length(louvain_algorithm)!=1) {
-    stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+  if(base::length(algorithm)!=1) {
+    stop("see ?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
   }
-  if(base::is.character(louvain_algorithm)==FALSE) {
-    stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+  if(base::is.character(algorithm)==FALSE) {
+    stop("see ?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
   }
-  if(louvain_algorithm %in% c("original", "LMR", "SLM", "Leiden")==FALSE) {
-    stop("see ?FindClusters from R-package Seurat: louvain_algorithm must be
+  if(algorithm %in% c("original", "LMR", "SLM", "Leiden")==FALSE) {
+    stop("see ?FindClusters from R-package Seurat: algorithm must be
       one of: original, LMR, SLM or Leiden")
   }
 }
