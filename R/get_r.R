@@ -46,18 +46,19 @@ get_r <- function(
   if(verbose) {
     base::message("1) clustering")
   }
-  louvain_obj <- parallel::mclapply(
+  future::plan(future::cluster, workers = cores)
+  louvain_obj <- future.apply::future_lapply(
     X = rs,
     FUN = Seurat::FindClusters,
     object = knn$snn,
     n.start = n_start,
     n.iter = iter_max,
-    mc.cores = cores,
     algorithm = map_louvain_algname(algorithm),
     modularity.fxn = 1,
     initial.membership = NULL,
     node.sizes = NULL,
-    verbose = FALSE)
+    verbose = FALSE,
+    future.seed = TRUE)
   base::names(louvain_obj) <- rs
   
   
@@ -76,7 +77,7 @@ get_r <- function(
   if(verbose) {
     base::message("2) gap statistic")
   }
-  q <- parallel::mclapply(
+  q <- future.apply::future_lapply(
     X = base::seq_len(length.out = length(louvain_obj)),
     FUN = get_gap_r,
     l = louvain_obj,
@@ -85,8 +86,8 @@ get_r <- function(
     n_start = n_start,
     iter_max = iter_max,
     algorithm = algorithm,
-    mc.cores = cores,
-    knn_k = knn_k)
+    knn_k = knn_k,
+    future.seed = TRUE)
   
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
@@ -165,6 +166,9 @@ get_r <- function(
     wcss_mean = wcss_mean,
     r = rs,
     k = ks)
+  
+  # remove unused connections
+  future::plan(future::sequential())
   
   return(base::structure(
     class = "boot_r",

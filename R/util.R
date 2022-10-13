@@ -150,12 +150,15 @@ get_dist <- function(
 
 
   # get distances between clusters in B bootstrap iterations
-  pair_dist <- parallel::mclapply(X = base::seq_len(length.out = B),
-                                  FUN = get_dist_point,
-                                  m = m,
-                                  c = c,
-                                  N_eff = N_eff,
-                                  mc.cores = cores)
+  future::plan(future::cluster, workers = cores)
+  pair_dist <- future.apply::future_lapply(
+    X = base::seq_len(length.out = B),
+    FUN = get_dist_point,
+    m = m,
+    c = c,
+    N_eff = N_eff,
+    future.seed = TRUE)
+  future::plan(future::sequential())
 
   # collect results
   pair_dist <- base::do.call(rbind, pair_dist)

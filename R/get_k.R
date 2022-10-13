@@ -27,30 +27,31 @@ get_k <- function(
   if(verbose) {
     base::message("1) clustering")
   }
-  kmeans_obj <- parallel::mclapply(
+  
+  future::plan(future::cluster, workers = cores)
+  kmeans_obj <- future.apply::future_lapply(
     X = ks,
     FUN = stats::kmeans,
     x = x,
     nstart = n_start,
     iter.max = iter_max,
-    mc.cores = cores,
-    algorithm = kmeans_algorithm)
+    algorithm = kmeans_algorithm,
+    future.seed = TRUE)
   base::names(kmeans_obj) <- ks
 
   # gap statistics
   if(verbose) {
     base::message("2) gap-stat")
   }
-  gap_stats <- parallel::mclapply(
+  gap_stats <- future.apply::future_lapply(
     X = kmeans_obj,
     FUN = get_gap_k,
     x = x,
     B_gap = B_gap,
-    mc.cores = cores,
-    mc.cleanup = TRUE,
     n_start = n_start,
     iter_max = iter_max,
-    kmeans_algorithm = kmeans_algorithm)
+    kmeans_algorithm = kmeans_algorithm,
+    future.seed = TRUE)
 
   # within cluster sum of squares
   if(verbose) {
@@ -120,6 +121,9 @@ get_k <- function(
     wcss_mean = wcss_mean,
     k = ks)
 
+  # remove unused connections
+  future::plan(future::sequential())
+  
   return(base::structure(
     class = "boot_k",
     base::list(boot_obj = boot_obj,
