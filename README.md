@@ -1,7 +1,12 @@
 # scBubbletree
 
 [![platform](http://www.bioconductor.org/shields/availability/devel/scBubbletree.svg)](https://www.bioconductor.org/packages/devel/bioc/html/scBubbletree.html#archives)
-`r badge_bioc_release("scBubbletree", "green")`
+[![](https://img.shields.io/badge/devel%20version-0.22-green.svg)](https://www.bioconductor.org/packages/scBubbletree)
+#[![codecov](https://codecov.io/gh/GuangchuangYu/ggtree/branch/master/graph/badge.svg)](https://codecov.io/gh/GuangchuangYu/ggtree)
+#[![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://awesome-r.com/#awesome-r-graphic-displays)
+
+#[![platform](http://www.bioconductor.org/shields/availability/devel/scBubbletree.svg)](https://www.bioconductor.org/packages/devel/bioc/html/scBubbletree.html#archives)
+#`r badge_bioc_release("scBubbletree", "green")`
 #[![codecov](https://codecov.io/gh/GuangchuangYu/ggtree/branch/master/graph/badge.svg)](https://codecov.io/gh/GuangchuangYu/ggtree)
 #[![Awesome](https://cdn.rawgit.com/sindresorhus/awesome/d7305f38d29fed78fa85652e3a63e154dd8e8829/media/badge.svg)](https://awesome-r.com/#awesome-r-graphic-displays)
 
