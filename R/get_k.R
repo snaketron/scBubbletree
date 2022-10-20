@@ -27,8 +27,8 @@ get_k <- function(
   if(verbose) {
     base::message("1) clustering")
   }
-  
-  future::plan(future::cluster, workers = cores)
+
+  future::plan(future::multisession, workers = cores)
   kmeans_obj <- future.apply::future_lapply(
     X = ks,
     FUN = stats::kmeans,
@@ -123,7 +123,7 @@ get_k <- function(
 
   # remove unused connections
   future::plan(future::sequential())
-  
+
   return(base::structure(
     class = "boot_k",
     base::list(boot_obj = boot_obj,

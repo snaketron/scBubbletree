@@ -7,13 +7,13 @@ get_r <- function(
     iter_max = 100,
     algorithm = "original",
     knn_k = 50,
-    cores = 1, 
+    cores = 1,
     verbose = TRUE) {
-  
+
   get_ks <- function(l) {
     return(base::length(base::unique(l)))
   }
-  
+
   # check input
   check_input_get_r(
     B_gap = B_gap,
@@ -25,13 +25,13 @@ get_r <- function(
     algorithm = algorithm,
     knn_k = knn_k,
     verbose = verbose)
-  
-  
-  
+
+
+
   # sort rs, smallest r first, largest r last
   rs <- base::sort(rs, decreasing = FALSE)
-  
-  
+
+
   # add cell ids if needed
   if(is.null(rownames(x))) {
     rownames(x) <- base::seq_len(length.out = nrow(x))
@@ -40,13 +40,13 @@ get_r <- function(
   knn <- Seurat::FindNeighbors(
     object = x,
     k.param = knn_k)
-  
-  
+
+
   # clustering
   if(verbose) {
     base::message("1) clustering")
   }
-  future::plan(future::cluster, workers = cores)
+  future::plan(future::multisession, workers = cores)
   louvain_obj <- future.apply::future_lapply(
     X = rs,
     FUN = Seurat::FindClusters,
@@ -60,19 +60,19 @@ get_r <- function(
     verbose = FALSE,
     future.seed = TRUE)
   base::names(louvain_obj) <- rs
-  
-  
+
+
   # convert result to vectors as opposed to data.frames
   louvain_obj <- lapply(
-    X = louvain_obj, 
+    X = louvain_obj,
     FUN = df2vec <- function(x) {
       res <- names(x)
       res <- gsub(pattern = "res\\.", replacement = '', x = res)
       c <- as.character(x[, 1])
       return(c)
     })
-  
-  
+
+
   # Gap stats
   if(verbose) {
     base::message("2) gap statistic")
@@ -88,18 +88,18 @@ get_r <- function(
     algorithm = algorithm,
     knn_k = knn_k,
     future.seed = TRUE)
-  
+
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
   q0[[1]] <- get_gap_r_k1(x = x, B_gap = B_gap)
   gap_stats <- append(q, q0)
   rm(q, q0)
-  
+
   # get k for each louvain obj
   ks <- base::unlist(base::lapply(
     X = louvain_obj,
     FUN = get_ks))
-  
+
   # within cluster sum of squares
   if(verbose) {
     base::message("3) WCSS")
@@ -108,26 +108,26 @@ get_r <- function(
     X = louvain_obj,
     FUN = get_wcss_get_r,
     x = x)
-  
+
   boot_obj <- list(
     obj = louvain_obj,
     wcss = wcss_data,
     gap = gap_stats)
-  
+
   # raw gap stats
   gap_matrix <- base::matrix(
-    data = 0, 
-    nrow = B_gap, 
+    data = 0,
+    nrow = B_gap,
     ncol = base::length(rs))
   wcss_matrix <- base::matrix(
-    data = 0, 
-    nrow = 1, 
+    data = 0,
+    nrow = 1,
     ncol = base::length(rs))
-  
+
   # loop over top-bootstrap iterations B
   gap_vec <- base::numeric(length = base::length(rs))
   wcss_vec <- base::numeric(length = base::length(rs))
-  
+
   # loop over rs
   for(j in base::seq_len(length.out = base::length(rs))) {
     gap_vec[j] <- boot_obj$gap[[j]]$gap
@@ -137,11 +137,11 @@ get_r <- function(
   }
   gap_stats <- base::data.frame(gap = gap_vec, r = rs)
   wcss_stats <- base::data.frame(wcss = wcss_vec, r = rs)
-  
+
   # collect DFs
   gap_stats <- base::do.call(base::rbind, gap_stats)
   wcss_stats <- base::do.call(base::rbind, wcss_stats)
-  
+
   # compute gap summary
   gap_mean <- base::apply(
     X = gap_matrix,
@@ -156,7 +156,7 @@ get_r <- function(
     gap_SE = gap_se,
     L95 = gap_mean-gap_se*1.96,
     H95 = gap_mean+gap_se*1.96)
-  
+
   # compute wcss summary
   wcss_mean <- base::apply(
     X = wcss_matrix,
@@ -166,10 +166,10 @@ get_r <- function(
     wcss_mean = wcss_mean,
     r = rs,
     k = ks)
-  
+
   # remove unused connections
   future::plan(future::sequential())
-  
+
   return(base::structure(
     class = "boot_r",
     base::list(boot_obj = boot_obj,
@@ -191,7 +191,7 @@ check_input_get_r <- function(
     algorithm,
     knn_k,
     verbose) {
-  
+
   check_x(x)
   check_B_gap(B_gap = B_gap)
   check_rs(rs = rs)
@@ -215,21 +215,21 @@ get_gap_r <- function(
     iter_max,
     algorithm,
     knn_k) {
-  
+
   spaceH0 <- "original"
   n <- base::nrow(x)
   ii <- base::seq_len(n)
-  
-  
+
+
   get_Wk <- function(X, r, knn_k) {
-    
+
     # create Knn graph
     knn <- Seurat::FindNeighbors(
       object = X,
       k.param = knn_k,
       verbose = FALSE)
-    
-    
+
+
     lc <- Seurat::FindClusters(
       object = knn$snn,
       resolution = r,
@@ -237,21 +237,21 @@ get_gap_r <- function(
       n.iter = iter_max,
       algorithm = map_louvain_algname(algorithm),
       verbose = FALSE)
-    
+
     wcss <- get_wcss_get_r(x = X, l = lc[,1])
     return(base::log(wcss))
   }
-  
-  
+
+
   r <- base::as.numeric(base::names(l)[i])
   l <- l[[i]]
   logW <- base::log(get_wcss_get_r(l = l, x = x))
   k <- base::length(base::unique(l))
-  
+
   E.logW <- base::numeric(1)
   SE.sim <- base::numeric(1)
-  
-  
+
+
   xs <- base::scale(x, center = TRUE, scale = FALSE)
   m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
   rng.x1 <- base::apply(xs, 2L, base::range)
@@ -262,7 +262,7 @@ get_gap_r <- function(
     z <- z1 + m.x
     base::rownames(z) <- base::paste0("z_", base::seq_len(
       length.out = nrow(z)))
-    
+
     # simpler
     logWks[b, 1] <- get_Wk(X = z, r = r, knn_k = knn_k)
   }
@@ -279,28 +279,28 @@ get_gap_r <- function(
 
 # Computes the gap statistic for special case k=1
 get_gap_r_k1 <- function(
-    x, 
+    x,
     B_gap) {
-  
+
   spaceH0 <- "original"
   n <- base::nrow(x)
   ii <- base::seq_len(length.out = n)
-  
-  
+
+
   get_Wk <- function(X) {
     return(base::log(get_wcss_get_r(x = X, l = base::rep(
       1, times = base::nrow(X)))))
   }
-  
-  
+
+
   logW <- base::log(get_wcss_get_r(
     l = base::rep(1, times = base::nrow(x)), x=x))
   k <- 1
-  
+
   E.logW <- base::numeric(1)
   SE.sim <- base::numeric(1)
-  
-  
+
+
   xs <- base::scale(x, center = TRUE, scale = FALSE)
   m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
   rng.x1 <- base::apply(xs, 2L, base::range)
@@ -311,7 +311,7 @@ get_gap_r_k1 <- function(
     z <- z1 + m.x
     base::rownames(z) <- base::paste0("z_", base::seq_len(
       length.out = base::nrow(z)))
-    
+
     # simpler
     logWks[b, 1] <- get_Wk(X = z)
   }
@@ -327,21 +327,21 @@ get_gap_r_k1 <- function(
 
 
 get_wcss_get_r <- function(
-    x, 
+    x,
     l) {
   c <- l
-  
+
   get_sum_squares <- function(x,y) {
     return(base::outer(base::rowSums(x^2),
                        base::rowSums(y^2), '+') -
              base::tcrossprod(x, 2 * y))
   }
-  
+
   wcss <- 0
   cs <- base::unique(c)
   for(i in base::seq_len(length.out = base::length(cs))) {
     j <- base::which(c == cs[i])
-    
+
     mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
     mu <- base::matrix(data = mu, nrow = 1)
     wcss <- wcss+base::sum(get_sum_squares(x = x[j,], y = mu))

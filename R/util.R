@@ -11,7 +11,7 @@ get_dist <- function(
     c,
     N_eff,
     cores) {
-  
+
   # Short description:
   # For b in 1:B computes inter-cluster distances
   get_dist_point <- function(x, m, c, N_eff) {
@@ -150,7 +150,7 @@ get_dist <- function(
 
 
   # get distances between clusters in B bootstrap iterations
-  future::plan(future::cluster, workers = cores)
+  future::plan(future::multisession, workers = cores)
   pair_dist <- future.apply::future_lapply(
     X = base::seq_len(length.out = B),
     FUN = get_dist_point,
@@ -183,11 +183,11 @@ get_ph_support <- function(main_ph,
                          formula = c_i~c_j,
                          value.var = "M")
     d <- stats::as.dist(d)
-    
+
     hc <- stats::hclust(d, method = "average")
     ph <- ape::as.phylo(x = hc)
     ph <- ape::unroot(phy = ph)
-    
+
     if(i == 1) {
       boot_ph <- ph
     }
@@ -195,17 +195,17 @@ get_ph_support <- function(main_ph,
       boot_ph <- c(boot_ph, ph)
     }
   }
-  
+
   # compute clade proportions
   clade_b <- ape::prop.clades(phy = main_ph,
                               x = boot_ph,
                               part = NULL,
                               rooted = ape::is.rooted(main_ph))
-  
-  
+
+
   # add bootstrap
   main_ph$node.label <- clade_b
-  
+
   return(list(main_ph = main_ph,
               boot_ph = boot_ph))
 }
@@ -219,14 +219,14 @@ get_dendrogram <- function(
     cluster,
     round_digits,
     show_simple_count) {
-  
+
   # input checks
   check_input_get_dendrogram(
     ph = ph,
     cluster = cluster,
     round_digits = round_digits,
     show_simple_count = show_simple_count)
-  
+
   # compute meta summary
   km_meta <- base::data.frame(base::table(cluster))
   base::colnames(km_meta) <- c("label", "Cells")
@@ -234,12 +234,12 @@ get_dendrogram <- function(
   km_meta$p <- km_meta$Cells/km_meta$n
   km_meta$pct <- base::round(x = km_meta$p*100,
                              digits = round_digits)
-  km_meta$lab_short <- paste0(km_meta$label, " (", 
+  km_meta$lab_short <- paste0(km_meta$label, " (",
                               round(km_meta$Cells/1000, digits = round_digits),
                               'K, ', km_meta$pct, "%)")
-  km_meta$lab_long <- paste0(km_meta$label, " (", km_meta$Cells, ', ', 
+  km_meta$lab_long <- paste0(km_meta$label, " (", km_meta$Cells, ', ',
                              km_meta$pct, "%)")
-  
+
   # build ggtree
   tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
     geom_point2(mapping = ggplot2::aes_string(subset="isTip==FALSE"),
@@ -268,12 +268,12 @@ get_dendrogram <- function(
   tree <- tree+
     geom_nodelab(geom='text', color = "#4c4c4c" ,size = 2.75, hjust=-0.2,
               mapping=ggplot2::aes_string(label="label",subset="isTip==FALSE"))
-  
+
   tree <- tree+
     ggplot2::scale_radius(range = c(1, 4), limits = c(0, max(km_meta$Cells)))+
     ggplot2::guides(size = ggplot2::guide_legend(
       title = "Cells", nrow = 2, byrow = TRUE))
-  
+
   # merge order of tips in the tree with metadata
   q <- tree$data
   q <- q[base::order(q$y, decreasing = FALSE), ]
@@ -292,7 +292,7 @@ get_dendrogram <- function(
 
 # Short description:
 # maps input louvain_algorithm to Seurat accepted names. If a
-# non-matching is provided, main function input check will catch 
+# non-matching is provided, main function input check will catch
 # this and report error.
 map_louvain_algname <- function(x) {
 
@@ -342,7 +342,7 @@ check_input_get_dendrogram <- function(
     cluster,
     round_digits,
     show_simple_count) {
-  
+
   check_cluster_dend(cluster = cluster)
   check_ph_dend(ph = ph, cluster = cluster)
   check_round_digits(round_digits = round_digits)
