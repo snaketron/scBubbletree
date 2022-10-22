@@ -182,15 +182,16 @@ dim(A)
 The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   
   1. determine the clustering resolution (clusters $k$ or resolution $r$)
-  2. Louvain or k-means clustering
+  2. graph-based community detection (e.g. with Louvain) or k-means clustering
   3. hierarchical organization of clusters (bubbles)
   4. visualization
 
 ## 1. determine the clustering resolution
-If we want to use the k-means clustering algorithm for this step we need to 
-find a reasonable value of the number of clusters $k$. We can also the
-Louvain algorithm in which case we need to find an appropriate value for the 
-resolution parameter $r$.
+If we use graph-based community detection (**recommended for scRNA-seq**) with
+e.g. the Louvain or Leiden method, then we need to find appropriate value for 
+the resolution parameter $r$. Otherwise, we can use the simpler k-means 
+clustering algorithm in which case we need to find an appropriate value of the 
+number of clusters $k$.
 
 ### 1.1 determining the number of clusters $k$
 How many clusters (cell types) are there are in the data? Can we guess a 
@@ -241,7 +242,6 @@ ggplot(data = b_k$wcss_stats_summary)+
 ```{r, fig.width=7, fig.height=2.5, fig.align='center'}
 g0
 ```
-
 
 ### 1.2 determining the resolution parameter $r$
 For Louvain clustering we need to select a clustering resolution $r$. Higher 
