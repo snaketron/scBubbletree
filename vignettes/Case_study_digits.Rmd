@@ -1,10 +1,12 @@
 ---
 title: "Case study: digit recognition with scBubbletree"
-author: "SK"
+author: "Simo Kitanovski (simo.kitanovski@uni-due.de)"
 output:
-  prettydoc::html_pretty:
-    theme: cayman
-    highlight: github
+  BiocStyle::html_document
+vignette: >
+  %\VignetteIndexEntry{Case study: digit recognition with scBubbletree}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
 
@@ -113,11 +115,6 @@ unlink("opt_tmp/", recursive=TRUE)
 As first input `r Biocpkg("scBubbletree")` uses matrix $A^{n\times f}$ (here 
 `A=digits`). We will skip the data processing that are ususal for scRNA-seq 
 data, such as normalization, linear dimensionality reduction, etc.
-
-```{r}
-# A has n=cells as rows, f=features as columns (e.g. from PCA)
-dim(A)
-```
 
 The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   
@@ -315,7 +312,7 @@ g_digit <- ggplot(data = q)+
 ```
 
 
-```{r, fig.width=8, fig.height=6}
+```{r, fig.width=8, fig.height=5}
 (k13_louvain$tree|w1$plot|g_digit)+
   patchwork::plot_annotation(tag_levels = 'A')+
   patchwork::plot_layout(widths = c(1,1.5,1))
