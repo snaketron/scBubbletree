@@ -1,18 +1,20 @@
 Package: scBubbletree
 Type: Package
 Title: Quantitative visual exploration of scRNA-seq data
-Version: 0.99.21
+Version: 0.99.22
 Authors@R: 
     person(given = "Simo",  
            family = "Kitanovski",
            role = c("aut", "cre"),
            email = "simokitanovski@gmail.com")
-Description: Visual exploration is an integral part of scRNA-seq data 
-  analysis. scBubbletree is a quantitative method for visual exploration 
-  of scRNA-seq data. scBubbletree was designed to overcome challenges 
-  associated with the rapid growth of the scale of scRNA-seq datasets, 
-  such as overplotting, and to accurately preserve the local and global 
-  structure of the data. scBubbletree is easy-to-use and allows seamless 
+Description: scBubbletree is a quantitative method for visual 
+  exploration of scRNA-seq data. It preserves biologically 
+  meaningful properties of scRNA-seq data, such as local and 
+  global cell distances, as well as the density distribution of 
+  cells across the sample. scBubbletree is scalable and avoids 
+  the overplotting problem, and is able to visualize diverse cell 
+  attributes derived from multiomic single-cell experiments. 
+  Importantly, Importantly, scBubbletree is easy to use and to 
   integrate with popular approaches for scRNA-seq data analysis.
 License: GPL-3 + file LICENSE
 Depends: 
