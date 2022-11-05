@@ -178,7 +178,8 @@ get_gap_k <- function(
                           iter.max = iter_max,
                           nstart = n_start)
 
-    log_Wk <- base::log(base::sum(clus$withinss)*0.5)
+    # log_Wk <- base::log(base::sum(clus$withinss)*0.5)
+    log_Wk <- base::log(base::sum(clus$withinss))
     return(log_Wk)
   }
 
@@ -186,8 +187,8 @@ get_gap_k <- function(
   E.logW <- base::numeric(1)
   SE.sim <- base::numeric(1)
 
-
-  logW <- base::log(base::sum(km$withinss)*0.5)
+  # logW <- base::log(base::sum(km$withinss)*0.5)
+  logW <- base::log(base::sum(km$withinss))
   xs <- base::scale(x, center = TRUE, scale = FALSE)
   m.x <- base::rep(base::attr(xs, "scaled:center"), each = n)
   rng.x1 <- base::apply(xs, 2L, base::range)

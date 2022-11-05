@@ -26,11 +26,8 @@ get_r <- function(
     knn_k = knn_k,
     verbose = verbose)
 
-
-
   # sort rs, smallest r first, largest r last
   rs <- base::sort(rs, decreasing = FALSE)
-
 
   # add cell ids if needed
   if(is.null(rownames(x))) {
@@ -40,7 +37,6 @@ get_r <- function(
   knn <- Seurat::FindNeighbors(
     object = x,
     k.param = knn_k)
-
 
   # clustering
   if(verbose) {
@@ -61,7 +57,6 @@ get_r <- function(
     future.seed = TRUE)
   base::names(louvain_obj) <- rs
 
-
   # convert result to vectors as opposed to data.frames
   louvain_obj <- lapply(
     X = louvain_obj,
@@ -71,7 +66,6 @@ get_r <- function(
       c <- as.character(x[, 1])
       return(c)
     })
-
 
   # Gap stats
   if(verbose) {
@@ -260,6 +254,7 @@ get_gap_r <- function(
     z1 <- base::apply(rng.x1, 2, function(M, nn) stats::runif(
       nn, min = M[1], max = M[2]), nn = n)
     z <- z1 + m.x
+
     base::rownames(z) <- base::paste0("z_", base::seq_len(
       length.out = nrow(z)))
 
@@ -343,7 +338,10 @@ get_wcss_get_r <- function(
     j <- base::which(c == cs[i])
 
     mu <- base::apply(X = x[j,], MARGIN = 2, FUN = base::mean)
+    # row vector of centroids
     mu <- base::matrix(data = mu, nrow = 1)
+
+    # within-cluster sum of squares
     wcss <- wcss+base::sum(get_sum_squares(x = x[j,], y = mu))
   }
   return(wcss)
