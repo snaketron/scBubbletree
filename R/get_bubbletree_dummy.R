@@ -23,6 +23,7 @@ get_bubbletree_dummy <- function(
   if(verbose) {
     base::message("Bubbletree construction ...")
   }
+  
   pair_dist <- get_dist(
     B = B,
     m = x,
@@ -40,15 +41,25 @@ get_bubbletree_dummy <- function(
   ph <- ape::as.phylo(x = hc)
   ph <- ape::unroot(phy = ph)
   
-  # get branch support
-  ph <- get_ph_support(main_ph = ph,
-                       x = pair_dist$raw_pair_dist)
+  if(B==0) {
+    # build tree
+    t <- get_dendrogram(
+      ph = ph,
+      cluster = km$cluster,
+      round_digits = round_digits,
+      show_simple_count = show_simple_count)
+  } else {
+    # get branch support
+    ph <- get_ph_support(main_ph = ph,
+                         x = pair_dist$raw_pair_dist)
+    
+    # build treetree
+    t <- get_dendrogram(ph = ph$main_ph,
+                        cluster = cs,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+  }
   
-  # build treetree
-  t <- get_dendrogram(ph = ph$main_ph,
-                      cluster = cs,
-                      round_digits = round_digits,
-                      show_simple_count = show_simple_count)
   
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = NA,
