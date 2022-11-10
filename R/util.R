@@ -89,48 +89,39 @@ get_dist <- function(
 
     return(stats)
   }
+  
+  
+  get_dist_centroid <- function(m, c) {
+    cs <- base::unique(c)
+    stats <- c()
+    len_cs <- base::length(cs)
+    
+    for(i in base::seq_len(length.out = len_cs-1)) {
+      x_i <- m[base::which(c == cs[i]), ]
+      x_i <- base::colMeans(x_i)
 
-
-  # Short description:
-  # computes summaries (mean + SE) of inter-cluster hclust distances
-  get_hc_dist <- function(pair_dist) {
-    B <- base::max(pair_dist$B)
-
-    # For b in 1:B computes hclust distances
-    get_hc_point <- function(x, pair_dist) {
-      d <- pair_dist[pair_dist$B==x, ]
-
-      # compute hierarchical clustering with average linkage
-      hc <- stats::hclust(d = stats::as.dist(reshape2::acast(
-        data = d, formula = c_i~c_j,
-        value.var = "M")),
-        method = "average")
-
-      # get hclust distances as data.frame and name columns appropriately
-      hd <- reshape2::melt(data = as.matrix(stats::cophenetic(x = hc)))
-      base::colnames(x = hd) <- c("c_i", "c_j", "M")
-
-      # add B info and join data
-      hd$B <- x
-      return(hd)
+      for(j in (i+1):len_cs) {
+        x_j <- m[base::which(c == cs[j]), ]
+        x_j <- base::colMeans(x_j)
+        
+        # symmetric distances
+        stats <- rbind(stats, base::data.frame(
+          c_i = cs[i],
+          c_j = cs[j],
+          B = 1,
+          M = base::sqrt(base::sum((x_i-x_j)^2))))
+        stats <- rbind(stats, base::data.frame(
+          c_i = cs[j],
+          c_j = cs[i],
+          B = 1,
+          M = base::sqrt(base::sum((x_i-x_j)^2))))
+      }
     }
-
-    hc_dist <- lapply(X = base::seq_len(length.out=B),
-                      FUN = get_hc_point,
-                      pair_dist = pair_dist)
-    hc_dist <- base::do.call(base::rbind, hc_dist)
-
-    m <- base::merge(
-      x = stats::aggregate(M~c_i+c_j, data = hc_dist, FUN = base::mean),
-      y = stats::aggregate(M~c_i+c_j, data = hc_dist, FUN = get_se),
-      by = c("c_i", "c_j"))
-    colnames(m) <- c("c_i", "c_j", "M", "SE")
-    m$L95 <- m$M-m$SE*1.96
-    m$H95 <- m$M+m$SE*1.96
-
-    return(m)
+    
+    return(stats)
+    
   }
-
+  
 
   # Short description:
   # computes summaries (mean + SE) of  inter-cluster PCA distance
@@ -150,33 +141,36 @@ get_dist <- function(
 
 
   # get distances between clusters in B bootstrap iterations
-  future::plan(future::multisession, workers = cores)
-  pair_dist <- future.apply::future_lapply(
-    X = base::seq_len(length.out = B),
-    FUN = get_dist_point,
-    m = m,
-    c = c,
-    N_eff = N_eff,
-    future.seed = TRUE)
-  future::plan(future::sequential())
-
-  # collect results
-  pair_dist <- base::do.call(rbind, pair_dist)
+  if(B>0) {
+    future::plan(future::multisession, workers = cores)
+    pair_dist <- future.apply::future_lapply(
+      X = base::seq_len(length.out = B),
+      FUN = get_dist_point,
+      m = m,
+      c = c,
+      N_eff = N_eff,
+      future.seed = TRUE)
+    future::plan(future::sequential())
+    
+    # collect results
+    pair_dist <- base::do.call(rbind, pair_dist)
+  }
+  # if B==0 centroid distances only
+  if(B==0) {
+    pair_dist <- get_dist_centroid(m = m, c = c)
+  }
 
   # get additional summaries
-  hc_pair_dist <- get_hc_dist(pair_dist = pair_dist)
   pca_pair_dist <- get_pca_dist(pair_dist = pair_dist)
-
-  return(list(hc_pair_dist = hc_pair_dist,
-              pca_pair_dist = pca_pair_dist,
+  
+  return(list(pca_pair_dist = pca_pair_dist,
               raw_pair_dist = pair_dist))
 }
 
 
 
 
-get_ph_support <- function(main_ph,
-                           x) {
+get_ph_support <- function(main_ph, x) {
   boot_ph <- c()
   for(i in base::seq_len(length.out = max(x$B))) {
     d <- reshape2::acast(data = x[x$B == i,],
