@@ -46,7 +46,8 @@ get_bubbletree_dummy(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{cs}{vector, cluster IDs}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree}
+generate bubbletree. If B=0, cluster centroids are used to compute inter-cluster
+distances and N_eff is ignored, i.e. all cells are used to compute centroids.}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
 computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}

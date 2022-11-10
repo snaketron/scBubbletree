@@ -51,7 +51,8 @@ get_bubbletree_kmeans(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{k}{integer, number of clusters}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree}
+generate bubbletree. If B=0, cluster centroids are used to compute inter-cluster
+distances and N_eff is ignored, i.e. all cells are used to compute centroids.}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
 computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}
@@ -78,7 +79,7 @@ in a hierarchical dendrogram the algorithm performs the following steps:
 2. draw up to \eqn{N_{eff}} number of cells at random from each cluster without
    replacement
 
-3. compute Euclidean distances (in space \eqn{A^{n\times f}}) between all pairs
+3. compute Euclidean distances (in space \eqn{A^{n\times f}}) between pairs
    of cells in cluster \eqn{i} and cluster \eqn{j}
 
 4. compute mean Euclidean distance between cluster \eqn{i} and \eqn{j} and
@@ -95,6 +96,11 @@ in a hierarchical dendrogram the algorithm performs the following steps:
    is found among bootrap dendrograms (\eqn{H_b}
 
 8. visualize the bubbletree (\eqn{\hat{H}}) with R-package ggtree
+
+Special case: If B=0, then cluster centroids are used to compute inter-cluster
+distances and N_eff is ignored, i.e. all cells are used to compute centroids. 
+This leads to computational efficiency, however, by doing so we lose information
+about the robustness of branches. 
 }
 
 \value{
