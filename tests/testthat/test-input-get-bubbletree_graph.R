@@ -253,7 +253,7 @@ test_that("null/na argument", {
                                      cores = 1,
                                      round_digits = 2,
                                      show_simple_count = F),
-               "B must be a positive integer > 0")
+               "B must be a positive integer >= 0")
   expect_error(get_bubbletree_graph(x = matrix(data = rnorm(n = 100*10), ncol = 10),
                                      r = 1,
                                      B = NA,
@@ -265,7 +265,7 @@ test_that("null/na argument", {
                                      cores = 1,
                                      round_digits = 2,
                                      show_simple_count = F),
-               "B must be a positive integer > 0")
+               "B must be a positive integer >= 0")
 
 
 
