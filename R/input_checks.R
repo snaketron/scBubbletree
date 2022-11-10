@@ -318,22 +318,22 @@ check_B <- function(B) {
     stop("B input not found")
   }
   if(base::is.numeric(B)==FALSE) {
-    stop("B must be a positive integer > 0")
+    stop("B must be a positive integer >= 0")
   }
   if(base::length(B)!=1) {
-    stop("B must be a positive integer > 0")
+    stop("B must be a positive integer >= 0")
   }
-  if(B<1) {
-    stop("B must be a positive integer > 0")
+  if(B<0) {
+    stop("B must be a positive integer >= 0")
   }
   if(base::is.infinite(B)==TRUE) {
-    stop("B must be a positive integer > 0")
+    stop("B must be a positive integer >= 0")
   }
   if(base::is.na(B)==TRUE) {
-    stop("B must be a positive integer > 0")
+    stop("B must be a positive integer >= 0")
   }
   if(B%%1!=0) {
-    stop("B must be a positive integer > 0")
+    stop("B must be a positive integer >= 0")
   }
 }
 
