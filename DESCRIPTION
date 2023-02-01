@@ -29,6 +29,7 @@ Imports:
     ggplot2,
     ggtree,
     patchwork,
+    proxy,
     methods,
     stats,
     base,
