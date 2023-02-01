@@ -91,11 +91,13 @@ get_dist <- function(
         
         # Euclidean distance
         if(hclust_distance=="euclidean") {
-          w <- get_euc(x = x_i, y = x_j)
+          w <- proxy::dist(x = x_i, y = x_j, method = "Euclidean")
+          # w <- get_euc(x = x_i, y = x_j)
         }
         # Manhattan distance
         if(hclust_distance=="manhattan") {
-          w <- get_manh(x = x_i, y = x_j)
+          w <- proxy::dist(x = x_i, y = x_j, method = "Manhattan")
+          # w <- get_manh(x = x_i, y = x_j)
         }
 
         # symmetric distances
