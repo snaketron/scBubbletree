@@ -39,6 +39,8 @@ get_bubbletree_kmeans(x,
                       n_start = 1000,
                       iter_max = 300,
                       kmeans_algorithm = "MacQueen",
+                      hclust_distance = "euclidean",
+                      hclust_method = "average",
                       cores = 1,
                       round_digits = 2,
                       show_simple_count = FALSE,
@@ -58,6 +60,10 @@ computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function k-means, R-package stats}
+\item{hclust_distance}{distance measure to be used: euclidean (default) or
+manhattan, see documentation of stats::dist}
+\item{hclust_method}{the agglomeration method to be used, default = average. 
+See documentation of stats::hclust}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
@@ -134,7 +140,9 @@ b <- get_bubbletree_kmeans(x = A,
                            N_eff = 100,
                            round_digits = 1,
                            show_simple_count = FALSE,
-                           kmeans_algorithm = "MacQueen")
+                           kmeans_algorithm = "MacQueen",
+                           hclust_distance = "euclidean",
+                           hclust_method = "average")
 
 b$tree
 }

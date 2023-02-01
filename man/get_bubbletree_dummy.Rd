@@ -34,6 +34,8 @@ get_bubbletree_dummy(x,
                      cs,
                      B = 100,
                      N_eff = 100,
+                     hclust_distance = "euclidean",
+                     hclust_method = "average",
                      cores = 1,
                      round_digits = 2,
                      show_simple_count = FALSE,
@@ -51,6 +53,10 @@ distances and N_eff is ignored, i.e. all cells are used to compute centroids.}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
 computing inter-cluster distances. Maximum available number of cells are used
 for clusters that contain lower number of cells than N_eff}
+\item{hclust_distance}{distance measure to be used: euclidean (default) or
+manhattan, see documentation of stats::dist}
+\item{hclust_method}{the agglomeration method to be used, default = average. 
+See documentation of stats::hclust}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
@@ -98,9 +104,9 @@ db <- get_bubbletree_dummy(x = A,
                            cs = cs,
                            B = 100,
                            N_eff = 100,
+                           hclust_distance = "euclidean",
+                           hclust_method = "average",
                            cores = 1)
-
-
 }
 
 \seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_graph,
