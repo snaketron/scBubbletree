@@ -7,6 +7,8 @@ get_bubbletree_graph <- function(
     iter_max = 100,
     algorithm = "original",
     knn_k = 50,
+    hclust_method = "average",
+    hclust_distance = "euclidean",
     cores = 1,
     round_digits = 2,
     show_simple_count = FALSE,
@@ -25,7 +27,9 @@ get_bubbletree_graph <- function(
     show_simple_count = show_simple_count,
     algorithm = algorithm,
     knn_k = knn_k,
-    verbose = verbose)
+    verbose = verbose,
+    hclust_method = hclust_method,
+    hclust_distance = hclust_distance)
   
   # add cell ids if needed
   if(is.null(rownames(x))) {
@@ -63,7 +67,8 @@ get_bubbletree_graph <- function(
       round_digits = round_digits,
       show_simple_count = show_simple_count,
       algorithm = algorithm,
-      update_iteration = 0)
+      hclust_method = hclust_method,
+      hclust_distance = hclust_distance)
     
     return(base::structure(
       class = "bubbletree_louvain",
@@ -88,7 +93,8 @@ get_bubbletree_graph <- function(
     m = x,
     c = cs,
     N_eff = N_eff,
-    cores = cores)
+    cores = cores,
+    hclust_distance = hclust_distance)
   
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(
@@ -96,7 +102,7 @@ get_bubbletree_graph <- function(
     formula = c_i~c_j,
     value.var = "M")
   d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = "average")
+  hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
   
   if(length(unique(cs)) <= 2|B==0) {
@@ -129,7 +135,8 @@ get_bubbletree_graph <- function(
     round_digits = round_digits,
     show_simple_count = show_simple_count,
     algorithm = algorithm,
-    update_iteration = 0)
+    hclust_method = hclust_method,
+    hclust_distance = hclust_distance)
   
   return(base::structure(
     class = "bubbletree_louvain",
@@ -158,7 +165,9 @@ check_input_louvain <- function(
     show_simple_count,
     algorithm,
     knn_k,
-    verbose) {
+    verbose,
+    hclust_method,
+    hclust_distance) {
   
   check_x(x = x)
   check_r(r = r)
@@ -172,4 +181,7 @@ check_input_louvain <- function(
   check_louvain_algorithm(algorithm = algorithm)
   check_knn_k(knn_k = knn_k)
   check_verbose(verbose = verbose)
+  check_hclust_method(hclust_method = hclust_method)
+  check_hclust_distance(hclust_distance = hclust_distance)
 }
+

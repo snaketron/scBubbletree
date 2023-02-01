@@ -5,23 +5,38 @@
 # c = cluster identities
 # N_eff = effective number of cells to draw from each cluster
 # cores = number -> multicore execution
+# hclust_distance = euclidean or manhattan
 get_dist <- function(
     B,
     m,
     c,
     N_eff,
-    cores) {
+    cores,
+    hclust_distance) {
 
   # Short description:
   # For b in 1:B computes inter-cluster distances
-  get_dist_point <- function(x, m, c, N_eff) {
+  get_dist_point <- function(x, m, c, N_eff, hclust_distance) {
 
-    # Compute pairwise euclidean distances between
-    # two matrices x and y
+    
+    # Compute pairwise euclidean distances between matrices x & y
     get_euc <- function(x,y) {
       return(base::sqrt(base::outer(base::rowSums(x^2),
                                     base::rowSums(y^2), '+') -
                           base::tcrossprod(x, 2 * y)))
+    }
+    
+    
+    # Compute pairwise manhattan distances between matrices x & y
+    get_manh <- function(x,y) {
+      get_manh_single <- function(i, x, y) {
+        return(base::apply(X = base::abs(x[i,]-y), 
+                           MARGIN = 1, FUN = base::sum))
+      }
+      return(base::do.call(base::rbind, 
+                           base::lapply(X = 1:base::nrow(x), 
+                                        x = x, y = y, 
+                                        FUN = get_manh_single)))
     }
 
 
@@ -72,8 +87,15 @@ get_dist <- function(
           x_j <- matrix(data = x_j, nrow = 1)
         }
 
-        w <- get_euc(x = x_i, y = x_j)
-
+        
+        # Euclidean distance
+        if(hclust_distance=="euclidean") {
+          w <- get_euc(x = x_i, y = x_j)
+        }
+        # Manhattan distance
+        if(hclust_distance=="manhattan") {
+          w <- get_manh(x = x_i, y = x_j)
+        }
 
         # symmetric distances
         stats <- rbind(stats, data.frame(c_i = cs[i],
@@ -91,7 +113,7 @@ get_dist <- function(
   }
   
   
-  get_dist_centroid <- function(m, c) {
+  get_dist_centroid <- function(m, c, hclust_distance) {
     cs <- base::unique(c)
     stats <- c()
     len_cs <- base::length(cs)
@@ -99,30 +121,36 @@ get_dist <- function(
     for(i in base::seq_len(length.out = len_cs-1)) {
       x_i <- m[base::which(c == cs[i]), ]
       x_i <- base::colMeans(x_i)
-
+      
       for(j in (i+1):len_cs) {
         x_j <- m[base::which(c == cs[j]), ]
         x_j <- base::colMeans(x_j)
+        
+        # Euclidean distance
+        if(hclust_distance=="euclidean") {
+          M <- base::sqrt(base::sum((x_i-x_j)^2))
+        }
+        # Manhattan distance
+        if(hclust_distance=="manhattan") {
+          M <- base::sum(base::abs((x_i-x_j)))
+        }
         
         # symmetric distances
         stats <- rbind(stats, base::data.frame(
           c_i = cs[i],
           c_j = cs[j],
           B = 1,
-          M = base::sqrt(base::sum((x_i-x_j)^2))))
+          M = M))
         stats <- rbind(stats, base::data.frame(
           c_i = cs[j],
           c_j = cs[i],
           B = 1,
-          M = base::sqrt(base::sum((x_i-x_j)^2))))
+          M = M))
       }
     }
-    
     return(stats)
-    
   }
   
-
   # Short description:
   # computes summaries (mean + SE) of  inter-cluster PCA distance
   get_pca_dist <- function(pair_dist) {
@@ -139,7 +167,6 @@ get_dist <- function(
     return(m)
   }
 
-
   # get distances between clusters in B bootstrap iterations
   if(B>0) {
     future::plan(future::multisession, workers = cores)
@@ -149,6 +176,7 @@ get_dist <- function(
       m = m,
       c = c,
       N_eff = N_eff,
+      hclust_distance = hclust_distance,
       future.seed = TRUE)
     future::plan(future::sequential())
     
@@ -157,7 +185,8 @@ get_dist <- function(
   }
   # if B==0 centroid distances only
   if(B==0) {
-    pair_dist <- get_dist_centroid(m = m, c = c)
+    pair_dist <- get_dist_centroid(m = m, c = c, 
+                                   hclust_distance = hclust_distance)
   }
 
   # get additional summaries

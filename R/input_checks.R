@@ -810,3 +810,39 @@ check_ph_dend <- function(ph, cluster) {
     stop("mismatch between tip.labels of ph and cluster IDs")
   }
 }
+
+check_hclust_method <- function(hclust_method) {
+  if(base::missing(hclust_method)) {
+    stop("hclust_method input not found")
+  }
+  if(base::length(hclust_method)!=1) {
+    stop("hclust_method must be one of: ward.D, single, complete, 
+    average, mcquitty, median, centroid or ward.D2")
+  }
+  if(base::is.character(hclust_method)==FALSE) {
+    stop("hclust_method must be one of: ward.D, single, complete, 
+    average, mcquitty, median, centroid or ward.D2")
+  }
+  if(!hclust_method %in% c("ward.D", "ward.D2", "single", 
+                          "complete", "average", "mcquitty",
+                          "median", "centroid")) {
+    stop("hclust_method must be one of: ward.D, single, complete, 
+    average, mcquitty, median, centroid or ward.D2")
+  }
+}
+
+check_hclust_distance <- function(hclust_distance) {
+  
+  if(base::missing(hclust_distance)) {
+    stop("hclust_distance input not found")
+  }
+  if(base::length(hclust_distance)!=1) {
+    stop("hclust_distance must be one of: euclidean or manhattan")
+  }
+  if(base::is.character(hclust_distance)==FALSE) {
+    stop("hclust_distance must be one of: euclidean or manhattan")
+  }
+  if(!hclust_distance %in% c("euclidean", "manhattan")) {
+    stop("hclust_distance must be one of: euclidean or manhattan")
+  }
+}

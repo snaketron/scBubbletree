@@ -4,6 +4,8 @@ get_bubbletree_dummy <- function(
     B = 100,
     N_eff = 100,
     cores = 1,
+    hclust_method = "average",
+    hclust_distance = "euclidean",
     round_digits = 2,
     show_simple_count = FALSE,
     verbose = TRUE) {
@@ -17,7 +19,9 @@ get_bubbletree_dummy <- function(
     cores = cores,
     round_digits = round_digits,
     show_simple_count = show_simple_count,
-    verbose = verbose)
+    verbose = verbose,
+    hclust_method = hclust_method,
+    hclust_distance = hclust_distance)
   
   # pairwise distances
   if(verbose) {
@@ -29,7 +33,8 @@ get_bubbletree_dummy <- function(
     m = x,
     c = cs,
     N_eff = N_eff,
-    cores = cores)
+    cores = cores,
+    hclust_distance = hclust_distance)
   
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(
@@ -37,7 +42,7 @@ get_bubbletree_dummy <- function(
     formula = c_i~c_j,
     value.var = "M")
   d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = "average")
+  hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
   ph <- ape::unroot(phy = ph)
   
@@ -68,7 +73,9 @@ get_bubbletree_dummy <- function(
                     B = B,
                     round_digits = round_digits,
                     show_simple_count = show_simple_count,
-                    kmeans_algorithm = NA)
+                    kmeans_algorithm = NA,
+                    hclust_method = hclust_method,
+                    hclust_distance = hclust_distance)
   
   return(base::structure(
     class = "bubbletree_dummy",
@@ -92,6 +99,8 @@ check_input_dummy <- function(
     B,
     N_eff,
     cores,
+    hclust_method,
+    hclust_distance,
     round_digits,
     show_simple_count,
     verbose) {
@@ -104,4 +113,6 @@ check_input_dummy <- function(
   check_round_digits(round_digits = round_digits)
   check_show_simple_count(show_simple_count = show_simple_count)
   check_verbose(verbose = verbose)
+  check_hclust_method(hclust_method = hclust_method)
+  check_hclust_distance(hclust_distance = hclust_distance)
 }

@@ -7,6 +7,8 @@ get_bubbletree_kmeans <- function(
     n_start = 1000,
     iter_max = 300,
     kmeans_algorithm = "MacQueen",
+    hclust_method = "average",
+    hclust_distance = "euclidean",
     cores = 1,
     round_digits = 2,
     show_simple_count = FALSE,
@@ -24,7 +26,9 @@ get_bubbletree_kmeans <- function(
     round_digits = round_digits,
     show_simple_count = show_simple_count,
     kmeans_algorithm = kmeans_algorithm,
-    verbose = verbose)
+    verbose = verbose,
+    hclust_method = hclust_method,
+    hclust_distance = hclust_distance)
   
   # perform k-means clustering
   if(verbose) {
@@ -46,7 +50,8 @@ get_bubbletree_kmeans <- function(
     m = x,
     c = km$cluster,
     N_eff = N_eff,
-    cores = cores)
+    cores = cores,
+    hclust_distance = hclust_distance)
   
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(
@@ -54,7 +59,7 @@ get_bubbletree_kmeans <- function(
     formula = c_i~c_j,
     value.var = "M")
   d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = "average")
+  hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
   
   if(k==2|B==0) {
@@ -88,7 +93,8 @@ get_bubbletree_kmeans <- function(
     round_digits = round_digits,
     show_simple_count = show_simple_count,
     kmeans_algorithm = kmeans_algorithm,
-    update_iteration = 0)
+    hclust_method = hclust_method,
+    hclust_distance = hclust_distance)
   
   return(base::structure(
     class = "bubbletree_kmeans",
@@ -117,7 +123,9 @@ check_input_kmeans <- function(
     round_digits,
     show_simple_count,
     kmeans_algorithm,
-    verbose) {
+    verbose,
+    hclust_method,
+    hclust_distance) {
   
   check_x(x = x)
   check_k(k = k)
@@ -130,4 +138,7 @@ check_input_kmeans <- function(
   check_show_simple_count(show_simple_count = show_simple_count)
   check_kmeans_algorithm(kmeans_algorithm = kmeans_algorithm)
   check_verbose(verbose = verbose)
+  check_hclust_method(hclust_method = hclust_method)
+  check_hclust_distance(hclust_distance = hclust_distance)
 }
+
