@@ -43,6 +43,7 @@ get_dist <- function(
     cs <- unique(c)
     stats <- c()
     len_cs <- length(cs)
+    with_replacement <- TRUE
 
 
     for(i in base::seq_len(length.out = len_cs-1)) {
@@ -57,7 +58,7 @@ get_dist <- function(
         if(nrow(x_i)>N_eff) {
           x_i <- x_i[base::sample(x = base::seq_len(length.out=base::nrow(x_i)),
                                   size = N_eff,
-                                  replace = FALSE), ]
+                                  replace = with_replacement), ]
         }
       }
 
@@ -74,7 +75,7 @@ get_dist <- function(
             x_j <- x_j[base::sample(
               x = base::seq_len(length.out=base::nrow(x_j)),
               size = N_eff,
-              replace = FALSE), ]
+              replace = with_replacement), ]
           }
         }
 
@@ -111,7 +112,6 @@ get_dist <- function(
 
     return(stats)
   }
-  
   
   get_dist_centroid <- function(m, c, hclust_distance) {
     cs <- base::unique(c)
