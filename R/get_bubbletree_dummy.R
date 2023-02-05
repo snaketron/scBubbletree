@@ -50,7 +50,7 @@ get_bubbletree_dummy <- function(
     # build tree
     t <- get_dendrogram(
       ph = ph,
-      cluster = km$cluster,
+      cluster = cs,
       round_digits = round_digits,
       show_simple_count = show_simple_count)
   } else {
@@ -81,7 +81,6 @@ get_bubbletree_dummy <- function(
     class = "bubbletree_dummy",
     list(A = x,
          k = length(unique(cs)),
-         km = NULL,
          ph = ph,
          pair_dist = pair_dist,
          cluster = cs,
