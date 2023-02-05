@@ -18,14 +18,12 @@ get_dist <- function(
   # For b in 1:B computes inter-cluster distances
   get_dist_point <- function(x, m, c, N_eff, hclust_distance) {
 
-    
     # Compute pairwise euclidean distances between matrices x & y
     get_euc <- function(x,y) {
       return(base::sqrt(base::outer(base::rowSums(x^2),
                                     base::rowSums(y^2), '+') -
                           base::tcrossprod(x, 2 * y)))
     }
-    
     
     # Compute pairwise manhattan distances between matrices x & y
     get_manh <- function(x,y) {
@@ -39,15 +37,12 @@ get_dist <- function(
                                         FUN = get_manh_single)))
     }
 
-
     cs <- unique(c)
     stats <- c()
     len_cs <- length(cs)
     with_replacement <- TRUE
 
-
     for(i in base::seq_len(length.out = len_cs-1)) {
-
       x_i <- m[which(c == cs[i]), ]
       if(is.vector(x_i)) {
         x_i <- matrix(data = x_i, nrow = 1)
@@ -63,7 +58,6 @@ get_dist <- function(
       }
 
       for(j in (i+1):len_cs) {
-
         x_j <- m[which(c == cs[j]), ]
         if(is.vector(x_j)) {
           x_j <- matrix(data = x_j, nrow = 1)
@@ -79,7 +73,6 @@ get_dist <- function(
           }
         }
 
-
         # just in case check
         if(is.vector(x_i)) {
           x_i <- matrix(data = x_i, nrow = 1)
@@ -88,16 +81,15 @@ get_dist <- function(
           x_j <- matrix(data = x_j, nrow = 1)
         }
 
-        
         # Euclidean distance
         if(hclust_distance=="euclidean") {
-          w <- proxy::dist(x = x_i, y = x_j, method = "Euclidean")
-          # w <- get_euc(x = x_i, y = x_j)
+          w <- proxy::dist(x = x_i, y = x_j, 
+                           method = "Euclidean")
         }
         # Manhattan distance
         if(hclust_distance=="manhattan") {
-          w <- proxy::dist(x = x_i, y = x_j, method = "Manhattan")
-          # w <- get_manh(x = x_i, y = x_j)
+          w <- proxy::dist(x = x_i, y = x_j, 
+                           method = "Manhattan")
         }
 
         # symmetric distances
@@ -111,7 +103,6 @@ get_dist <- function(
                                          M = mean(w)))
       }
     }
-
     return(stats)
   }
   
@@ -187,8 +178,9 @@ get_dist <- function(
   }
   # if B==0 centroid distances only
   if(B==0) {
-    pair_dist <- get_dist_centroid(m = m, c = c, 
-                                   hclust_distance = hclust_distance)
+    pair_dist <- get_dist_centroid(
+      m = m, c = c, 
+      hclust_distance = hclust_distance)
   }
 
   # get additional summaries

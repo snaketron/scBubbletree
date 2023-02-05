@@ -3,9 +3,9 @@ get_bubbletree_dummy <- function(
     cs,
     B = 100,
     N_eff = 100,
-    cores = 1,
-    hclust_method = "average",
     hclust_distance = "euclidean",
+    hclust_method = "average",
+    cores = 1,
     round_digits = 2,
     show_simple_count = FALSE,
     verbose = TRUE) {

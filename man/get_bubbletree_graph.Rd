@@ -40,8 +40,8 @@ get_bubbletree_graph(x,
                      iter_max = 100,
                      algorithm = "original",
                      knn_k = 50,
-                     hclust_distance = "euclidean",
                      hclust_method = "average",
+                     hclust_distance = "euclidean",
                      cores = 1,
                      round_digits = 2,
                      show_simple_count = FALSE,
@@ -66,10 +66,10 @@ of function FindClusters, R-package Seurat}
 R-package Seurat}
 \item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
 documentation of function FindClusters, R-package Seurat}
-\item{hclust_distance}{distance measure to be used: euclidean (default) or
-manhattan, see documentation of stats::dist}
 \item{hclust_method}{the agglomeration method to be used, default = average. 
 See documentation of stats::hclust}
+\item{hclust_distance}{distance measure to be used: euclidean (default) or
+manhattan, see documentation of stats::dist}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
@@ -148,8 +148,8 @@ b <- get_bubbletree_graph(x = A,
                           iter_max = 100,
                           algorithm = "original",
                           knn_k = 50,
-                          hclust_distance = "euclidean",
                           hclust_method = "average",
+                          hclust_distance = "euclidean",
                           cores = 1,
                           round_digits = 2,
                           show_simple_count = FALSE)
