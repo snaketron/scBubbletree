@@ -447,9 +447,6 @@ check_btd <- function(btd) {
   if(base::missing(btd)) {
     stop("bubbletree (btd) input not found")
   }
-  if(length(btd)!=9) {
-    stop("btd should be a list with 9 elements")
-  }
   if(base::any(base::is.na(btd))||
      base::is.null(btd)||
      base::any(base::is.na(base::class(btd)))||

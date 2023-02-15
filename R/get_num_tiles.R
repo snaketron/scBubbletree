@@ -48,7 +48,8 @@ get_num_tiles <- function(
     ws$feature <- ws$feature[base::is.na(ws$feature)==FALSE][1]
   }
   ws$feature <- base::as.character(ws$feature)
-  ws$feature <- base::factor(x = ws$feature, levels = base::colnames(fs))
+  ws$feature <- base::factor(x = ws$feature, 
+                             levels = base::colnames(fs))
   
   w <- ggplot_num_tiles(
     ws = ws,

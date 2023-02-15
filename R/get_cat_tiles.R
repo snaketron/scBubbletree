@@ -127,14 +127,14 @@ ggplot_cat_tiles <- function(
   if(tile_bw==FALSE) {
     w <- w+ggplot2::scale_fill_distiller(name = legend,
                                          palette = "Spectral",
-                                         na.value = 'white',
-                                         limits = c(0, 100))
+                                         na.value = 'white')
+                                         #limits = c(0, 100))
   } else {
     w <- w+ggplot2::scale_fill_gradient(name = legend,
                                         low = "#f9f9f9",
                                         high = "#848484",
-                                        na.value = 'white',
-                                        limits = c(0, 100))
+                                        na.value = 'white')
+                                        #limits = c(0, 100))
   }
   if(rotate_x_axis_labels==TRUE) {
     w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(
