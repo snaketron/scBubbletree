@@ -141,7 +141,7 @@ test_that("null/na argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "NA/NULL elements or wrong class detected in the bubbletree")
   expect_error(get_cat_tiles(
     btd = NULL,
     f = f,
@@ -151,7 +151,7 @@ test_that("null/na argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "NA/NULL elements or wrong class detected in the bubbletree")
 
 
 
@@ -349,7 +349,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "btd\\$A must be numeric matrix")
   btd_test <- btd
   btd_test$A <- NA
   expect_error(get_cat_tiles(
@@ -388,7 +388,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "problem in btd: btd\\$k must be a positive integer \\(k>=2\\)")
   btd_test <- btd
   btd_test$k <- NA
   expect_error(get_cat_tiles(
@@ -427,20 +427,6 @@ test_that("btd argument", {
     "problem in btd\\: btd\\$k must be a positive integer \\(k>=2\\)")
 
 
-
-
-  btd_test <- btd
-  btd_test$km <- NULL
-  expect_error(get_cat_tiles(
-    btd = btd_test,
-    f = f,
-    integrate_vertical = T,
-    round_digits = 2,
-    tile_text_size = 3,
-    tile_bw = F,
-    x_axis_name = "Feature",
-    rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
   btd_test <- btd
   btd_test$km <- NA
   expect_error(get_cat_tiles(
@@ -467,7 +453,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "problem in btd: btd\\$ph\\$main_ph is not phylo class")
   btd_test <- btd
   btd_test$ph <- NA
   expect_error(get_cat_tiles(
@@ -482,19 +468,6 @@ test_that("btd argument", {
     "NA/NULL elements or wrong class detected in the bubbletree")
 
 
-
-  btd_test <- btd
-  btd_test$pair_dist <- NULL
-  expect_error(get_cat_tiles(
-    btd = btd_test,
-    f = f,
-    integrate_vertical = T,
-    round_digits = 2,
-    tile_text_size = 3,
-    tile_bw = F,
-    x_axis_name = "Feature",
-    rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
   btd_test <- btd
   btd_test$pair_dist <- NA
   expect_error(get_cat_tiles(
@@ -521,7 +494,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "NA/NULL/Inf cluster assignments present in bubbletree")
   btd_test <- btd
   btd_test$cluster <- NA
   expect_error(get_cat_tiles(
@@ -547,7 +520,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "problem in btd: btd\\$tree_meta is not a data.frame")
   btd_test <- btd
   btd_test$tree_meta <- NA
   expect_error(get_cat_tiles(

@@ -137,7 +137,7 @@ test_that("na/null argument", {
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "NA/NULL elements or wrong class detected in the bubbletree")
   expect_error(get_num_tiles(
     btd = NULL,
     fs = f,
@@ -147,7 +147,7 @@ test_that("na/null argument", {
     tile_bw = F,
     x_axis_name = "",
     rotate_x_axis_labels = T),
-    "btd should be a list with 9 elements")
+    "NA/NULL elements or wrong class detected in the bubbletree")
   
   
   expect_error(get_num_tiles(

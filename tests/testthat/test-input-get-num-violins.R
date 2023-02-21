@@ -77,12 +77,12 @@ test_that("na/null argument", {
                                fs = fs,
                                x_axis_name = "Feature distribution",
                                rotate_x_axis_labels = TRUE),
-               "btd should be a list with 9 elements")
+               "NA/NULL elements or wrong class detected in the bubbletree")
   expect_error(get_num_violins(btd = NULL,
                                fs = fs,
                                x_axis_name = "Feature distribution",
                                rotate_x_axis_labels = TRUE),
-               "btd should be a list with 9 elements")
+               "NA/NULL elements or wrong class detected in the bubbletree")
   
   
   
