@@ -30,8 +30,8 @@ This vignette introduces `r Biocpkg("scBubbletree")`, a transparent workflow
 for quantitative exploration of single cell RNA-seq data. 
 
 In short, the algorithm of `r Biocpkg("scBubbletree")` performs clustering 
-to identify clusters (bubbles) of transcriptionally similar cells, and then 
-visualizes these clusters as leafs in a hierarchical dendrogram (bubbletree) 
+to identify clusters ("bubbles") of transcriptionally similar cells, and then 
+visualizes these clusters as leafs in a hierarchical dendrogram ("bubbletree") 
 which describes their natural relationships. The workflow comprises four 
 steps: 1. determining the clustering resolution, 2. clustering, 3. hierarchical 
 cluster grouping and 4. visualization. We explain each step in the following
@@ -179,6 +179,7 @@ from the corresponding `r CRANpkg("Seurat")` or
 # A has n=cells as rows, f=features as columns (e.g. from PCA)
 dim(A)
 ```
+
 The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   
   1. determine the clustering resolution (clusters $k$ or resolution $r$)
@@ -187,20 +188,21 @@ The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   4. visualization
 
 ## 1. determine the clustering resolution
-If we use graph-based community detection (**recommended for scRNA-seq**) with
-e.g. the Louvain or Leiden method, then we need to find appropriate value for 
-the resolution parameter $r$. Otherwise, we can use the simpler k-means 
+If we use graph-based community detection (GCD, **recommended for scRNA-seq**) 
+with e.g. the Louvain or Leiden method, then we need to find appropriate value 
+for the resolution parameter $r$. Otherwise, we can use the simpler k-means 
 clustering algorithm in which case we need to find an appropriate value of the 
-number of clusters $k$.
+number of clusters $k$. In the next we will try both, GCD and k-means, 
+clustering.
 
 ### 1.1 determining the number of clusters $k$
 How many clusters (cell types) are there are in the data? Can we guess a 
 reasonable value of $k$? 
 
-To find a reasonable value of $k$ we can study the literature or databases such 
-as the human protein atlas database (HPA). We can also use the function `get_k` 
-for data-driven inference of $k$ based on the Gap statistic and the within-
-cluster sum of squares (WCSS).
+To find a reasonable value of $k$ we can study the literature or databases 
+such as the human protein atlas database (HPA). We can also use the function 
+`get_k` for data-driven inference of $k$ based on the Gap statistic and the 
+within-cluster sum of squares (WCSS).
 
 As this is a toy dataset, we will skip the first approach and perform a 
 data-driven search for $k$ using `get_k`. As input we need to provide the 
@@ -243,7 +245,7 @@ ggplot(data = b_k$wcss_stats_summary)+
 g0
 ```
 
-### 1.2 determining the resolution parameter $r$
+### 1.2 determining the resolution parameter $r$ for Louvain clustering
 For Louvain clustering we need to select a clustering resolution $r$. Higher 
 resolutions lead to more communities and lower resolutions lead to fewer 
 communities. We can use the same strategy as before to find a reasonable 
