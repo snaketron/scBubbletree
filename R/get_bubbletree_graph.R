@@ -138,6 +138,7 @@ get_bubbletree_graph <- function(
     hclust_method = hclust_method,
     hclust_distance = hclust_distance)
   
+  
   return(base::structure(
     class = "bubbletree_louvain",
     list(A = x,
