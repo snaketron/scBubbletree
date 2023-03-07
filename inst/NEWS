@@ -27,3 +27,8 @@ Changes in version 0.99.18 (11 Oct, 2022)
 + contact email changed
 + vignette adjusted -> inputs vignette removed
 + function name changed in unit tests, namespace, man files, etc.
+
+Changes in version 1.1.8 (7 March, 2023)
++ Manhattan distance metric implemented
++ other linkage functions for clustering implemented
++ tracking timestamps for clustering, bubbletree construction, end
