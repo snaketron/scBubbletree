@@ -1,7 +1,7 @@
 # scBubbletree
 
-[![platform](http://www.bioconductor.org/shields/availability/devel/scBubbletree.svg)](https://www.bioconductor.org/packages/devel/bioc/html/scBubbletree.html#archives)
-[![](https://img.shields.io/badge/devel%20version-0.99.22-green.svg)](https://www.bioconductor.org/packages/scBubbletree)
+[![platform](http://www.bioconductor.org/shields/availability/release/scBubbletree.svg)](https://www.bioconductor.org/packages/release/bioc/html/scBubbletree.html#archives)
+[![release](https://img.shields.io/badge/release%20version-1.0.0-green.svg)](https://www.bioconductor.org/packages/scBubbletree)
 
 ## Overview 
 Single cell RNA sequencing has revolutionized biological research by allowing 
