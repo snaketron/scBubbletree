@@ -258,7 +258,7 @@ for each $r$ (or the number of communities $k'$ detected at resolution $r$).
 
 ```{r}
 b_r <- get_r(B_gap = 5,
-             rs = 10^seq(from = -4, to = 0, by = 0.35),
+             rs = 10^seq(from = -4, to = 0, by = 0.5),
              x = A,
              n_start = 10, 
              iter_max = 50,
@@ -268,9 +268,9 @@ b_r <- get_r(B_gap = 5,
 ```
 
 
-The Gap statistic and WCSS curves have noticeable knees (elbows) at $k'=5$ 
-($r=0.0025$). Means (points) and 95% confidence intervals are shown for the 
-Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
+Once again, the Gap statistic and WCSS curves have noticeable knees (elbows) 
+at $k'=5$ ($r=0.0025$). Means (points) and 95% confidence intervals are shown 
+for the Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
 
 ```{r}
 g0_r <- (ggplot(data = b_r$gap_stats_summary)+
@@ -307,8 +307,9 @@ g0_r
 ```
 
 
-A range of resolutions yields $k=5$ number of communities, i.e. $r = 0.0025$ 
-and $r = 0.125$ result in $k=5$. Lets use $r=0.1$ for clustering
+A range of resolutions yields $k=5$ number of communities, i.e. among the 
+tested $r$s, we saw $k=5$ communities for $r = 0.003$ and $r = 0.1$. 
+Lets use $r=0.1$ for clustering.
 
 ```{r, fig.width=4, fig.height=3, fig.align='center'}
 ggplot(data = b_r$gap_stats_summary)+
@@ -423,7 +424,7 @@ Steps 2.2 and 3. (hierarchical clustering) are performed next
 
 ```{r}
 k5_louvain <- get_bubbletree_graph(x = A,
-                                   r = 0.0025,
+                                   r = 0.1,
                                    n_start = 20,
                                    iter_max = 100,
                                    algorithm = "original",
@@ -450,7 +451,6 @@ The two dendrograms shown side-by-side:
 ```{r, fig.width=7, fig.height=3, fig.align='center'}
 k5_kmeans$tree|k5_louvain$tree
 ```
-
 
 Given the high degree of similarity between the two clustering solutions we 
 proceed in the next with the k-means results.
