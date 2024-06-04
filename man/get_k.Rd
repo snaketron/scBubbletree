@@ -40,21 +40,21 @@ get_k(x,
 low-dimensional projections}
 \item{ks}{integer vector, \eqn{k} values to consider}
 \item{B_gap}{integer, number of Monte Carlo ("bootstrap") samples taken when
-computing the Gap statistic (see documentation of function clusGap, R-package
-cluster)}
+computing the Gap statistic (see documentation of function \code{clusGap},
+R-package \code{cluster})}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
-see documentation of function k-means, R-package stats}
+see documentation of function \code{kmeans}, R-package \code{stats}}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{verbose}{logical, progress messages}
 }
 
 
 \details{
-To compute the Gap statistic get_k adapts the algorithm of function clustGap
-from R-package cluster (version 2.1.3). For k-means clustering get_k uses
-the function kmeans implemented in R-package stats (version 4.2.0). For
-additional information see the respective documentations.
-}
+To compute the Gap statistic \code{get_k} adapts the algorithm of function
+\code{clustGap} from R-package \code{cluster} (version 2.1.3). For k-means
+clustering \code{get_k} uses the function \code{kmeans} implemented in
+R-package \code{stats} (version 4.2.0). For additional information see the
+respective documentations.}
 
 \value{
 \item{boot_obj}{The results: k-means clustering solutions, the Gap statistic
@@ -68,7 +68,7 @@ estimates for each \eqn{k} and bootstrap iteration \eqn{b}}
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 

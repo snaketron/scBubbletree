@@ -1,18 +1,12 @@
 \name{get_gini_k}
 
-
-
 \alias{get_gini_k}
-
-
 
 
 \title{
 Gini impurity index computed for a list of clustering solutions obtained by
-functions get_k or get_r and a vector of categorical cell feature labels
-}
-
-
+functions \code{get_k} or \code{get_r} and a vector of categorical cell feature
+labels}
 
 \description{
 Given
@@ -25,11 +19,12 @@ the labels in each bubble is identical to the background relative frequency
 distribution of the labels.
 
 Cell type predictions are a type of categorical features that are often used
-to evaluate the goodness of the clustering. get_gini_k takes as input: 1) a
-vector of labels for each cell (e.g. cell types) and 2) object returned by
-function get_k or get_r. Then it computes for each \eqn{k} or \eqn{r} the
-cluster purity and weightred gini impurity of each clustering solution mean
-GI, which is another way of finding an optimal clustering resolution.
+to evaluate the goodness of the clustering. \code{get_gini_k} takes as input:
+1) a vector of labels for each cell (e.g. cell types) and 2) object returned
+by function \code{get_k} or \code{get_r}. Then it computes for each \eqn{k}
+or \eqn{r} the cluster purity and weightred gini impurity of each clustering
+solution mean GI, which is another way of finding an optimal clustering
+resolution.
 }
 
 
@@ -41,7 +36,7 @@ get_gini_k(labels, obj)
 
 \arguments{
 \item{labels}{character/factor vector of labels}
-\item{obj}{object returned by functions get_k or get_r}
+\item{obj}{object returned by functions \code{get_k} or \code{get_r}}
 }
 
 
@@ -82,7 +77,7 @@ resolution \eqn{k} or \eqn{r}}
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 

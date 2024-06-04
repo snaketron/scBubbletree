@@ -14,7 +14,7 @@ Visualization of numeric cell features using tile plots
 
 
 \description{
-get_num_tiles creates tile plot to visualize a summary (e.g. mean,
+\code{get_num_tiles} creates tile plot to visualize a summary (e.g. mean,
 median or sum) of a numeric cell feature (e.g. gene expression of a specific
 gene) in each bubble of a bubbletree
 }
@@ -42,15 +42,15 @@ relative frequency of cells in each bubble}
 \item{tile_text_size}{integer, size of tile labels}
 \item{x_axis_name}{character, x-axis title}
 \item{rotate_x_axis_labels}{logical, should the x-axis labels be shown
-horizontally (rotate_x_axis_labels  = FALSE) or vertically
-(rotate_x_axis_labels = TRUE)}
+horizontally (\code{rotate_x_axis_labels}  = FALSE) or vertically
+(\code{rotate_x_axis_labels} = TRUE)}
 \item{tile_bw}{logical, tile grayscale (tile_bw = TRUE) vs. color
-(tile_bw = FALSE, default)}
+(\code{tile_bw} = FALSE, default)}
 }
 
 
 \details{
-get_num_tiles uses two main inputs:
+\code{get_num_tiles} uses two main inputs:
 
 1. bubbletree object
 
@@ -77,7 +77,7 @@ Important note: NA and NULL values are omitted.
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 
@@ -87,9 +87,7 @@ data("d_500", package = "scBubbletree")
 A <- d_500$A
 fs <- d_500$fs
 
-b <- get_bubbletree_kmeans(x = A,
-                    k = 8,
-                    N_eff = 100)
+b <- get_bubbletree_kmeans(x = A, k = 8)
 
 g <- get_num_tiles(btd = b,
                    fs = fs,

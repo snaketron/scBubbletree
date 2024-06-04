@@ -14,7 +14,7 @@ Visualization of categorical cell features using tile plots
 
 
 \description{
-get_cat_tiles creates tile plot to visualize the relative frequency of
+\code{get_cat_tiles creates} tile plot to visualize the relative frequency of
 categorical cell features between and within the bubbles of a bubbletree
 }
 
@@ -63,11 +63,11 @@ cell features (input  2.)
 
 This function computes:
 
-1. with integrate_vertical=T: relative frequencies of each feature
+1. with \code{integrate_vertical}=T: relative frequencies of each feature
 across the different bubbles
 
-2. with integrate_vertical=F: within-bubble relative frequencies (composition)
-of different features
+2. with \code{integrate_vertical\=F: within-bubble relative frequencies
+(composition) of different features
 }
 
 \value{
@@ -77,7 +77,7 @@ of different features
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 

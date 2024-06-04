@@ -1,7 +1,7 @@
 get_bubbletree_graph <- function(
     x,
     r,
-    B = 100,
+    B = 0,
     N_eff = 200,
     n_start = 20,
     iter_max = 100,
@@ -13,7 +13,7 @@ get_bubbletree_graph <- function(
     round_digits = 2,
     show_simple_count = FALSE,
     verbose = TRUE) {
-  
+
   # check inputs
   check_input_louvain(
     x = x,
@@ -30,7 +30,7 @@ get_bubbletree_graph <- function(
     verbose = verbose,
     hclust_method = hclust_method,
     hclust_distance = hclust_distance)
-  
+
   # add cell ids if needed
   if(is.null(rownames(x))) {
     rownames(x) <- base::seq_len(length.out = base::nrow(x))
@@ -39,7 +39,7 @@ get_bubbletree_graph <- function(
   knn <- Seurat::FindNeighbors(
     object = x,
     k.param = knn_k)
-  
+
   # clustering
   if(verbose) {
     base::message("Clustering ...")
@@ -51,11 +51,11 @@ get_bubbletree_graph <- function(
     n.iter = iter_max,
     algorithm = map_louvain_algname(algorithm),
     verbose = FALSE)
-  
+
   # clusters
   cs <- as.character(lc[,1])
   cs_unique <- base::length(base::unique(cs))
-  
+
   if(cs_unique==1) {
     warning("Only one cluster at specified r, bubbletree can't be constructed")
     # collect input parameters: can be used for automated update
@@ -69,7 +69,7 @@ get_bubbletree_graph <- function(
       algorithm = algorithm,
       hclust_method = hclust_method,
       hclust_distance = hclust_distance)
-    
+
     return(base::structure(
       class = "bubbletree_louvain",
       list(A = x,
@@ -82,8 +82,8 @@ get_bubbletree_graph <- function(
            tree = NA,
            tree_meta = NA)))
   }
-  
-  
+
+
   # pairwise distances
   if(verbose) {
     base::message("Bubbletree construction ...")
@@ -95,7 +95,7 @@ get_bubbletree_graph <- function(
     N_eff = N_eff,
     cores = cores,
     hclust_distance = hclust_distance)
-  
+
   # compute hierarchical clustering dendrogram
   d <- reshape2::acast(
     data = pair_dist$pca_pair_dist,
@@ -104,7 +104,7 @@ get_bubbletree_graph <- function(
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
-  
+
   if(length(unique(cs)) <= 2|B==0) {
     t <- get_dendrogram(
       ph = ph,
@@ -114,18 +114,18 @@ get_bubbletree_graph <- function(
   }
   else {
     ph <- ape::unroot(phy = ph)
-    
+
     # get branch support
     ph <- get_ph_support(main_ph = ph,
                          x = pair_dist$raw_pair_dist)
-    
+
     # build bubbletree
     t <- get_dendrogram(ph = ph$main_ph,
                         cluster = cs,
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
   }
-  
+
   # collect input parameters: can be used for automated update
   input_par <- list(
     n_start = n_start,
@@ -137,8 +137,8 @@ get_bubbletree_graph <- function(
     algorithm = algorithm,
     hclust_method = hclust_method,
     hclust_distance = hclust_distance)
-  
-  
+
+
   return(base::structure(
     class = "bubbletree_louvain",
     list(A = x,
@@ -169,7 +169,7 @@ check_input_louvain <- function(
     verbose,
     hclust_method,
     hclust_distance) {
-  
+
   check_x(x = x)
   check_r(r = r)
   check_n_start(n_start = n_start)

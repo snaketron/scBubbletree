@@ -59,7 +59,8 @@ a heatmap.
 }
 
 \value{
-\item{tree_comparison_plot}{ggplot2 objects assembled by patchwork}
+\item{tree_comparison_plot}{ggplot2 objects assembled by R-package
+\code{patchwork}}
 \item{cooccurrence}{data.frame object with cooccurrence data}
 }
 
@@ -77,8 +78,6 @@ A <- d_500$A
 
 btd_1 <- get_bubbletree_graph(x = A,
                               r = 1,
-                              B = 200,
-                              N_eff = 100,
                               n_start = 20,
                               iter_max = 100,
                               algorithm = "original",
@@ -93,7 +92,6 @@ btd_1 <- get_bubbletree_graph(x = A,
 btd_2 <- get_bubbletree_kmeans(x = A,
                                k = 8,
                                cores = 1,
-                               N_eff = 100,
                                round_digits = 1,
                                show_simple_count = FALSE,
                                kmeans_algorithm = "MacQueen",

@@ -20,20 +20,20 @@ get_dist <- function(
 
     # Compute pairwise euclidean distances between matrices x & y
     get_euc <- function(x,y) {
-      return(base::sqrt(base::outer(base::rowSums(x^2),
-                                    base::rowSums(y^2), '+') -
-                          base::tcrossprod(x, 2 * y)))
+      return(sqrt(outer(rowSums(x^2),
+                                    rowSums(y^2), '+') -
+                          tcrossprod(x, 2 * y)))
     }
-    
+
     # Compute pairwise manhattan distances between matrices x & y
     get_manh <- function(x,y) {
       get_manh_single <- function(i, x, y) {
-        return(base::apply(X = base::abs(x[i,]-y), 
-                           MARGIN = 1, FUN = base::sum))
+        return(apply(X = abs(x[i,]-y),
+                           MARGIN = 1, FUN = sum))
       }
-      return(base::do.call(base::rbind, 
-                           base::lapply(X = 1:base::nrow(x), 
-                                        x = x, y = y, 
+      return(do.call(rbind,
+                           lapply(X = 1:nrow(x),
+                                        x = x, y = y,
                                         FUN = get_manh_single)))
     }
 
@@ -42,16 +42,16 @@ get_dist <- function(
     len_cs <- length(cs)
     with_replacement <- TRUE
 
-    for(i in base::seq_len(length.out = len_cs-1)) {
+    for(i in seq_len(length.out = len_cs-1)) {
       x_i <- m[which(c == cs[i]), ]
       if(is.vector(x_i)) {
         x_i <- matrix(data = x_i, nrow = 1)
       }
 
-      # efficiency
       if(is.na(N_eff)==FALSE) {
+        # efficiency
         if(nrow(x_i)>N_eff) {
-          x_i <- x_i[base::sample(x = base::seq_len(length.out=base::nrow(x_i)),
+          x_i <- x_i[sample(x = seq_len(length.out=nrow(x_i)),
                                   size = N_eff,
                                   replace = with_replacement), ]
         }
@@ -63,78 +63,79 @@ get_dist <- function(
           x_j <- matrix(data = x_j, nrow = 1)
         }
 
-        # efficiency
         if(is.na(N_eff)==FALSE) {
+          # efficiency
           if(nrow(x_j)>N_eff) {
-            x_j <- x_j[base::sample(
-              x = base::seq_len(length.out=base::nrow(x_j)),
-              size = N_eff,
-              replace = with_replacement), ]
+            x_j <- x_j[sample(x = seq_len(length.out=nrow(x_j)),
+                              size = N_eff,
+                              replace = with_replacement), ]
           }
         }
 
         # just in case check
-        if(is.vector(x_i)) {
-          x_i <- matrix(data = x_i, nrow = 1)
-        }
-        if(is.vector(x_j)) {
-          x_j <- matrix(data = x_j, nrow = 1)
-        }
+        # if(is.vector(x_i)) {
+        #   x_i <- matrix(data = x_i, nrow = 1)
+        # }
+        # if(is.vector(x_j)) {
+        #   x_j <- matrix(data = x_j, nrow = 1)
+        # }
 
         # Euclidean distance
         if(hclust_distance=="euclidean") {
-          w <- proxy::dist(x = x_i, y = x_j, 
-                           method = "Euclidean")
+          w <- proxy::dist(x = x_i, y = x_j, method = "Euclidean")
         }
         # Manhattan distance
         if(hclust_distance=="manhattan") {
-          w <- proxy::dist(x = x_i, y = x_j, 
-                           method = "Manhattan")
+          w <- proxy::dist(x = x_i, y = x_j, method = "Manhattan")
         }
 
         # symmetric distances
         stats <- rbind(stats, data.frame(c_i = cs[i],
                                          c_j = cs[j],
                                          B = x,
-                                         M = mean(w)))
+                                         M = mean(w),
+                                         n_i = nrow(x_i),
+                                         n_j = nrow(x_j)))
         stats <- rbind(stats, data.frame(c_i = cs[j],
                                          c_j = cs[i],
                                          B = x,
-                                         M = mean(w)))
+                                         M = mean(w),
+                                         n_i = nrow(x_j),
+                                         n_j = nrow(x_i)))
       }
     }
     return(stats)
   }
-  
+
   get_dist_centroid <- function(m, c, hclust_distance) {
-    cs <- base::unique(c)
+    cs <- unique(c)
     stats <- c()
-    len_cs <- base::length(cs)
-    
-    for(i in base::seq_len(length.out = len_cs-1)) {
-      x_i <- m[base::which(c == cs[i]), ]
-      x_i <- base::colMeans(x_i)
-      
+    len_cs <- length(cs)
+
+    for(i in seq_len(length.out = len_cs-1)) {
+      x_i <- m[which(c == cs[i]), ]
+      x_i <- colMeans(x_i)
+
       for(j in (i+1):len_cs) {
-        x_j <- m[base::which(c == cs[j]), ]
-        x_j <- base::colMeans(x_j)
-        
+        x_j <- m[which(c == cs[j]), ]
+        x_j <- colMeans(x_j)
+
         # Euclidean distance
         if(hclust_distance=="euclidean") {
-          M <- base::sqrt(base::sum((x_i-x_j)^2))
+          M <- sqrt(sum((x_i-x_j)^2))
         }
         # Manhattan distance
         if(hclust_distance=="manhattan") {
-          M <- base::sum(base::abs((x_i-x_j)))
+          M <- sum(abs((x_i-x_j)))
         }
-        
+
         # symmetric distances
-        stats <- rbind(stats, base::data.frame(
+        stats <- rbind(stats, data.frame(
           c_i = cs[i],
           c_j = cs[j],
           B = 1,
           M = M))
-        stats <- rbind(stats, base::data.frame(
+        stats <- rbind(stats, data.frame(
           c_i = cs[j],
           c_j = cs[i],
           B = 1,
@@ -143,14 +144,14 @@ get_dist <- function(
     }
     return(stats)
   }
-  
+
   # Short description:
   # computes summaries (mean + SE) of  inter-cluster PCA distance
   get_pca_dist <- function(pair_dist) {
-    B <- base::max(pair_dist$B)
+    B <- max(pair_dist$B)
 
-    m <- base::merge(
-      x = stats::aggregate(M~c_i+c_j, data = pair_dist, FUN = base::mean),
+    m <- merge(
+      x = stats::aggregate(M~c_i+c_j, data = pair_dist, FUN = mean),
       y = stats::aggregate(M~c_i+c_j, data = pair_dist, FUN = get_se),
       by = c("c_i", "c_j"))
     colnames(m) <- c("c_i", "c_j", "M", "SE")
@@ -164,7 +165,7 @@ get_dist <- function(
   if(B>0) {
     future::plan(future::multisession, workers = cores)
     pair_dist <- future.apply::future_lapply(
-      X = base::seq_len(length.out = B),
+      X = seq_len(length.out = B),
       FUN = get_dist_point,
       m = m,
       c = c,
@@ -172,20 +173,20 @@ get_dist <- function(
       hclust_distance = hclust_distance,
       future.seed = TRUE)
     future::plan(future::sequential())
-    
+
     # collect results
-    pair_dist <- base::do.call(rbind, pair_dist)
+    pair_dist <- do.call(rbind, pair_dist)
   }
   # if B==0 centroid distances only
   if(B==0) {
     pair_dist <- get_dist_centroid(
-      m = m, c = c, 
+      m = m, c = c,
       hclust_distance = hclust_distance)
   }
 
   # get additional summaries
   pca_pair_dist <- get_pca_dist(pair_dist = pair_dist)
-  
+
   return(list(pca_pair_dist = pca_pair_dist,
               raw_pair_dist = pair_dist))
 }
@@ -195,7 +196,7 @@ get_dist <- function(
 
 get_ph_support <- function(main_ph, x) {
   boot_ph <- c()
-  for(i in base::seq_len(length.out = max(x$B))) {
+  for(i in seq_len(length.out = max(x$B))) {
     d <- reshape2::acast(data = x[x$B == i,],
                          formula = c_i~c_j,
                          value.var = "M")
@@ -245,11 +246,11 @@ get_dendrogram <- function(
     show_simple_count = show_simple_count)
 
   # compute meta summary
-  km_meta <- base::data.frame(base::table(cluster))
-  base::colnames(km_meta) <- c("label", "Cells")
-  km_meta$n <- base::sum(km_meta$Cells)
+  km_meta <- data.frame(table(cluster))
+  colnames(km_meta) <- c("label", "Cells")
+  km_meta$n <- sum(km_meta$Cells)
   km_meta$p <- km_meta$Cells/km_meta$n
-  km_meta$pct <- base::round(x = km_meta$p*100,
+  km_meta$pct <- round(x = km_meta$p*100,
                              digits = round_digits)
   km_meta$lab_short <- paste0(km_meta$label, " (",
                               round(km_meta$Cells/1000, digits = round_digits),
@@ -293,14 +294,14 @@ get_dendrogram <- function(
 
   # merge order of tips in the tree with metadata
   q <- tree$data
-  q <- q[base::order(q$y, decreasing = FALSE), ]
+  q <- q[order(q$y, decreasing = FALSE), ]
   tips <- q$label[q$isTip==TRUE]
-  tips <- base::data.frame(label = tips,
-                           tree_order = base::seq_len(length.out=length(tips)))
-  km_meta <- base::merge(x = km_meta, y = tips, by = "label")
-  km_meta <- km_meta[base::order(km_meta$tree_order, decreasing = TRUE), ]
+  tips <- data.frame(label = tips,
+                           tree_order = seq_len(length.out=length(tips)))
+  km_meta <- merge(x = km_meta, y = tips, by = "label")
+  km_meta <- km_meta[order(km_meta$tree_order, decreasing = TRUE), ]
 
-  return(base::list(tree = tree, tree_meta = km_meta))
+  return(list(tree = tree, tree_meta = km_meta))
 }
 
 
@@ -313,10 +314,10 @@ get_dendrogram <- function(
 # this and report error.
 map_louvain_algname <- function(x) {
 
-  if(base::missing(x)) {
+  if(missing(x)) {
     stop("x is missing")
   }
-  if(base::is.numeric(x)) {
+  if(is.numeric(x)) {
     return(x)
   }
 
@@ -338,14 +339,14 @@ map_louvain_algname <- function(x) {
 # Short description:
 # aux. function which computes standard error of num. vector x
 get_se <- function(x) {
-  if(base::missing(x)|base::length(x)==0) {
+  if(missing(x)|length(x)==0) {
     stop("x is missing or length(x)==0")
   }
   if(length(x) == 1) {
     se <- NA
   }
   else {
-    se <- stats::sd(x)/base::sqrt(base::length(x))
+    se <- stats::sd(x)/sqrt(length(x))
   }
   return(se)
 }

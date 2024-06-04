@@ -5,13 +5,9 @@
 \alias{get_bubbletree_dummy}
 
 
-
-
 \title{
-Build bubbletree given matrix \eqn{A} and vector \eqn{cs} of externally
-generated cluster IDs
-}
-
+Build bubbletree from matrix \eqn{A} of low-dimensional projections and
+vector \eqn{cs} of externally generated cluster IDs}
 
 
 \description{
@@ -23,16 +19,16 @@ data, with \eqn{n} rows as cells and \eqn{f} columns as low-dimension features.
 
 2. vector \eqn{cs} of cluster IDs of each cell
 
-The function get_bubbletree_dummy performs one main operation. It organizes
-the bubbles (defined by \eqn{cs}) in a hierarchical dendrogram (bubbletree)
-which represents the hierarchical relationships between the clusters (bubbles).
+The function \code{get_bubbletree_dummy} performs one main operation. It
+organizes the bubbles (defined by \eqn{cs}) in a hierarchical dendrogram
+(bubbletree) which represents the hierarchical relationships between the
+clusters (bubbles).
 }
 
 \usage{
-
 get_bubbletree_dummy(x,
                      cs,
-                     B = 100,
+                     B = 0,
                      N_eff = 100,
                      hclust_distance = "euclidean",
                      hclust_method = "average",
@@ -48,29 +44,31 @@ get_bubbletree_dummy(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{cs}{vector, cluster IDs}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree. If B=0, cluster centroids are used to compute inter-cluster
-distances and N_eff is ignored, i.e. all cells are used to compute centroids.}
+generate bubbletree. \eqn{B=0} (default), cluster centroids are used to compute
+inter-cluster distances and \eqn{N_{eff}} is ignored, i.e. all cells are used
+to compute centroids.}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
-computing inter-cluster distances. Maximum available number of cells are used
-for clusters that contain lower number of cells than N_eff}
+computing inter-cluster distances. This argument is only used if \eqn{B\neq 0}.
+Maximum available number of cells are used for clusters that contain lower
+number of cells than \eqn{N_{eff}}}
 \item{hclust_distance}{distance measure to be used: euclidean (default) or
-manhattan, see documentation of stats::dist}
-\item{hclust_method}{the agglomeration method to be used, default = average. 
-See documentation of stats::hclust}
+manhattan, see documentation of \code{stats::dist}}
+\item{hclust_method}{agglomeration method to be used, default = average.
+See documentation of \code{stats::hclust}}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{round_digits}{integer, number of decimal places to keep when showing the
 relative frequency of cells in each bubble}
-\item{show_simple_count}{logical, if show_simple_count=T, cell counts in each
-bubble will be divided by 1,000 to improve readability. This is only useful for
-samples that are composed of millions of cells.}
+\item{show_simple_count}{logical, if \code{show_simple_count}=T, cell counts
+in each bubble will be divided by 1,000 to improve readability. This is only
+useful for samples that are composed of millions of cells.}
 \item{verbose}{logical, progress messages}
 }
 
 
 \details{
-This function is similar to get_bubbletree_kmeans and get_bubbletree_graph.
-It skips the clustering step. See documentation of get_bubbletree_kmeans and
-get_bubbletree_graph.
+This function is similar to \code{get_bubbletree_kmeans} and
+\code{get_bubbletree_graph} but skips the clustering step. See
+the documentation of the respective functions.
 }
 
 
@@ -78,8 +76,7 @@ get_bubbletree_graph.
 \item{A}{input x matrix}
 \item{k}{number of clusters}
 \item{km}{NULL}
-\item{ph}{boot_ph: bootstrap dendrograms \eqn{H_b}; main_ph: consensus
-          dendrogram \eqn{\hat{H}}}
+\item{ph}{boot_ph: bootstrap dendrograms \eqn{H_b}; main_ph: bubbletree \eqn{H}}
 \item{pair_dist}{inter-cluster distances used to generate the dendrograms}
 \item{cluster}{cluster assignments of each cell}
 \item{input_par}{list of all input parameters}
@@ -89,7 +86,7 @@ get_bubbletree_graph.
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 
@@ -110,5 +107,5 @@ db <- get_bubbletree_dummy(x = A,
 }
 
 \seealso{get_k, get_r, get_bubbletree_kmeans, get_bubbletree_graph,
-get_gini, get_gini_k, get_num_tiles, get_num_violins, get_cat_tiles,
-d_500}
+         get_bubbletree_comparison, get_gini, get_gini_k, get_num_tiles,
+         get_num_violins, get_cat_tiles, d_500}

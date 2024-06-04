@@ -42,25 +42,26 @@ get_r(x,
 low-dimensional projections}
 \item{rs}{number vector, \eqn{r} values to consider}
 \item{B_gap}{integer, number of Monte Carlo ("bootstrap") samples taken when
-computing the Gap statistic (see documentation of function clusGap, R-package
-cluster)}
+computing the Gap statistic (see documentation of function \code{clusGap},
+R-package \code{cluster})}
 \item{n_start, iter_max}{parameters for Louvain clustering, see documentation
-of function FindClusters, R-package Seurat}
+of function \code{FindClusters}, R-package \code{Seurat}}
 \item{algorithm}{character, four clustering algorithms: 'original',
-'LMR', 'SLM' and 'Leiden', see documentation of function FindClusters,
-R-package Seurat}
+'LMR', 'SLM' and 'Leiden', see documentation of function \code{FindClusters},
+R-package \code{Seurat}}
 \item{knn_k}{integer, defines k for the k-nearest neighbor algorithm, see
-documentation of function FindClusters, R-package Seurat}
+documentation of function \code{FindClusters}, R-package \code{Seurat}}
 \item{cores}{integer, number of PC cores for parallel execution}
 \item{verbose}{logical, progress messages}
 }
 
 
 \details{
-To compute the Gap statistic get_r adapts the algorithm of function clustGap
-from R-package cluster (version 2.1.3). For Louvain clustering get_r uses
-the function FindClusters implemented in R-package Seurat. For additional
-information see the respective documentations.
+To compute the Gap statistic \code{get_r} adapts the algorithm of function
+\code{clustGap} from R-package \code{cluster} (version 2.1.3). For Louvain
+clustering \code{get_r} uses the function \code{FindClusters} implemented in
+the R-package \code{Seurat}. For additional information see the respective
+documentations.
 }
 
 \value{
@@ -75,7 +76,7 @@ estimates for each \eqn{r} and \eqn{k'} and bootstrap iteration \eqn{b}}
 
 
 \author{
-  Simo Kitanovski <simo.kitanovski@uni-due.de>
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 
