@@ -25,11 +25,12 @@ organizes the bubbles (defined by \eqn{cs}) in a hierarchical dendrogram
 clusters (bubbles).
 }
 
+
 \usage{
 get_bubbletree_dummy(x,
                      cs,
                      B = 0,
-                     N_eff = 100,
+                     N_eff = 200,
                      hclust_distance = "euclidean",
                      hclust_method = "average",
                      cores = 1,

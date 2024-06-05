@@ -79,7 +79,7 @@ with \eqn{n_i} as the number of cells in cluster \eqn{i} and \eqn{n=\sum_i n_i}.
 
 
 \author{
-  Simo Kitanovski \email{simo.kitanovski@uni-due.de>}
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 

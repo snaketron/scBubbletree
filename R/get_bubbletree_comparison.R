@@ -77,8 +77,10 @@ compare_bubbletrees <- function(btd_1,
   cm$n <- sum(cm$y)
   cm$p <- cm$y/cm$n
 
-  cm$btd_1 <- factor(x = cm$btd_1, levels = rev(as.character(btd_1$tree_meta$label)))
-  cm$btd_2 <- factor(x = cm$btd_2, levels = rev(as.character(btd_2$tree_meta$label)))
+  cm$btd_1 <- factor(x = cm$btd_1, levels = rev(
+    as.character(btd_1$tree_meta$label)))
+  cm$btd_2 <- factor(x = cm$btd_2, levels = rev(
+    as.character(btd_2$tree_meta$label)))
 
   g <- ggplot(data = cm)+
     geom_tile(aes(x = btd_2, y = btd_1, fill = p))+
@@ -103,13 +105,18 @@ compare_bubbletrees <- function(btd_1,
                                  breaks = scales::pretty_breaks(n = 3))
   }
 
-  e <- plot_spacer()+theme(plot.margin = unit(c(0,118,0,0), "pt"))
-  top_plot <- (t1|g)+plot_layout(widths = c(1-ratio_heatmap, 
-                                            ratio_heatmap))
-  bottom_plot <- (e|t2)+plot_layout(widths = c(1-ratio_heatmap, 
-                                               ratio_heatmap))
-  tg <- (top_plot/bottom_plot)+plot_layout(heights = c(ratio_heatmap, 
-                                                     1-ratio_heatmap))
+  e <- plot_spacer()+
+    theme(plot.margin = unit(c(0,118,0,0), "pt"))
+  
+  top_plot <- (t1|g)+
+    plot_layout(widths = c(1-ratio_heatmap, ratio_heatmap))
+  
+  bottom_plot <- (e|t2)+
+    plot_layout(widths = c(1-ratio_heatmap, ratio_heatmap))
+  
+  tg <- (top_plot/bottom_plot)+
+    plot_layout(heights = c(ratio_heatmap, 1-ratio_heatmap))
 
-  return(list(tree_comparison = tg, cooccurrence = cm))
+  return(list(tree_comparison = tg, 
+              cooccurrence = cm))
 }

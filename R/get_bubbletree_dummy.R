@@ -53,7 +53,10 @@ get_bubbletree_dummy <- function(
       cluster = cs,
       round_digits = round_digits,
       show_simple_count = show_simple_count)
-  } else {
+    
+    ph <- list(main_ph = ph, boot_ph = NA)
+  } 
+  else {
     # get branch support
     ph <- get_ph_support(main_ph = ph,
                          x = pair_dist$raw_pair_dist)
@@ -64,7 +67,6 @@ get_bubbletree_dummy <- function(
                         round_digits = round_digits,
                         show_simple_count = show_simple_count)
   }
-  
   
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = NA,

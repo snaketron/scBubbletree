@@ -1,8 +1,8 @@
-\name{get_bubbletree_comparison}
+\name{compare_bubbletrees}
 
 
 
-\alias{get_bubbletree_comparison}
+\alias{compare_bubbletrees}
 
 
 

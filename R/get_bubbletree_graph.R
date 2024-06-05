@@ -105,12 +105,14 @@ get_bubbletree_graph <- function(
   hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
 
-  if(length(unique(cs)) <= 2|B==0) {
+  if(length(unique(cs)) <= 2) {
     t <- get_dendrogram(
       ph = ph,
       cluster = cs,
       round_digits = round_digits,
       show_simple_count = show_simple_count)
+    
+    ph <- list(main_ph = ph, boot_ph = NA)
   }
   else {
     ph <- ape::unroot(phy = ph)

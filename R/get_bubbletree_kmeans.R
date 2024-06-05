@@ -62,13 +62,14 @@ get_bubbletree_kmeans <- function(
   hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
   
-  if(k==2|B==0) {
-    # build tree
+  if(k==2) {
     t <- get_dendrogram(
       ph = ph,
       cluster = km$cluster,
       round_digits = round_digits,
       show_simple_count = show_simple_count)
+    
+    ph <- list(main_ph = ph, boot_ph = NA)
   }
   else {
     ph <- ape::unroot(phy = ph)

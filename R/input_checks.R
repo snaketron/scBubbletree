@@ -451,9 +451,9 @@ check_btd <- function(btd) {
      is.null(btd)||
      any(is.na(class(btd)))||
      is.null(class(btd))||
-     (methods::is(btd, "bubbletree_kmeans")==FALSE&
-      methods::is(btd, "bubbletree_louvain")==FALSE&
-      methods::is(btd, "bubbletree_dummy")==FALSE)) {
+     (is(btd, "bubbletree_kmeans")==FALSE&
+      is(btd, "bubbletree_louvain")==FALSE&
+      is(btd, "bubbletree_dummy")==FALSE)) {
     stop("NA/NULL elements or wrong class detected in the bubbletree")
   }
   if(is.vector(btd$cluster)==FALSE||
@@ -503,12 +503,12 @@ check_btd <- function(btd) {
   if(btd$k%%1!=0) {
     stop("problem in btd: btd$k must be a positive integer (k>=2)")
   }
-  if(methods::is(btd$ph$main_ph, "phylo")==FALSE) {
+  if(is(btd$ph$main_ph, "phylo")==FALSE) {
     stop("problem in btd: btd$ph$main_ph is not phylo class")
   }
-  if(methods::is(btd$ph$boot_ph, "multiPhylo")==FALSE) {
-    stop("problem in btd: btd$ph$boot_ph is not multiPhylo class")
-  }
+  # if(is(btd$ph$boot_ph, "multiPhylo")==FALSE) {
+  #   stop("problem in btd: btd$ph$boot_ph is not multiPhylo class")
+  # }
   if(length(btd$cluster)!=nrow(btd$A)) {
     stop("problem in btd: length(btd$cluster)!=nrow(btd$A)")
   }
@@ -756,8 +756,8 @@ check_obj_k_r <- function(obj) {
   }
   if(any(is.na(obj))|is.null(obj)|is.na(class(obj))|
      is.null(class(obj))|
-     (methods::is(obj, "boot_k")==FALSE&
-      methods::is(obj, "boot_r")==FALSE)) {
+     (is(obj, "boot_k")==FALSE&
+      is(obj, "boot_r")==FALSE)) {
     stop("problem with input obj")
   }
   
@@ -800,7 +800,7 @@ check_ph_dend <- function(ph, cluster) {
   if(missing(ph)) {
     stop("ph input not found")
   }
-  if(methods::is(ph, "phylo")==FALSE) {
+  if(is(ph, "phylo")==FALSE) {
     stop("ph must be a phylo object")
   }
   if(any(cluster %in% ph$tip.label == FALSE)) {
