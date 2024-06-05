@@ -66,7 +66,7 @@ This function computes:
 1. with \code{integrate_vertical}=T: relative frequencies of each feature
 across the different bubbles
 
-2. with \code{integrate_vertical\=F: within-bubble relative frequencies
+2. with \code{integrate_vertical\=F}: within-bubble relative frequencies
 (composition) of different features
 }
 

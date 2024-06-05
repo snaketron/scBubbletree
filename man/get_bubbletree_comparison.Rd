@@ -31,7 +31,8 @@ a heatmap.
 compare_bubbletrees(btd_1,
                     btd_2,
                     tile_bw = FALSE
-                    tile_text_size = 3)
+                    tile_text_size = 3,
+                    ratio_heatmap = 0.5)
 }
 
 
@@ -41,6 +42,8 @@ compare_bubbletrees(btd_1,
 \item{tile_text_size}{integer, size of tile labels}
 \item{tile_bw}{logical, tile grayscale (tile_bw = TRUE) vs. color
 (tile_bw = FALSE, default)}
+\item{ratio_heatmap}{nummeric, probability (default = 0.5) that dictates the 
+relative width and height of the heatmap and the bubbletrees}
 }
 
 
@@ -101,7 +104,8 @@ btd_2 <- get_bubbletree_kmeans(x = A,
 btd_comparison <- compare_bubbletrees(btd_1 = btd_1,
                                       btd_2 = btd_2,
                                       tile_bw = FALSE,
-                                      tile_text_size = 3)
+                                      tile_text_size = 3,
+                                      ratio_heatmap = 0.5)
 
 
 # plot

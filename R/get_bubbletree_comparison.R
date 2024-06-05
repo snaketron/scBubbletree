@@ -3,12 +3,14 @@
 check_input_compare_trees <- function(btd_1,
                                       btd_2,
                                       tile_text_size,
-                                      tile_bw) {
+                                      tile_bw,
+                                      ratio_heatmap) {
 
   check_tile_text_size(tile_text_size = tile_text_size)
   check_tile_bw(tile_bw = tile_bw)
   check_btd(btd = btd_1)
   check_btd(btd = btd_2)
+  check_ratio(ratio = ratio_heatmap)
 
   if(length(btd_1$cluster)!=length(btd_2$cluster)) {
     stop("unequal number of cells in btd_1 and btd_2")
@@ -20,18 +22,20 @@ check_input_compare_trees <- function(btd_1,
 compare_bubbletrees <- function(btd_1,
                                 btd_2,
                                 tile_bw = FALSE,
-                                tile_text_size = 2.5) {
-
+                                tile_text_size = 2.5,
+                                ratio_heatmap = 0.5) {
 
   check_input_compare_trees(btd_1 = btd_1,
                             btd_2 = btd_2,
                             tile_text_size = tile_text_size,
-                            tile_bw = tile_bw)
+                            tile_bw = tile_bw,
+                            ratio_heatmap = ratio_heatmap)
 
   # create tree 1
   t1 <- ggtree(btd_1$ph$main_ph, linetype = "solid")%<+%btd_1$tree_meta+
     geom_point2(mapping = ggplot2::aes_string(subset = "isTip==FALSE"),
-                size = 0.5, col = "black") + layout_rectangular() +
+                size = 0.5, col = "black")+
+    layout_rectangular()+
     geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
                   fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
@@ -50,26 +54,25 @@ compare_bubbletrees <- function(btd_1,
   # create tree 2
   t2 <- ggtree(btd_2$ph$main_ph, linetype = "solid")%<+%btd_2$tree_meta+
     geom_point2(mapping = ggplot2::aes_string(subset = "isTip==FALSE"),
-                size = 0.5, col = "black") + #layout_rectangular() +
+                size = 0.5, col = "black")+
+    geom_tiplab(mapping = ggplot2::aes_string(label = "lab_short"),
+                color = "black", size = tile_text_size, vjust = 0,
+                align = TRUE, offset = +5, angle = 90)+
+    hexpand(.6)+
     geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
                   fill = "white", shape = 21)+
     theme_bw(base_size = 10) +
-    theme_tree(plot.margin = margin(6, 6, 6, 6),
+    theme_tree(plot.margin = margin(15, 6, 6, 6),
                legend.position = "bottom",
                legend.margin = margin(0, 0, 0, 0),
-               legend.box.margin = margin(-10, -10, -10, -10),
+               legend.box.margin = margin(-10, -10, -5, -10),
                legend.spacing.x = unit(0.2, "cm"),
                legend.spacing.y = unit(0, "cm"))+
-    geom_tiplab(mapping = ggplot2::aes_string(label = "lab_short"),
-                color = "black", size = tile_text_size, vjust = -0.65,
-                align = TRUE, offset = -20, angle = 90)+
     scale_radius(range = c(1, 4), limits = c(0, max(btd_2$tree_meta$Cells)))+
     coord_flip()
-
-
+  
   # co-occurrence matrix
   cm <- data.frame(btd_1 = btd_1$cluster, btd_2 = btd_2$cluster, y = 1)
-
   cm <- aggregate(y~btd_1+btd_2, data = cm, FUN = sum)
   cm$n <- sum(cm$y)
   cm$p <- cm$y/cm$n
@@ -83,7 +86,7 @@ compare_bubbletrees <- function(btd_1,
               col = "black", size = tile_text_size)+
     theme_bw(base_size = 10)+
     theme(legend.position = "top",
-          legend.margin=margin(t=0,r=0,b=2,l=0, unit = "pt"),
+          legend.margin=margin(5,0,2,0, unit = "pt"),
           legend.box.margin=margin(-10,-10,-10,-10))+
     guides(fill = guide_colourbar(barwidth = 5, barheight=1))
 
@@ -101,7 +104,12 @@ compare_bubbletrees <- function(btd_1,
   }
 
   e <- plot_spacer()+theme(plot.margin = unit(c(0,118,0,0), "pt"))
-  tg <- ((t1|g)/(e|t2))
+  top_plot <- (t1|g)+plot_layout(widths = c(1-ratio_heatmap, 
+                                            ratio_heatmap))
+  bottom_plot <- (e|t2)+plot_layout(widths = c(1-ratio_heatmap, 
+                                               ratio_heatmap))
+  tg <- (top_plot/bottom_plot)+plot_layout(heights = c(ratio_heatmap, 
+                                                     1-ratio_heatmap))
 
   return(list(tree_comparison = tg, cooccurrence = cm))
 }

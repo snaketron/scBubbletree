@@ -343,25 +343,28 @@ is necessary to make sure that k-means converges.
 
 
 ## 3. hierarchical grouping
-After the clustering is complete we will organize the bubbles in a natural
-hierarchy. For this we perform $B$ bootstrap iterations (default $B=200$). 
-In iteration $b$ the algorithm draws a random subset of $N_\textit{eff}$ 
-(default $N_\textit{eff}=200$) cells with replacement from each cluster and 
-computes the average inter-cluster Euclidean distances. This data is used to 
-populate the distance matrix ($D^{k\times k}_b$), which is provided as input 
-for hierarchical clustering with average linkage to generate a hierarchical 
-clustering dendrogram $H_b$. 
+After the clustering is complete we will organize the bubbles as leaves of
+a hierarchical dendrogram (=bubbletree). For this, we will first compute 
+inter-cluster distances (e.g. euclidean or Manhattan) between the centroids 
+of each clusters computed from $A^{n\times f}$.  Distances between individual 
+bubbles are visualized quantitatively as sums of branch lengths in root-to-leaf 
+direction between these bubbles.
 
-The collection of distance matrices that are computed during $B$ iterations are 
-used to compute a consensus (average) distance matrix ($\hat{D}^{k\times k}$) 
-and from this a corresponding consensus hierarchical dendrogram (bubbletree; 
-$\hat{H}$) is constructed. The collection of dendrograms are used to quantify 
-the robustness of the bubbletree topology, i.e. to count the number of times 
-each branch in the bubbletree is found among the topologies of the bootstrap 
-dendrograms. Branches can have has variable degrees of support ranging between 
-0 (no support) and $B$ (complete support). Distances between bubbles (inter-
-bubble relationships) are described quantitatively in the bubbletree as sums 
-of branch lengths. 
+To assess the robustness of the bubbletree topology, `r Biocpkg("scBubbletree")`
+can perform $B$ bootstrap iterations (e.g. $B=200$). In iteration $b$, we 
+draw a random subset of $N_\textit{eff}$ (default $N_\textit{eff}=200$) cells 
+with replacement from each cluster. Next, for each pair of cells in cluster $i$
+and $j$ we compute their distance. The distance metric is defined by the user.
+From the inter-cell distances we estimate the average inter-bubble distance, 
+and we use this data to populate the distance matrix ($D^{k\times k}_b$), which 
+is then provided as input for hierarchical clustering with an user-specified 
+linkage method to generate a hierarchical clustering dendrogram $H_b$. 
+
+The collection of dendrograms ($H_b$) are used to quantify the robustness 
+of the bubbletree topology, i.e. to count the number of times each branch in 
+the bubbletree is found among the topologies of the bootstrap dendrograms.
+Branches can have has variable degrees of support ranging between close to 0 
+(no support) and $B$ (complete support). 
 
 Steps 2.1 and 3. are performed next
 
@@ -455,8 +458,22 @@ k5_kmeans$tree|k5_louvain$tree
 Given the high degree of similarity between the two clustering solutions we 
 proceed in the next with the k-means results.
 
+We can also use the function `compare_bubbletrees` to compare the bubbletrees 
+and the clustering solutions. The heatmap shows the cooccurrence of cells 
+between the bubbles of the two bubbletrees. 
 
+The heatmap labels are cell frequencies and the tile colors are relative 
+cell abundances. From the heatmap we that with exception to 3 cells (3 blue 
+tiles), the two clustering algorithms generate identical clusterings.
 
+```{r, fig.width=8, fig.height=8}
+cp <- compare_bubbletrees(btd_1 = k5_kmeans, 
+                          btd_2 = k5_louvain,
+                          ratio_heatmap = 0.6,
+                          tile_bw = F,
+                          tile_text_size = 3)
+cp$tree_comparison
+```
 
 ## 4. visualization
 
@@ -706,9 +723,7 @@ Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering with
 R-package `r CRANpkg("cluster")` and then generate the bubbletree:
 
 ```{r, fig.width=7, fig.height=4, fig.align='center'}
-pam_k5 <- cluster::pam(x = A, 
-                       k = 5, 
-                       metric = "euclidean")
+pam_k5 <- cluster::pam(x = A, k = 5, metric = "euclidean")
 
 dummy_k5_pam <- get_bubbletree_dummy(x = A,
                                      cs = pam_k5$clustering,
