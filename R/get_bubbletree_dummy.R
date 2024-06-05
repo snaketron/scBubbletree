@@ -1,8 +1,8 @@
 get_bubbletree_dummy <- function(
     x,
     cs,
-    B = 100,
-    N_eff = 100,
+    B = 0,
+    N_eff = 200,
     hclust_distance = "euclidean",
     hclust_method = "average",
     cores = 1,

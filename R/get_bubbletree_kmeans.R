@@ -2,7 +2,7 @@
 get_bubbletree_kmeans <- function(
     x,
     k,
-    B = 100,
+    B = 0,
     N_eff = 200,
     n_start = 1000,
     iter_max = 300,
