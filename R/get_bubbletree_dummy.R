@@ -44,7 +44,7 @@ get_bubbletree_dummy <- function(
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = hclust_method)
   ph <- ape::as.phylo(x = hc)
-  ph <- ape::unroot(phy = ph)
+  main_ph <- ape::unroot(phy = ph)
   
   if(B==0) {
     # build tree
@@ -54,11 +54,12 @@ get_bubbletree_dummy <- function(
       round_digits = round_digits,
       show_simple_count = show_simple_count)
     
-    ph <- list(main_ph = ph, boot_ph = NA)
+    ph <- list(main_ph = main_ph, 
+               boot_ph = NA)
   } 
   else {
     # get branch support
-    ph <- get_ph_support(main_ph = ph,
+    ph <- get_ph_support(main_ph = main_ph,
                          x = pair_dist$raw_pair_dist)
     
     # build treetree

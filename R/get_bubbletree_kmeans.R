@@ -60,22 +60,23 @@ get_bubbletree_kmeans <- function(
     value.var = "M")
   d <- stats::as.dist(d)
   hc <- stats::hclust(d, method = hclust_method)
-  ph <- ape::as.phylo(x = hc)
+  main_ph <- ape::as.phylo(x = hc)
   
   if(k==2) {
     t <- get_dendrogram(
-      ph = ph,
+      ph = main_ph,
       cluster = km$cluster,
       round_digits = round_digits,
       show_simple_count = show_simple_count)
     
-    ph <- list(main_ph = ph, boot_ph = NA)
+    ph <- list(main_ph = main_ph, 
+               boot_ph = NA)
   }
   else {
-    ph <- ape::unroot(phy = ph)
+    main_ph <- ape::unroot(phy = main_ph)
     
     # get branch support
-    ph <- get_ph_support(main_ph = ph,
+    ph <- get_ph_support(main_ph = main_ph,
                          x = pair_dist$raw_pair_dist)
     
     # build bubbletree

@@ -25,12 +25,10 @@ a heatmap.
 2. it visualizes the two bubbletrees together with the heatmap.
 }
 
-
-
 \usage{
 compare_bubbletrees(btd_1,
                     btd_2,
-                    tile_bw = FALSE
+                    tile_bw = FALSE,
                     tile_text_size = 3,
                     ratio_heatmap = 0.5)
 }
