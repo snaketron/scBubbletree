@@ -8,7 +8,7 @@
 
 
 \title{
-Comparison of two bubbletrees generated from the same data
+Comparison of two bubbletrees generated from the same scRNA-seq data
 }
 
 \description{
@@ -18,9 +18,8 @@ from the \bold{same input data} but potentially with different input parameters
 
 It then does the following two operations:
 
-1. computes a co-occurrence matrix which represents the co-occurrence of cells
-between the clusters of the two bubbletrees. It then visualizes this matrix as
-a heatmap.
+1. computes the Jaccard distance (JD) and the intersection between paris of clusters 
+from the two bubbletrees. This is visualized as a heatmap.
 
 2. it visualizes the two bubbletrees together with the heatmap.
 }
@@ -52,9 +51,8 @@ from the \bold{same input data} but potentially with different input parameters
 
 It then does the following two operations:
 
-1. computes a co-occurrence matrix which represents the co-occurrence of cells
-between the clusters of the two bubbletrees. It then visualizes this matrix as
-a heatmap.
+1. computes the Jaccard distance and the intersection between paris of clusters 
+from the two bubbletrees. This is visualized as a heatmap.
 
 2. it visualizes the two bubbletrees together with the heatmap.
 }
@@ -62,13 +60,13 @@ a heatmap.
 \value{
 \item{tree_comparison_plot}{ggplot2 objects assembled by R-package
 \code{patchwork}}
-\item{cooccurrence}{data.frame object with cooccurrence data}
+\item{m}{data.frame object with jaccard distances and intersection for each
+pair of clusters from the two bubbletrees}
 }
 
 
 \author{
-  Simo Kitanovski
-  \email{simo.kitanovski@uni-due.de}
+  Simo Kitanovski \email{simo.kitanovski@uni-due.de}
 }
 
 

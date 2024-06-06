@@ -369,15 +369,14 @@ Branches can have has variable degrees of support ranging between close to 0
 Steps 2.1 and 3. are performed next
 
 ```{r}
-k5_kmeans <- get_bubbletree_kmeans(
-  x = A,
-  k = 5,
-  cores = 1,
-  B = 200,
-  N_eff = 200,
-  round_digits = 1,
-  show_simple_count = FALSE,
-  kmeans_algorithm = "MacQueen")
+k5_kmeans <- get_bubbletree_kmeans(x = A,
+                                   k = 5,
+                                   cores = 1,
+                                   B = 100,
+                                   N_eff = 200,
+                                   round_digits = 1,
+                                   show_simple_count = FALSE,
+                                   kmeans_algorithm = "MacQueen")
 ```
 
 ... and plot the bubbletree
@@ -385,7 +384,6 @@ k5_kmeans <- get_bubbletree_kmeans(
 ```{r, fig.width=4, fig.height=3, fig.align='center'}
 k5_kmeans$tree
 ```
-
 
 Lets describe the bubbletree:
 
@@ -401,8 +399,7 @@ and contains only 436 cells ($\approx$ 11% of all cells in the dataset).
 We can access the bubble data shown in the bubbletree
 
 ```{r}
-knitr::kable(k5_kmeans$tree_meta, 
-             digits = 2, row.names = FALSE)
+knitr::kable(k5_kmeans$tree_meta, digits = 2, row.names = FALSE)
 ```
 
 **topology**: inter-bubble distances are represented by sums of branch 
@@ -433,7 +430,7 @@ k5_louvain <- get_bubbletree_graph(x = A,
                                    algorithm = "original",
                                    knn_k = 50,
                                    cores = 1,
-                                   B = 200,
+                                   B = 100,
                                    N_eff = 200,
                                    round_digits = 1,
                                    show_simple_count = FALSE)
