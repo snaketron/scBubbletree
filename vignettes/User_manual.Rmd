@@ -455,13 +455,20 @@ k5_kmeans$tree|k5_louvain$tree
 Given the high degree of similarity between the two clustering solutions we 
 proceed in the next with the k-means results.
 
-We can also use the function `compare_bubbletrees` to compare the bubbletrees 
-and the clustering solutions. The heatmap shows the cooccurrence of cells 
-between the bubbles of the two bubbletrees. 
 
-The heatmap labels are cell frequencies and the tile colors are relative 
-cell abundances. From the heatmap we that with exception to 3 cells (3 blue 
-tiles), the two clustering algorithms generate identical clusterings.
+#### Comparison of bubbletree pairs
+To compare a pair of bubbletrees and their clustering solutions we can use 
+the function `compare_bubbletrees`. The function produces the following
+output:
+
+1. heatmap with jaccard distances (JDs) between the pairs of bubbles from the two 
+bubbletrees (JD=0 if both clusters contain the same set of cells; JD=1 for 
+completely disjoint clusters). The tile labels in the heatmap show the numbers 
+of intersecting cells between the bubbles of the two bubbletrees. 
+
+From the heatmap we nearly identical clusterings between the bubbletrees. 
+Only 3 cells (in tiles with label = 1) are classified differently by the
+two bubbletrees.
 
 ```{r, fig.width=8, fig.height=8}
 cp <- compare_bubbletrees(btd_1 = k5_kmeans, 
@@ -469,7 +476,7 @@ cp <- compare_bubbletrees(btd_1 = k5_kmeans,
                           ratio_heatmap = 0.6,
                           tile_bw = F,
                           tile_text_size = 3)
-cp$tree_comparison
+cp$comparison
 ```
 
 ## 4. visualization

@@ -98,19 +98,15 @@ compare_bubbletrees <- function(btd_1,
                                  limits = c(0, 1))
   }
   
-  e <- plot_spacer()+
-    theme(plot.margin = unit(c(0,118,0,0), "pt"))
+  e <- plot_spacer()+theme(plot.margin = unit(c(0,118,0,0), "pt"))
   
-  top_plot <- (t1|g)+
-    plot_layout(widths = c(1-ratio_heatmap, ratio_heatmap))
-  
-  bottom_plot <- (e|t2)+
-    plot_layout(widths = c(1-ratio_heatmap, ratio_heatmap))
-  
-  tg <- (top_plot/bottom_plot)+
-    plot_layout(heights = c(ratio_heatmap, 1-ratio_heatmap))
-  
-  return(list(tree_comparison = tg, m = jm))
+  top_plot <- (t1|g)+plot_layout(widths = c(1-ratio_heatmap,
+                                            ratio_heatmap))
+  bottom_plot <- (e|t2)+plot_layout(widths = c(1-ratio_heatmap,
+                                               ratio_heatmap))
+  tg <- (top_plot/bottom_plot)+plot_layout(heights = c(ratio_heatmap,
+                                                       1-ratio_heatmap))
+  return(list(comparison = tg, m = jm))
 }
 
 

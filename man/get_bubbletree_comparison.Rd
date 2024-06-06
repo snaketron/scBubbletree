@@ -58,10 +58,9 @@ from the two bubbletrees. This is visualized as a heatmap.
 }
 
 \value{
-\item{tree_comparison_plot}{ggplot2 objects assembled by R-package
-\code{patchwork}}
-\item{m}{data.frame object with jaccard distances and intersection for each
-pair of clusters from the two bubbletrees}
+\item{comparison}{ggplot2 objects assembled by R-package \code{patchwork}}
+\item{m}{data.frame object with JD and intersection for each pair of clusters 
+from the two bubbletrees}
 }
 
 
