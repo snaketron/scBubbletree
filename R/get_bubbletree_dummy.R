@@ -26,19 +26,16 @@ get_bubbletree_dummy <- function(x,
     message("Bubbletree construction ...")
   }
   
-  pd <- get_dist(B = B,
-                 m = x,
-                 c = cs,
-                 N_eff = N_eff,
-                 cores = cores,
+  pd <- get_dist(B = B, m = x, c = cs, N_eff = N_eff, cores = cores,
                  hclust_distance = hclust_distance)
   
   # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M")
-  d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = hclust_method)
-  ph <- ape::as.phylo(x = hc)
-  main_ph <- ape::unroot(phy = ph)
+  d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
+             fun.aggregate = mean)
+  d <- as.dist(d)
+  hc <- hclust(d, method = hclust_method)
+  ph <- as.phylo(x = hc)
+  main_ph <- unroot(phy = ph)
   
   if(B==0) {
     # build tree

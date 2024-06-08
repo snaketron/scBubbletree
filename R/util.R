@@ -51,9 +51,7 @@ get_ph_support <- function(main_ph, x) {
   
   boot_ph <- c()
   for(i in seq_len(length.out = max(x$B))) {
-    d <- reshape2::acast(data = x[x$B == i,],
-                         formula = c_i~c_j,
-                         value.var = "M")
+    d <- acast(data = x[x$B == i,], formula = c_i~c_j, value.var = "M")
     d <- stats::as.dist(d)
 
     hc <- stats::hclust(d, method = "average")
@@ -88,12 +86,11 @@ get_dendrogram <- function(ph,
                            show_simple_count) {
   
   # input checks
-  check_input_get_dendrogram(
-    ph = ph,
-    cluster = cluster,
-    round_digits = round_digits,
-    show_simple_count = show_simple_count)
-
+  check_input_get_dendrogram(ph = ph,
+                             cluster = cluster,
+                             round_digits = round_digits,
+                             show_simple_count = show_simple_count)
+  
   # compute meta summary
   km_meta <- data.frame(table(cluster))
   colnames(km_meta) <- c("label", "Cells")
@@ -165,7 +162,7 @@ get_p_dist <- function(x, m, c, N_eff, hclust_distance) {
   
   stats <- vector(mode = "list", length = len_cs*len_cs)
   counter <- 1
-  for(i in seq_len(length.out = len_cs-1)) {
+  for(i in seq_len(length.out = len_cs)) {
     x_i <- m[which(c == cs[i]), ]
     if(is.vector(x_i)) {
       x_i <- matrix(data = x_i, nrow = 1)
@@ -208,9 +205,11 @@ get_p_dist <- function(x, m, c, N_eff, hclust_distance) {
       stats[[counter]]<-data.frame(c_i = cs[i], c_j = cs[j], B = x, M = mean(w), 
                                    n_i = nrow(x_i), n_j = nrow(x_j))
       counter <- counter + 1
-      stats[[counter]]<-data.frame(c_i = cs[j], c_j = cs[i], B = x, M = mean(w), 
-                                   n_i = nrow(x_j), n_j = nrow(x_i))
-      counter <- counter + 1
+      if(i!=j) {
+        stats[[counter]]<-data.frame(c_i = cs[j], c_j = cs[i], B = x, M = mean(w), 
+                                     n_i = nrow(x_j), n_j = nrow(x_i))
+        counter <- counter + 1
+      }
     }
   }
   
@@ -228,7 +227,7 @@ get_c_dist <- function(m, c, hclust_distance) {
   
   stats <- vector(mode = "list", length = len_cs*len_cs)
   counter <- 1
-  for(i in seq_len(length.out = len_cs-1)) {
+  for(i in seq_len(length.out = len_cs)) {
     x_i <- m[which(c == cs[i]), ]
     x_i <- colMeans(x_i)
     
@@ -248,8 +247,10 @@ get_c_dist <- function(m, c, hclust_distance) {
       # symmetric distances
       stats[[counter]] <- data.frame(c_i = cs[i], c_j = cs[j], B = 1, M = M)
       counter <- counter + 1
-      stats[[counter]] <- data.frame(c_i = cs[j], c_j = cs[i], B = 1, M = M)
-      counter <- counter + 1
+      if(i!=j) {
+        stats[[counter]] <- data.frame(c_i = cs[j], c_j = cs[i], B = 1, M = M)
+        counter <- counter + 1
+      }
     }
   }
   
@@ -263,8 +264,8 @@ get_c_dist <- function(m, c, hclust_distance) {
 get_p_dist_summary <- function(p_dist) {
   B <- max(p_dist$B)
   
-  m <- merge(x = stats::aggregate(M~c_i+c_j, data = p_dist, FUN = mean),
-             y = stats::aggregate(M~c_i+c_j, data = p_dist, FUN = get_se),
+  m <- merge(x = aggregate(M~c_i+c_j, data = p_dist, FUN = mean),
+             y = aggregate(M~c_i+c_j, data = p_dist, FUN = get_se),
              by = c("c_i", "c_j"))
   colnames(m) <- c("c_i", "c_j", "M", "SE")
   m$L95 <- m$M-m$SE*1.96

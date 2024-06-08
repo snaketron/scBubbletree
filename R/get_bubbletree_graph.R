@@ -34,18 +34,18 @@ get_bubbletree_graph <- function(x,
     rownames(x) <- seq_len(length.out = nrow(x))
   }
   # create Knn graph
-  knn <- Seurat::FindNeighbors(object = x, k.param = knn_k)
+  knn <- FindNeighbors(object = x, k.param = knn_k)
   
   # clustering
   if(verbose) {
     message("Clustering ...")
   }
-  lc <- Seurat::FindClusters(object = knn$snn,
-                             resolution = r,
-                             n.start = n_start,
-                             n.iter = iter_max,
-                             algorithm = map_louvain_algname(algorithm),
-                             verbose = FALSE)
+  lc <- FindClusters(object = knn$snn,
+                     resolution = r,
+                     n.start = n_start,
+                     n.iter = iter_max,
+                     algorithm = map_louvain_algname(algorithm),
+                     verbose = FALSE)
   
   # clusters
   cs <- as.character(lc[,1])
@@ -89,12 +89,11 @@ get_bubbletree_graph <- function(x,
                  hclust_distance = hclust_distance)
   
   # compute hierarchical clustering dendrogram
-  d <- reshape2::acast(data = pd$c_dist,
-                       formula = c_i~c_j,
-                       value.var = "M")
-  d <- stats::as.dist(d)
-  hc <- stats::hclust(d, method = hclust_method)
-  main_ph <- ape::as.phylo(x = hc)
+  d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
+             fun.aggregate = mean)
+  d <- as.dist(d)
+  hc <- hclust(d, method = hclust_method)
+  main_ph <- as.phylo(x = hc)
   
   if(length(unique(cs)) <= 2) {
     t <- get_dendrogram(ph = main_ph,
@@ -105,7 +104,7 @@ get_bubbletree_graph <- function(x,
     ph <- list(main_ph = main_ph, boot_ph = NA)
   }
   else {
-    main_ph <- ape::unroot(phy = main_ph)
+    main_ph <- unroot(phy = main_ph)
     
     # get branch support
     ph <- get_ph_support(main_ph = main_ph, x = pd$p_dist)

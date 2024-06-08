@@ -38,7 +38,7 @@ get_r <- function(x,
   if(verbose) {
     message("1) clustering")
   }
-  plan(multisession, workers = cores)
+  future::plan(future::multisession, workers = cores)
   louvain_obj <- future_lapply(X = rs,
                                FUN = FindClusters,
                                object = knn$snn,
@@ -64,16 +64,16 @@ get_r <- function(x,
   if(verbose) {
     message("2) gap statistic")
   }
-  q <- future_lapply(X = seq_len(length.out = length(louvain_obj)),
-                     FUN = get_gap_r,
-                     l = louvain_obj,
-                     x = x,
-                     B_gap = B_gap,
-                     n_start = n_start,
-                     iter_max = iter_max,
-                     algorithm = algorithm,
-                     knn_k = knn_k,
-                     future.seed = TRUE)
+  q <- future.apply::future_lapply(X = seq_len(length.out=length(louvain_obj)),
+                                   FUN = get_gap_r,
+                                   l = louvain_obj,
+                                   x = x,
+                                   B_gap = B_gap,
+                                   n_start = n_start,
+                                   iter_max = iter_max,
+                                   algorithm = algorithm,
+                                   knn_k = knn_k,
+                                   future.seed = TRUE)
   
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
@@ -129,7 +129,7 @@ get_r <- function(x,
   wcss_stats_summary <- data.frame(wcss_mean = wcss_mean, r = rs, k = ks)
   
   # remove unused connections
-  plan(sequential())
+  future::plan(future::sequential())
   
   return(structure(class = "boot_r",
                    list(boot_obj = boot_obj,
