@@ -163,7 +163,7 @@ get_p_dist <- function(x, m, c, N_eff, hclust_distance) {
   len_cs <- length(cs)
   with_replacement <- TRUE
   
-  stats <- vector(mode = "list", length = len_cs*len_cs - len_cs)
+  stats <- vector(mode = "list", length = len_cs*len_cs)
   counter <- 1
   for(i in seq_len(length.out = len_cs-1)) {
     x_i <- m[which(c == cs[i]), ]
@@ -180,7 +180,7 @@ get_p_dist <- function(x, m, c, N_eff, hclust_distance) {
       }
     }
     
-    for(j in (i+1):len_cs) {
+    for(j in i:len_cs) {
       x_j <- m[which(c == cs[j]), ]
       if(is.vector(x_j)) {
         x_j <- matrix(data = x_j, nrow = 1)
@@ -226,13 +226,13 @@ get_c_dist <- function(m, c, hclust_distance) {
   stats <- c()
   len_cs <- length(cs)
   
-  stats <- vector(mode = "list", length = len_cs*len_cs - len_cs)
+  stats <- vector(mode = "list", length = len_cs*len_cs)
   counter <- 1
   for(i in seq_len(length.out = len_cs-1)) {
     x_i <- m[which(c == cs[i]), ]
     x_i <- colMeans(x_i)
     
-    for(j in (i+1):len_cs) {
+    for(j in i:len_cs) {
       x_j <- m[which(c == cs[j]), ]
       x_j <- colMeans(x_j)
       

@@ -31,7 +31,7 @@ get_r(x,
      n_start = 20,
      iter_max = 100,
      algorithm = "original",
-     knn_k = 50,
+     knn_k = 20,
      cores = 1,
      verbose = TRUE)
 }
