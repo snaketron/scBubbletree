@@ -75,7 +75,13 @@ get_ph_support <- function(main_ph, x) {
 
   # add bootstrap
   main_ph$node.label <- clade_b
-
+  
+  # b = 0 for these nodes
+  na_nodes <- which(is.na(main_ph$node.label))
+  if(length(na_nodes)!=0) {
+    main_ph$node.label[na_nodes] <- 0
+  }
+  
   return(list(main_ph = main_ph, boot_ph = boot_ph))
 }
 
@@ -99,9 +105,11 @@ get_dendrogram <- function(ph,
   km_meta$pct <- round(x = km_meta$p*100,
                              digits = round_digits)
   km_meta$lab_short <- paste0(km_meta$label, " (",
-                              round(km_meta$Cells/1000, digits = round_digits),
+                              round(km_meta$Cells/1000, 
+                                    digits = round_digits),
                               'K, ', km_meta$pct, "%)")
-  km_meta$lab_long <- paste0(km_meta$label, " (", km_meta$Cells, ', ',
+  km_meta$lab_long <- paste0(km_meta$label, " (", 
+                             km_meta$Cells, ', ',
                              km_meta$pct, "%)")
 
   # build ggtree
@@ -152,7 +160,8 @@ get_dendrogram <- function(ph,
 
 
 # Short description:
-# For b in 1:B computes pairwise inter-cluster distances using bootstrapping
+# For b in 1:B computes pairwise inter-cluster distances using 
+# bootstrapping
 get_p_dist <- function(x, m, c, N_eff, hclust_distance) {
   
   cs <- unique(c)
