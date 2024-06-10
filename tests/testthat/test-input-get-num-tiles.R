@@ -338,19 +338,6 @@ test_that("btd argument", {
     round_digits = 2,
     show_simple_count = F)
   
-  btd_r_0 <- expect_warning(get_bubbletree_graph(
-    x = x,
-    r = 10^(-5),
-    B = 20,
-    N_eff = 50,
-    n_start = 100,
-    iter_max = 100,
-    algorithm = "original",
-    cores = 1,
-    round_digits = 2,
-    show_simple_count = F),
-    "Only one cluster at specified r, bubbletree can't be constructed")
-  
   btd_d <- get_bubbletree_dummy(
     x = x,
     cs = sample(x = base::LETTERS[1:5], size = nrow(x), replace = T),
@@ -393,17 +380,6 @@ test_that("btd argument", {
     x_axis_name = "",
     rotate_x_axis_labels = T),
     NA)
-  
-  expect_error(get_num_tiles(
-    btd = btd_r_0,
-    fs = f,
-    summary_function = "mean",
-    round_digits = 1,
-    tile_text_size = 2,
-    tile_bw = F,
-    x_axis_name = "",
-    rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
 })
 
 

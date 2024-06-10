@@ -1,39 +1,36 @@
-get_cat_tiles <- function(
-    btd,
-    f,
-    integrate_vertical,
-    round_digits = 2,
-    tile_text_size = 3,
-    tile_bw = FALSE,
-    x_axis_name = "Feature",
-    rotate_x_axis_labels = TRUE) {
-  
+get_cat_tiles <- function(btd,
+                          f,
+                          integrate_vertical,
+                          round_digits = 2,
+                          tile_text_size = 3,
+                          tile_bw = FALSE,
+                          x_axis_name = "Feature",
+                          rotate_x_axis_labels = TRUE) {
   
   # check inputs
-  check_input_cat_tiles(
-    btd = btd,
-    f = f,
-    integrate_vertical = integrate_vertical,
-    round_digits = round_digits,
-    tile_text_size = tile_text_size,
-    tile_bw = tile_bw,
-    x_axis_name = x_axis_name,
-    rotate_x_axis_labels = rotate_x_axis_labels)
+  check_input_cat_tiles(btd = btd,
+                        f = f,
+                        integrate_vertical = integrate_vertical,
+                        round_digits = round_digits,
+                        tile_text_size = tile_text_size,
+                        tile_bw = tile_bw,
+                        x_axis_name = x_axis_name,
+                        rotate_x_axis_labels = rotate_x_axis_labels)
   
-  ws <- base::data.frame(table(btd$cluster, f))
-  base::colnames(ws) <- c("cluster", "feature", "freq")
+  ws <- data.frame(table(btd$cluster, f))
+  colnames(ws) <- c("cluster", "feature", "freq")
   
   # compute stats
-  n <- stats::aggregate(freq~cluster, data = ws, FUN = sum)
+  n <- aggregate(freq~cluster, data = ws, FUN = sum)
   n$n_cluster <- n$freq
   n$freq <- NULL
-  ws <- base::merge(x = ws, y = n, by = "cluster")
+  ws <- merge(x = ws, y = n, by = "cluster")
   rm(n)
   
-  n <- stats::aggregate(freq~feature, data = ws, FUN = sum)
+  n <- aggregate(freq~feature, data = ws, FUN = sum)
   n$n_feature <- n$freq
   n$freq <- NULL
-  ws <- base::merge(x = ws, y = n, by = "feature")
+  ws <- merge(x = ws, y = n, by = "feature")
   rm(n)
   
   ws$prob_cluster <- ws$freq/ws$n_cluster
@@ -47,49 +44,39 @@ get_cat_tiles <- function(
   
   if(integrate_vertical==FALSE) {
     legend <- "Bubble composition [%]"
-    ws$percent <- base::round(x = ws$percent_cluster,
-                              digits = round_digits)
+    ws$percent <- round(x = ws$percent_cluster, digits = round_digits)
     ws$norm_percent <- ws$norm_percent_cluster
   }
   if(integrate_vertical==TRUE) {
     legend <- "Feature composition [%]"
-    ws$percent <- base::round(x = ws$percent_feature,
-                              digits = round_digits)
+    ws$percent <- round(x = ws$percent_feature, digits = round_digits)
     ws$norm_percent <- ws$norm_percent_feature
   }
   
-  ws <- base::merge(
-    x = ws,
-    y = btd$tree_meta,
-    by.x = "cluster",
-    by.y = "label",
-    all = TRUE)
-  ws <- ws[ base::order(ws$tree_order,
-                        decreasing = FALSE),]
-  ws$cluster <- base::factor(x = ws$cluster,
-                             levels = base::unique(ws$cluster))
+  ws <- merge(x = ws, y = btd$tree_meta, by.x = "cluster", 
+              by.y = "label", all = TRUE)
+  ws <- ws[ order(ws$tree_order, decreasing = FALSE),]
+  ws$cluster <- factor(x = ws$cluster, levels = unique(ws$cluster))
   
   # draw
-  w <- ggplot_cat_tiles(
-    ws = ws, 
-    tile_text_size = tile_text_size, 
-    x_axis_name = x_axis_name, 
-    tile_bw = tile_bw, 
-    legend = legend,
-    rotate_x_axis_labels = rotate_x_axis_labels)
+  w <- ggplot_cat_tiles(ws = ws, 
+                        tile_text_size = tile_text_size, 
+                        x_axis_name = x_axis_name, 
+                        tile_bw = tile_bw, 
+                        legend = legend,
+                        rotate_x_axis_labels = rotate_x_axis_labels)
   
-  return(base::list(table = ws, plot = w))
+  return(list(table = ws, plot = w))
 }
 
-check_input_cat_tiles <- function(
-    btd,
-    f,
-    integrate_vertical,
-    round_digits,
-    tile_text_size,
-    tile_bw,
-    x_axis_name,
-    rotate_x_axis_labels) {
+check_input_cat_tiles <- function(btd,
+                                  f,
+                                  integrate_vertical,
+                                  round_digits,
+                                  tile_text_size,
+                                  tile_bw,
+                                  x_axis_name,
+                                  rotate_x_axis_labels) {
   
   check_btd(btd = btd)
   check_f(f = f, btd = btd)
@@ -102,43 +89,37 @@ check_input_cat_tiles <- function(
 }
 
 
-ggplot_cat_tiles <- function(
-    ws, 
-    tile_text_size, 
-    x_axis_name, 
-    tile_bw, 
-    legend,
-    rotate_x_axis_labels) {
+ggplot_cat_tiles <- function(ws, 
+                             tile_text_size, 
+                             x_axis_name, 
+                             tile_bw, 
+                             legend,
+                             rotate_x_axis_labels) {
   
-  w <- ggplot2::ggplot(data = ws)+
-    ggplot2::theme_bw(base_size = 10)+
-    ggplot2::geom_tile(ggplot2::aes_string(x = "feature", y = "cluster", 
-                                           fill = "percent"), col = "white")+
-    ggplot2::geom_text(ggplot2::aes_string(x = "feature", y = "cluster", 
-                                           label = "percent"), col = "black", 
-                       size = tile_text_size)+
-    ggplot2::theme(legend.position = "top",
-                   legend.margin=ggplot2::margin(0,0,0,0),
-                   legend.box.margin=ggplot2::margin(-5,-5,-5,-5))+
-    ggplot2::xlab(label = x_axis_name)+
-    ggplot2::ylab(label = "Bubble")+
-    ggplot2::guides(fill = ggplot2::guide_colourbar(
-      barwidth = 4, barheight = 0.7))
+  w <- ggplot(data = ws)+
+    theme_bw(base_size = 10)+
+    geom_tile(aes(x = feature, y = cluster, fill = percent), 
+              col = "white")+
+    geom_text(aes(x = feature, y = cluster, label = percent), 
+              col = "black", size = tile_text_size)+
+    theme(legend.position = "top",
+          legend.margin=margin(0,0,0,0),
+          legend.box.margin=margin(-5,-5,-5,-5))+
+    xlab(label = x_axis_name)+
+    ylab(label = "Bubble")+
+    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
+  
   if(tile_bw==FALSE) {
-    w <- w+ggplot2::scale_fill_distiller(name = legend,
-                                         palette = "Spectral",
-                                         na.value = 'white')
-                                         #limits = c(0, 100))
+    w <- w+scale_fill_distiller(name = legend, palette = "Spectral", 
+                                na.value = 'white')
   } else {
-    w <- w+ggplot2::scale_fill_gradient(name = legend,
-                                        low = "#f9f9f9",
-                                        high = "#848484",
-                                        na.value = 'white')
-                                        #limits = c(0, 100))
+    w <- w+scale_fill_gradient(name = legend,
+                               low = "#f9f9f9",
+                               high = "#848484",
+                               na.value = 'white')
   }
   if(rotate_x_axis_labels==TRUE) {
-    w <- w+ggplot2::theme(axis.text.x = ggplot2::element_text(
-      angle = 90, vjust = 0.5, hjust=1))
+    w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
   }
   return(w)
 }

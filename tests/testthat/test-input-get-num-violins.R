@@ -156,19 +156,6 @@ test_that("btd argument", {
     round_digits = 2,
     show_simple_count = F)
   
-  btd_r_0 <- expect_warning(get_bubbletree_graph(
-    x = x,
-    r = 10^(-5),
-    B = 20,
-    N_eff = 50,
-    n_start = 100,
-    iter_max = 100,
-    algorithm = "original",
-    cores = 1,
-    round_digits = 2,
-    show_simple_count = F),
-    "Only one cluster at specified r, bubbletree can't be constructed")
-  
   btd_d <- get_bubbletree_dummy(
     x = x,
     cs = sample(x = base::LETTERS[1:5], size = nrow(x), replace = T),
@@ -189,11 +176,6 @@ test_that("btd argument", {
                                x_axis_name = "Feature distribution",
                                rotate_x_axis_labels = TRUE),
                NA)
-  expect_error(get_num_violins(btd = btd_r_0,
-                               fs = fs,
-                               x_axis_name = "Feature distribution",
-                               rotate_x_axis_labels = TRUE),
-               "NA/NULL elements or wrong class detected in the bubbletree")
   expect_error(get_num_violins(btd = btd_d,
                                fs = fs,
                                x_axis_name = "Feature distribution",

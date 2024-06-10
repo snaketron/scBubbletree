@@ -12,7 +12,7 @@ get_dist <- function(B,
                      N_eff,
                      cores,
                      hclust_distance) {
-
+  
   # get centroid distances
   c_dist <- get_c_dist(m = m, c = c, hclust_distance = hclust_distance)
   p_dist <- NA
@@ -64,7 +64,7 @@ get_tree <- function(pd,
     }
   }
   
-  d <- as.dist(d)
+  d <- stats::as.dist(d)
   hc <- hclust(d, method = hclust_method)
   main_ph <- as.phylo(x = hc)
   
@@ -103,11 +103,11 @@ get_ph_support <- function(main_ph, x) {
   for(i in seq_len(length.out = max(x$B))) {
     d <- acast(data = x[x$B == i,], formula = c_i~c_j, value.var = "M")
     d <- stats::as.dist(d)
-
-    hc <- stats::hclust(d, method = "average")
-    ph <- ape::as.phylo(x = hc)
-    ph <- ape::unroot(phy = ph)
-
+    
+    hc <- hclust(d, method = "average")
+    ph <- as.phylo(x = hc)
+    ph <- unroot(phy = ph)
+    
     if(i == 1) {
       boot_ph <- ph
     }
@@ -115,14 +115,14 @@ get_ph_support <- function(main_ph, x) {
       boot_ph <- c(boot_ph, ph)
     }
   }
-
+  
   # compute clade proportions
-  clade_b <- ape::prop.clades(phy = main_ph,
-                              x = boot_ph,
-                              part = NULL,
-                              rooted = ape::is.rooted(main_ph))
-
-
+  clade_b <- prop.clades(phy = main_ph,
+                         x = boot_ph,
+                         part = NULL,
+                         rooted = is.rooted(main_ph))
+  
+  
   # add bootstrap
   main_ph$node.label <- clade_b
   
@@ -152,8 +152,7 @@ get_dendrogram <- function(ph,
   colnames(km_meta) <- c("label", "Cells")
   km_meta$n <- sum(km_meta$Cells)
   km_meta$p <- km_meta$Cells/km_meta$n
-  km_meta$pct <- round(x = km_meta$p*100,
-                             digits = round_digits)
+  km_meta$pct <- round(x = km_meta$p*100, digits = round_digits)
   km_meta$lab_short <- paste0(km_meta$label, " (",
                               round(km_meta$Cells/1000, 
                                     digits = round_digits),
@@ -161,14 +160,12 @@ get_dendrogram <- function(ph,
   km_meta$lab_long <- paste0(km_meta$label, " (", 
                              km_meta$Cells, ', ',
                              km_meta$pct, "%)")
-
+  
   # build ggtree
-  tree <- ggtree::ggtree(ph, linetype='solid')%<+%km_meta+
-    geom_point2(mapping = ggplot2::aes_string(subset="isTip==FALSE"),
-                size = 0.5, col = "black")+
-    ggtree::layout_rectangular()+
-    ggtree::geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
-                  fill = "white", shape = 21)+
+  tree <- ggtree(ph, linetype='solid')%<+%km_meta+
+    geom_point2(mapping = aes(subset=isTip==FALSE),size = 0.5, col = "black")+
+    layout_rectangular()+
+    geom_tippoint(aes(size = Cells),fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree2(plot.margin=margin(6,100,6,6),
                 legend.position = "top",
@@ -176,26 +173,25 @@ get_dendrogram <- function(ph,
                 legend.box.margin=margin(-10,-10,-10,-10),
                 legend.spacing.x = unit(0.2, 'cm'),
                 legend.spacing.y = unit(0, 'cm'))
-
+  
   if(show_simple_count) {
     tree <- tree+
-      geom_tiplab(mapping = ggplot2::aes_string(label="lab_short"),
-        color='black', size = 2.75, hjust=-0.25, align = TRUE)
+      geom_tiplab(aes(label=lab_short),
+                  color='black', size = 2.75, hjust=-0.25, align = TRUE)
   } else {
     tree <- tree+
-      geom_tiplab(mapping = ggplot2::aes_string(label="lab_long"),
-        color='black', size = 2.75, hjust=-0.25, align = TRUE)
+      geom_tiplab(aes(label=lab_long),
+                  color='black', size = 2.75, hjust=-0.25, align = TRUE)
   }
-
+  
   tree <- tree+
     geom_nodelab(geom='text', color = "#4c4c4c" ,size = 2.75, hjust=-0.2,
-              mapping=ggplot2::aes_string(label="label",subset="isTip==FALSE"))
-
+                 mapping = aes(label=label,subset=isTip==FALSE))
+  
   tree <- tree+
-    ggplot2::scale_radius(range = c(1, 4), limits = c(0, max(km_meta$Cells)))+
-    ggplot2::guides(size = ggplot2::guide_legend(
-      title = "Cells", nrow = 2, byrow = TRUE))
-
+    scale_radius(range = c(1, 4), limits = c(0, max(km_meta$Cells)))+
+    guides(size = guide_legend(title = "Cells", nrow = 2, byrow = TRUE))
+  
   # merge order of tips in the tree with metadata
   q <- tree$data
   q <- q[order(q$y, decreasing = FALSE), ]
@@ -203,7 +199,7 @@ get_dendrogram <- function(ph,
   tips <- data.frame(label = tips,tree_order = seq_len(length.out=length(tips)))
   km_meta <- merge(x = km_meta, y = tips, by = "label")
   km_meta <- km_meta[order(km_meta$tree_order, decreasing = TRUE), ]
-
+  
   return(list(tree = tree, tree_meta = km_meta))
 }
 
@@ -338,14 +334,14 @@ get_p_dist_summary <- function(p_dist) {
 # non-matching is provided, main function input check will catch
 # this and report error.
 map_louvain_algname <- function(x) {
-
+  
   if(missing(x)) {
     stop("x is missing")
   }
   if(is.numeric(x)) {
     return(x)
   }
-
+  
   if(x=="original") {
     return(1)
   }
@@ -371,7 +367,7 @@ get_se <- function(x) {
     se <- NA
   }
   else {
-    se <- stats::sd(x)/sqrt(length(x))
+    se <- sd(x)/sqrt(length(x))
   }
   return(se)
 }
@@ -380,9 +376,7 @@ get_se <- function(x) {
 # Short description:
 # Compute pairwise euclidean distances between matrices x & y
 get_euc <- function(x,y) {
-  return(sqrt(outer(rowSums(x^2),
-                    rowSums(y^2), '+') -
-                tcrossprod(x, 2 * y)))
+  return(sqrt(outer(rowSums(x^2), rowSums(y^2), '+') - tcrossprod(x, 2 * y)))
 }
 
 
@@ -390,13 +384,10 @@ get_euc <- function(x,y) {
 # Compute pairwise manhattan distances between matrices x & y
 get_manh <- function(x,y) {
   get_manh_single <- function(i, x, y) {
-    return(apply(X = abs(x[i,]-y),
-                 MARGIN = 1, FUN = sum))
+    return(apply(X = abs(x[i,]-y), MARGIN = 1, FUN = sum))
   }
-  return(do.call(rbind,
-                 lapply(X = 1:nrow(x),
-                        x = x, y = y,
-                        FUN = get_manh_single)))
+  return(do.call(rbind, lapply(X = 1:nrow(x), x = x, y = y, 
+                               FUN = get_manh_single)))
 }
 
 
