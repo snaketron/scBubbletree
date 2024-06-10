@@ -13,11 +13,9 @@ compare_bubbletrees <- function(btd_1,
   
   # create tree 1
   t1 <- ggtree(btd_1$ph$main_ph, linetype = "solid")%<+%btd_1$tree_meta+
-    geom_point2(mapping = ggplot2::aes_string(subset = "isTip==FALSE"),
-                size = 0.5, col = "black")+
+    geom_point2(aes(subset = isTip==FALSE),size = 0.5, col = "black")+
     layout_rectangular()+
-    geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
-                  fill = "white", shape = 21)+
+    geom_tippoint(aes(size = Cells), fill = "white", shape = 21)+
     theme_bw(base_size = 10)+
     theme_tree(plot.margin = margin(6, 100, 6, 6),
                legend.position = "left",
@@ -25,24 +23,19 @@ compare_bubbletrees <- function(btd_1,
                legend.box.margin = margin(-10, -10, -10, -10),
                legend.spacing.x = unit(0.2, "cm"),
                legend.spacing.y = unit(0, "cm"))+
-    geom_tiplab(mapping = ggplot2::aes_string(label = "lab_short"),
-                color = "black", size = tile_text_size,
-                hjust = -0.25, align = TRUE)+
+    geom_tiplab(mapping = aes(label = lab_short), color = "black", 
+                size = tile_text_size, hjust = -0.25, align = TRUE)+
     scale_radius(range = c(1, 4), limits = c(0, max(btd_1$tree_meta$Cells)))+
     geom_nodelab(geom='text', color = "#4c4c4c", size = 2.75, hjust=-0.2,
-                 mapping=ggplot2::aes_string(label="label",
-                                             subset="isTip==FALSE"))
+                 aes(label=label, subset=isTip==FALSE))
   
   # create tree 2
   t2 <- ggtree(btd_2$ph$main_ph, linetype = "solid")%<+%btd_2$tree_meta+
-    geom_point2(mapping = ggplot2::aes_string(subset = "isTip==FALSE"),
-                size = 0.5, col = "black")+
-    geom_tiplab(mapping = ggplot2::aes_string(label = "lab_short"),
-                color = "black", size = tile_text_size, vjust = 0,
-                align = TRUE, offset = +5, angle = 90)+
+    geom_point2(aes(subset = isTip==FALSE), size = 0.5, col = "black")+
+    geom_tiplab(aes(label = lab_short), color = "black", size = tile_text_size, 
+                vjust = 0, align = TRUE, offset = +5, angle = 90)+
     hexpand(.6)+
-    geom_tippoint(mapping = ggplot2::aes_string(size = "Cells"),
-                  fill = "white", shape = 21)+
+    geom_tippoint(mapping = aes(size = Cells), fill = "white", shape = 21)+
     theme_bw(base_size = 10) +
     theme_tree(plot.margin = margin(15, 6, 6, 6),
                legend.position = "bottom",
@@ -52,8 +45,7 @@ compare_bubbletrees <- function(btd_1,
                legend.spacing.y = unit(0, "cm"))+
     scale_radius(range = c(1, 4), limits = c(0, max(btd_2$tree_meta$Cells)))+
     geom_nodelab(geom='text', color = "#4c4c4c", size = 2.75, hjust=-0.2,
-                 mapping=ggplot2::aes_string(label="label",
-                                             subset="isTip==FALSE"))+
+                 aes(label=label, subset=isTip==FALSE))+
     coord_flip()
   
   # compute pairwise JD

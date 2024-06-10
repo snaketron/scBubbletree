@@ -36,7 +36,7 @@ compare_bubbletrees(btd_1,
 \arguments{
 \item{btd_1}{bubbletree object}
 \item{btd_2}{bubbletree object}
-\item{tile_text_size}{integer, size of tile labels}
+\item{tile_text_size}{integer, size of tile labels (default = 3)}
 \item{tile_bw}{logical, tile grayscale (tile_bw = TRUE) vs. color
 (tile_bw = FALSE, default)}
 \item{ratio_heatmap}{nummeric, probability (default = 0.5) that dictates the 
@@ -106,8 +106,8 @@ btd_comparison <- compare_bubbletrees(btd_1 = btd_1,
 # plot
 btd_comparison$tree_comparison
 
-# data.frame of cooccurrence data
-btd_comparison$cooccurrence
+# data.frame of heatmap data
+btd_comparison$m
 }
 
 \seealso{get_k, get_bubbletree_dummy, get_bubbletree_graph,

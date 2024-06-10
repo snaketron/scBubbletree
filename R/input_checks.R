@@ -447,9 +447,7 @@ check_btd <- function(btd) {
   if(missing(btd)) {
     stop("bubbletree (btd) input not found")
   }
-  if(any(is.na(btd))||
-     is.null(btd)||
-     any(is.na(class(btd)))||
+  if(is.null(btd)||
      is.null(class(btd))||
      (is(btd, "bubbletree_kmeans")==FALSE&
       is(btd, "bubbletree_louvain")==FALSE&
@@ -463,7 +461,11 @@ check_btd <- function(btd) {
     stop("NA/NULL/Inf cluster assignments present in bubbletree")
   }
   
+  
   # check btd$A
+  if(any(is.na(btd$A))|is.null(btd$A)) {
+    stop("btd$A must be numeric matrix")
+  }
   if(is.numeric(btd$A)==FALSE) {
     stop("btd$A must be numeric matrix")
   }
@@ -486,44 +488,52 @@ check_btd <- function(btd) {
     warning("more columns (features) than rows (cells) in btd$A")
   }
   if(nrow(btd$A)!=length(btd$cluster)) {
-    stop("problem in btd: nrow(btd$A)!=length(btd$cluster)")
+    stop("problem in btd nrow(btd$A)!=length(btd$cluster)")
+  }
+  
+  if(any(is.na(btd$k))|is.null(btd$k)) {
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
   }
   if(is.numeric(btd$k)==FALSE) {
-    stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
   }
   if(length(btd$k)!=1) {
-    stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
   }
   if(btd$k<=1) {
-    stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
   }
   if(is.infinite(btd$k)==TRUE) {
-    stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
   }
   if(btd$k%%1!=0) {
-    stop("problem in btd: btd$k must be a positive integer (k>=2)")
+    stop("problem in btd btd$k must be a positive integer (k>=2)")
+  }
+  
+  
+  if(all(is.na(btd$ph))|is.null(btd$ph)) {
+    stop("problem in btd btd$ph is NA or NULL")
+  }
+  if(any(is.na(btd$ph$main_ph))|is.null(btd$ph$main_ph)) {
+    stop("problem in btd btd$ph$main_ph is not phylo class")
   }
   if(is(btd$ph$main_ph, "phylo")==FALSE) {
-    stop("problem in btd: btd$ph$main_ph is not phylo class")
+    stop("problem in btd btd$ph$main_ph is not phylo class")
   }
-  # if(is(btd$ph$boot_ph, "multiPhylo")==FALSE) {
-  #   stop("problem in btd: btd$ph$boot_ph is not multiPhylo class")
-  # }
   if(length(btd$cluster)!=nrow(btd$A)) {
-    stop("problem in btd: length(btd$cluster)!=nrow(btd$A)")
+    stop("problem in btd length(btd$cluster)!=nrow(btd$A)")
   }
   if(btd$k!=length(unique(btd$cluster))) {
-    stop("problem in btd: k != length(unique(btd$cluster))")
+    stop("problem in btd k != length(unique(btd$cluster))")
   }
-  if(is.data.frame(btd$tree_meta)==FALSE||
-     nrow(btd$tree_meta)<=0) {
-    stop("problem in btd: btd$tree_meta is not a data.frame")
+  if(is.data.frame(btd$tree_meta)==FALSE||nrow(btd$tree_meta)<=0) {
+    stop("problem in btd btd$tree_meta is not a data.frame")
   }
   if(btd$k!=nrow(btd$tree_meta)) {
-    stop("problem in btd: k!=nrow(btd$tree_meta)")
+    stop("problem in btd k!=nrow(btd$tree_meta)")
   }
   if(any(is.na(btd$tree_meta))) {
-    stop("problem in btd: NAs in btd$tree_meta")
+    stop("problem in btd NAs in btd$tree_meta")
   }
 }
 

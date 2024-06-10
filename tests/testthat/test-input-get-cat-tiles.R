@@ -361,7 +361,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
+    "btd\\$A must be numeric matrix")
   btd_test <- btd
   btd_test$A <- 1
   expect_error(get_cat_tiles(
@@ -388,7 +388,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd: btd\\$k must be a positive integer \\(k>=2\\)")
+    "problem in btd btd\\$k must be a positive integer \\(k>=2\\)")
   btd_test <- btd
   btd_test$k <- NA
   expect_error(get_cat_tiles(
@@ -400,7 +400,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
+    "problem in btd btd\\$k must be a positive integer \\(k>=2\\)")
   btd_test <- btd
   btd_test$k <- 1
   expect_error(get_cat_tiles(
@@ -412,7 +412,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd\\: btd\\$k must be a positive integer \\(k>=2\\)")
+    "problem in btd btd\\$k must be a positive integer \\(k>=2\\)")
   btd_test <- btd
   btd_test$k <- c(T, F)
   expect_error(get_cat_tiles(
@@ -424,11 +424,11 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd\\: btd\\$k must be a positive integer \\(k>=2\\)")
+    "problem in btd btd\\$k must be a positive integer \\(k>=2\\)")
 
 
   btd_test <- btd
-  btd_test$km <- NA
+  btd_test$k <- NA
   expect_error(get_cat_tiles(
     btd = btd_test,
     f = f,
@@ -438,9 +438,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
-
-
+    "problem in btd btd\\$k must be a positive integer \\(k>=2\\)")
 
   btd_test <- btd
   btd_test$ph <- NULL
@@ -453,7 +451,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd: btd\\$ph\\$main_ph is not phylo class")
+    "problem in btd btd\\$ph is NA or NULL")
   btd_test <- btd
   btd_test$ph <- NA
   expect_error(get_cat_tiles(
@@ -465,8 +463,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
-
+    "problem in btd btd\\$ph is NA or NULL")
 
   btd_test <- btd
   btd_test$pair_dist <- NA
@@ -479,8 +476,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
-
+    NA)
 
 
   btd_test <- btd
@@ -505,8 +501,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
-
+    "problem in btd nrow\\(btd\\$A\\)!=length\\(btd\\$cluster\\)")
 
 
   btd_test <- btd
@@ -520,7 +515,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd: btd\\$tree_meta is not a data.frame")
+    "problem in btd btd\\$tree_meta is not a data.frame")
   btd_test <- btd
   btd_test$tree_meta <- NA
   expect_error(get_cat_tiles(
@@ -532,7 +527,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "NA/NULL elements or wrong class detected in the bubbletree")
+    "problem in btd btd\\$tree_meta is not a data.frame")
   btd_test <- btd
   btd_test$tree_meta <- 1
   expect_error(get_cat_tiles(
@@ -544,7 +539,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd: btd\\$tree_meta is not a data.frame")
+    "problem in btd btd\\$tree_meta is not a data.frame")
 
 })
 

@@ -30,4 +30,5 @@ importFrom(scales, pretty_breaks)
 importFrom(Seurat, FindClusters)
 importFrom(Seurat, FindNeighbors)
 importFrom(proxy, dist)
-importFrom(stats, aggregate)
+importFrom("stats", "hclust", "kmeans", "median", "na.omit", "runif",
+                "sd", "var", aggregate)

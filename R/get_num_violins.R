@@ -93,7 +93,7 @@ ggplot_num_violins <- function(ws,
     theme(strip.text.x = element_text(margin = margin(0.01,0,0.01,0, "cm")),
           legend.margin=margin(t = 0,r = 0,b = 2,l = 0),
           legend.box.margin=margin(-10,-10,-10,-10))+
-    geom_violin(data = ws, aes(x = "cluster", y = "value"), fill = NA)
+    geom_violin(data = ws, aes(x = cluster, y = value), fill = NA)
   
   if(rotate_x_axis_labels==TRUE) {
     w <- w+theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
