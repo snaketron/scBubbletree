@@ -343,30 +343,42 @@ is necessary to make sure that k-means converges.
 
 
 ## 3. hierarchical grouping
-After the clustering is complete we will organize the bubbles as leaves of
-a hierarchical dendrogram (=bubbletree). For this, we will first compute 
-inter-cluster distances (e.g. euclidean or Manhattan) between the centroids 
-of each clusters computed from $A^{n\times f}$.  Distances between individual 
-bubbles are visualized quantitatively as sums of branch lengths in root-to-leaf 
-direction between these bubbles.
+After clustering, `r Biocpkg("scBubbletree")` organizes the bubbles as leaves 
+of a hierarchical dendrogram (=bubbletree). The distance between clusters 
+$i$ and $j$ can be computed by estimating the average Euclidean distance 
+between all pairs of cells in $C_{i}^{n_i\times f}$ and $C_{j}^{n_j\times f}$. 
+However, this operation has considerable memory and computational cost. To 
+avoid such high memory demands, `r Biocpkg("scBubbletree")` employs a 
+bootstrapping approach with $B$ iterations
 
-To assess the robustness of the bubbletree topology, `r Biocpkg("scBubbletree")`
-can perform $B$ bootstrap iterations (e.g. $B=200$). In iteration $b$, we 
-draw a random subset of $N_\textit{eff}$ (default $N_\textit{eff}=200$) cells 
-with replacement from each cluster. Next, for each pair of cells in cluster $i$
-and $j$ we compute their distance. The distance metric is defined by the user.
-From the inter-cell distances we estimate the average inter-bubble distance, 
-and we use this data to populate the distance matrix ($D^{k\times k}_b$), which 
-is then provided as input for hierarchical clustering with an user-specified 
-linkage method to generate a hierarchical clustering dendrogram $H_b$. 
+In iteration $b$, the algorithm draws with replacement a random subset 
+with $n'_i=\min(n_i, N_{\textit{eff}})$ and $n'_j=\min(n_j, N_{\textit{eff}})$ 
+number of cells from cluster $i$ and $j$, respectively, where $N_{\textit{eff}}$
+is a user-defined parameter that controls the maximum number of cells to be 
+drawn from each cluster. The algorithm computes the average distance between 
+cluster $i$ and $j$ based on $n'_in'_j$ inter-cell Euclidean distances, and 
+stores the result in distance matrix $D^{k\times k}_b$: 
+\begin{equation}
+	D_{b}^{ij} = \dfrac{1}{n'_in'_j}\sum\limits_{\substack{\forall 
+	\mathbf{x}\in X\\ \forall \mathbf{y}\in Y}}\sqrt{(\mathbf{x}-\mathbf{y})^2},
+\end{equation}
+where $X^{n'_i \times f}$ and $Y^{n'_j \times f}$ are subsets drawn from 
+$C_{i}^{n_i\times f}$ and $C_{j}^{n_j\times f}$, respectively, and 
+$\mathbf{x}$ and $\mathbf{y}$ are cell transcriptome features (row vectors) 
+from each matrix. At the end of bootstrap iteration $b$, the distance matrix 
+$D^{k\times k}_{b}$ is provided as input for hierarchical clustering with 
+average linkage to generate the dendrogram $H_b$. 
 
-The collection of dendrograms ($H_b$) are used to quantify the robustness 
-of the bubbletree topology, i.e. to count the number of times each branch in 
-the bubbletree is found among the topologies of the bootstrap dendrograms.
-Branches can have has variable degrees of support ranging between close to 0 
-(no support) and $B$ (complete support). 
-
-Steps 2.1 and 3. are performed next
+From the collection of $B$ distance matrices we compute an average distance 
+matrix ($\hat{D}^{k\times k}$), and use $\hat{D}^{k\times k}$ to generate a 
+consensus hierarchical dendrogram (bubbletree; $\hat{H}$) by hierarchical 
+clustering with average linkage. The collection of bootstrap dendrograms are 
+used to assess the robustness of the bubbletree topology by quantifying the 
+number of times each branch in $\hat{H}$ was found among the topologies of 
+the bootstrap dendrograms. Branches can have variable degrees of support 
+ranging between values close to 0 (no support) and $B$ (complete support). 
+Distances between individual bubbles are visualized quantitatively as sums 
+of branch lengths in root-to-leaf direction between these bubbles.
 
 ```{r}
 k5_kmeans <- get_bubbletree_kmeans(x = A,

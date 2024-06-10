@@ -50,6 +50,16 @@ get_bubbletree_kmeans <- function(x,
                  cs = km$cluster, round_digits = round_digits, 
                  show_simple_count = show_simple_count, type = "p")
   
+  # which ph to use as main?
+  if(B==0) {
+    ph <- tc$ph
+    t <- tc$t
+  } 
+  else {
+    ph <- tp$ph
+    t <- tp$t
+  }
+  
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
                     iter_max = iter_max,
@@ -65,13 +75,13 @@ get_bubbletree_kmeans <- function(x,
                    list(A = x,
                         k = k,
                         km = km,
-                        ph = tc$ph,
-                        alt_ph = tp$ph,
+                        ph = ph,
+                        ph_data = list(ph_c = tc, ph_p = tp),
                         pair_dist = pd,
                         cluster = km$cluster,
                         input_par = input_par,
-                        tree = tc$t$tree,
-                        tree_meta = tc$t$tree_meta)))
+                        tree = t$tree,
+                        tree_meta = t$tree_meta)))
 }
 
 
