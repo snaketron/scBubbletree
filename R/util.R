@@ -43,6 +43,56 @@ get_dist <- function(B,
 }
 
 
+get_tree <- function(pd,
+                     B,
+                     hclust_method, 
+                     cs, 
+                     round_digits, 
+                     show_simple_count, 
+                     type = "c") {
+  
+  if(type == "c") {
+    d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
+               fun.aggregate = mean)
+  }
+  else if(type == "p") {
+    if(B>0) {
+      d <- acast(data = pd$p_dist_summary, formula = c_i~c_j, 
+                 value.var = "M", fun.aggregate = mean)
+    } else {
+      return(list(ph = NA, t = NA))
+    }
+  }
+  
+  d <- as.dist(d)
+  hc <- hclust(d, method = hclust_method)
+  main_ph <- as.phylo(x = hc)
+  
+  if(length(unique(cs)) <= 2) {
+    t <- get_dendrogram(ph = main_ph,
+                        cluster = cs,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+    
+    ph <- list(main_ph = main_ph, boot_ph = NA)
+  }
+  else {
+    main_ph <- unroot(phy = main_ph)
+    
+    # get branch support
+    ph <- get_ph_support(main_ph = main_ph, x = pd$p_dist)
+    
+    # build bubbletree
+    t <- get_dendrogram(ph = ph$main_ph,
+                        cluster = cs,
+                        round_digits = round_digits,
+                        show_simple_count = show_simple_count)
+  }
+  
+  return(list(ph = ph, t = t))
+}
+
+
 get_ph_support <- function(main_ph, x) {
   # if B=0, then no support values will be provided
   if(is.data.frame(x)==FALSE) {
@@ -156,7 +206,6 @@ get_dendrogram <- function(ph,
 
   return(list(tree = tree, tree_meta = km_meta))
 }
-
 
 
 # Short description:

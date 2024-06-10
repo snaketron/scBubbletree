@@ -49,72 +49,21 @@ get_bubbletree_graph <- function(x,
   
   # clusters
   cs <- as.character(lc[,1])
-  cs_unique <- length(unique(cs))
-  
-  if(cs_unique==1) {
-    warning("Only one cluster at specified r, bubbletree can't be constructed")
-    # collect input parameters: can be used for automated update
-    input_par <- list(n_start = n_start,
-                      iter_max = iter_max,
-                      N_eff = N_eff,
-                      B = B,
-                      round_digits = round_digits,
-                      show_simple_count = show_simple_count,
-                      algorithm = algorithm,
-                      hclust_method = hclust_method,
-                      hclust_distance = hclust_distance)
-    
-    return(structure(class = "bubbletree_louvain",
-                     list(A = x,
-                          k = 1,
-                          r = r,
-                          ph = NA,
-                          pair_dist = NA,
-                          cluster = cs,
-                          input_par = input_par,
-                          tree = NA,
-                          tree_meta = NA)))
-  }
-  
   
   # pairwise distances
   if(verbose) {
     message("Bubbletree construction ...")
   }
-  pd <- get_dist(B = B,
-                 m = x,
-                 c = cs,
-                 N_eff = N_eff,
-                 cores = cores,
+  pd <- get_dist(B = B, m = x, c = cs, N_eff = N_eff, cores = cores,
                  hclust_distance = hclust_distance)
   
-  # compute hierarchical clustering dendrogram
-  d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
-             fun.aggregate = mean)
-  d <- as.dist(d)
-  hc <- hclust(d, method = hclust_method)
-  main_ph <- as.phylo(x = hc)
+  tc <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = cs, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "c")
   
-  if(length(unique(cs)) <= 2) {
-    t <- get_dendrogram(ph = main_ph,
-                        cluster = cs,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-    
-    ph <- list(main_ph = main_ph, boot_ph = NA)
-  }
-  else {
-    main_ph <- unroot(phy = main_ph)
-    
-    # get branch support
-    ph <- get_ph_support(main_ph = main_ph, x = pd$p_dist)
-    
-    # build bubbletree
-    t <- get_dendrogram(ph = ph$main_ph,
-                        cluster = cs,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-  }
+  tp <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = cs, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "p")
   
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
@@ -131,12 +80,13 @@ get_bubbletree_graph <- function(x,
                    list(A = x,
                         k = length(unique(cs)),
                         r = r,
-                        ph = ph,
+                        ph = tc$ph,
+                        alt_ph = tp$ph,
                         pair_dist = pd,
                         cluster = cs,
                         input_par = input_par,
-                        tree = t$tree,
-                        tree_meta = t$tree_meta)))
+                        tree = tc$t$tree,
+                        tree_meta = tc$t$tree_meta)))
 }
 
 # check input param

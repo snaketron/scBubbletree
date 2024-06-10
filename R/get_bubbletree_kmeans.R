@@ -32,7 +32,7 @@ get_bubbletree_kmeans <- function(x,
   if(verbose) {
     message("Clustering ...")
   }
-  km <- kmeans(x = x, centers = k, nstart = n_start, iter.max = iter_max,
+  km <- kmeans(x = x, centers = k, nstart = n_start, iter.max = iter_max, 
                algorithm = kmeans_algorithm)
   
   # pairwise distances
@@ -42,33 +42,13 @@ get_bubbletree_kmeans <- function(x,
   pd <- get_dist(B = B, m = x, c = km$cluster, N_eff = N_eff, cores = cores,
                  hclust_distance = hclust_distance)
   
-  # compute hierarchical clustering dendrogram
-  d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
-             fun.aggregate = mean)
-  d <- as.dist(d)
-  hc <- hclust(d, method = hclust_method)
-  main_ph <- as.phylo(x = hc)
+  tc <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = km$cluster, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "c")
   
-  if(k==2) {
-    t <- get_dendrogram(ph = main_ph,
-                        cluster = km$cluster,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-    
-    ph <- list(main_ph = main_ph, boot_ph = NA)
-  }
-  else {
-    main_ph <- unroot(phy = main_ph)
-    
-    # get branch support
-    ph <- get_ph_support(main_ph = main_ph, x = pd$p_dist)
-    
-    # build bubbletree
-    t <- get_dendrogram(ph = ph$main_ph,
-                        cluster = km$cluster,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-  }
+  tp <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = km$cluster, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "p")
   
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = n_start,
@@ -82,15 +62,16 @@ get_bubbletree_kmeans <- function(x,
                     hclust_distance = hclust_distance)
   
   return(structure(class = "bubbletree_kmeans",
-                         list(A = x,
-                              k = k,
-                              km = km,
-                              ph = ph,
-                              pair_dist = pd,
-                              cluster = km$cluster,
-                              input_par = input_par,
-                              tree = t$tree,
-                              tree_meta = t$tree_meta)))
+                   list(A = x,
+                        k = k,
+                        km = km,
+                        ph = tc$ph,
+                        alt_ph = tp$ph,
+                        pair_dist = pd,
+                        cluster = km$cluster,
+                        input_par = input_par,
+                        tree = tc$t$tree,
+                        tree_meta = tc$t$tree_meta)))
 }
 
 

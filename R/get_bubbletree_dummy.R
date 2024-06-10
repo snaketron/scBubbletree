@@ -29,33 +29,13 @@ get_bubbletree_dummy <- function(x,
   pd <- get_dist(B = B, m = x, c = cs, N_eff = N_eff, cores = cores,
                  hclust_distance = hclust_distance)
   
-  # compute hierarchical clustering dendrogram
-  d <- acast(data = pd$c_dist, formula = c_i~c_j, value.var = "M", 
-             fun.aggregate = mean)
-  d <- as.dist(d)
-  hc <- hclust(d, method = hclust_method)
-  ph <- as.phylo(x = hc)
-  main_ph <- unroot(phy = ph)
+  tc <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = cs, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "c")
   
-  if(B==0) {
-    # build tree
-    t <- get_dendrogram(ph = main_ph,
-                        cluster = cs,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-    
-    ph <- list(main_ph = main_ph, boot_ph = NA)
-  } 
-  else {
-    # get branch support
-    ph <- get_ph_support(main_ph = main_ph, x = main_ph$p_dist)
-    
-    # build treetree
-    t <- get_dendrogram(ph = ph$main_ph,
-                        cluster = cs,
-                        round_digits = round_digits,
-                        show_simple_count = show_simple_count)
-  }
+  tp <- get_tree(pd = pd, B = B, hclust_method = hclust_method, 
+                 cs = cs, round_digits = round_digits, 
+                 show_simple_count = show_simple_count, type = "p")
   
   # collect input parameters: can be used for automated update
   input_par <- list(n_start = NA,
@@ -71,14 +51,14 @@ get_bubbletree_dummy <- function(x,
   return(structure(class = "bubbletree_dummy",
                    list(A = x,
                         k = length(unique(cs)),
-                        ph = ph,
+                        ph = tc$ph,
+                        alt_ph = tp$ph,
                         pair_dist = pd,
                         cluster = cs,
                         input_par = input_par,
-                        tree = t$tree,
-                        tree_meta = t$tree_meta)))
+                        tree = tc$t$tree,
+                        tree_meta = tc$t$tree_meta)))
 }
-
 
 
 # check input param

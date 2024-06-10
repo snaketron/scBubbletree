@@ -215,9 +215,9 @@ Lets run `get_k` now:
 b_k <- get_k(B_gap = 5,
              ks = 1:10,
              x = A,
-             n_start = 50, 
+             n_start = 50,
              iter_max = 200,
-             kmeans_algorithm = "MacQueen", 
+             kmeans_algorithm = "MacQueen",
              cores = 1)
 ```
 
@@ -260,7 +260,7 @@ for each $r$ (or the number of communities $k'$ detected at resolution $r$).
 b_r <- get_r(B_gap = 5,
              rs = 10^seq(from = -4, to = 0, by = 0.5),
              x = A,
-             n_start = 10, 
+             n_start = 10,
              iter_max = 50,
              algorithm = "original",
              knn_k = 50,
@@ -269,7 +269,7 @@ b_r <- get_r(B_gap = 5,
 
 
 Once again, the Gap statistic and WCSS curves have noticeable knees (elbows) 
-at $k'=5$ ($r=0.0025$). Means (points) and 95% confidence intervals are shown 
+at $k'=5$ ($r=0.003$). Means (points) and 95% confidence intervals are shown 
 for the Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
 
 ```{r}
@@ -313,7 +313,7 @@ Lets use $r=0.1$ for clustering.
 
 ```{r, fig.width=4, fig.height=3, fig.align='center'}
 ggplot(data = b_r$gap_stats_summary)+
-    geom_point(aes(x = r, y = k), size = 1)+
+    geom_point(aes(x = r, y = k))+
     xlab(label = "r")+
     ylab(label = "k'")+
   scale_x_log10()+
