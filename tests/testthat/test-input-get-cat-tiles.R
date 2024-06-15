@@ -451,7 +451,7 @@ test_that("btd argument", {
     tile_bw = F,
     x_axis_name = "Feature",
     rotate_x_axis_labels = T),
-    "problem in btd btd\\$ph is NA or NULL")
+    "problem in btd btd\\$ph\\$main_ph is not phylo class")
   btd_test <- btd
   btd_test$ph <- NA
   expect_error(get_cat_tiles(
