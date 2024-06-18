@@ -49,7 +49,7 @@ library(patchwork)
 
 # Data[^1]
 
-Here we will analyze a scRNA-seq dataset containing a mixture of 3,918 cells 
+Here we will analyze a scRNA-seq data[^1] containing a mixture of 3,918 cells 
 from five human lung adenocarcinoma cell lines (HCC827, H1975, A549, H838 and 
 H2228). The dataset is available here[^2].
   
@@ -142,14 +142,35 @@ projections (embeddings) in 15-dimensional feature space, $A^{3,918\times 15}$.
 ```
 
 
-Load the processed PC matrix and the meta data
+Load the processed PCA matrix and the meta data
 
 ```{r}
+# Load the data
 data("d_ccl", package = "scBubbletree")
-A <- d_ccl$A
-m <- d_ccl$m
-e <- d_ccl$e
 ```
+
+```{r}
+# Extract the 15-dimensional PCA matrix A
+# A has n=cells as rows, f=15 features as columns (e.g. from PCA)
+A <- d_ccl$A
+dim(A)
+```
+
+```{r}
+# Extract the meta-data. For each cell this data contains some 
+# additional information. Inspect this data now!
+m <- d_ccl$m
+colnames(m)
+```
+
+```{r}
+# Extract the normalized expressions of five marker genes. Rows
+# are cells.
+e <- d_ccl$e
+colnames(e)
+```
+
+
 
 
 
@@ -161,11 +182,6 @@ As main input `r Biocpkg("scBubbletree")` uses matrix $A^{n\times f}$ which
 represents a low-dimensional projection of the original scRNA-seq data, with 
 $n$ rows as cells and $f$ columns as low-dimension features. Here we use
 $A^{3,918\times 15}$ as input.
-
-```{r}
-# A has n=cells as rows, f=features as columns (e.g. from PCA)
-dim(A)
-```
 
 **Important remark about $A$**: the `r Biocpkg("scBubbletree")` workflow 
 works directly with the numeric matrix $A^{n\times f}$ and is agnostic to 
@@ -184,41 +200,33 @@ The `r Biocpkg("scBubbletree")` workflow performs the following steps:
   3. hierarchical organization of clusters (bubbles)
   4. visualization
 
-## 1. determine the clustering resolution
-If we use graph-based community detection (GCD, **recommended for scRNA-seq**) 
-with e.g. the Louvain method, then we need to find appropriate value for the 
-resolution parameter $r$. Otherwise, we can use the simpler k-means clustering 
-algorithm in which case we need to find an appropriate value of the number of 
-clusters $k$.
+## Determine the clustering resolution (**step 1**)
+How many clusters (cell types) are there are in the data?
 
-### 1.1 determining the resolution parameter $r$ for Louvain clustering
+Before we apply clustering, we must first find appropriate value for the 
+resolution parameter $k$ (if we intend to use k-means) or $r$ (if we intend 
+to use graph based community detection approaches such as Louvain). In the 
+next we will first perform Louvain clustering and then k-means clustering.
+
+## Determining the resolution parameter $r$ for Louvain clustering
+How many clusters (cell types) are there are in the data?
+
 For Louvain clustering we need to select a clustering resolution $r$. Higher 
 resolutions lead to more communities ($k'$) and lower resolutions lead to fewer 
 communities. 
 
 To find a reasonable value of $r$ we can study the literature or databases 
 such as the human protein atlas database (HPA). We can also use the function 
-`get_r` for data-driven inference of $r$ based on the Gap statistic and the 
-within-cluster sum of squares (WCSS)
+`get_r` for data-driven inference of $r$ based on the Gap statistic.
 
 Lets use the function `get_r` for data-driven estimation of $r$ based on 
 the Gap statistic and WCSS. As input we need to provide the matrix $A$ and 
-a vector of $r$s to inspect. Here the $r$s are:
-
-```{r, eval = FALSE}
-10^seq(from = -4, to = 0.5, by = 0.5)
-```
-
-
-```{r, include = FALSE}
-knitr::kable(10^seq(from = -4, to = 0.5, by = 0.5), col.names = "r")
-```
-
-For more/less detailed analysis, you can should decrease/increase the 
-increment number (`by`). See the help function `?get_r` to learn more 
+a vector of $r$s to inspect. See the help function `?get_r` to learn more 
 about the remaining input parameters. The output of `get_r` is the Gap 
 statistic and WCSS estimate for each $r$ (or the number of communities $k'$ 
 detected at resolution $r$).
+
+Lets run `get_r` now [this might take a minute]:
 
 ```{r}
 b_r <- get_r(B_gap = 5,
@@ -232,68 +240,67 @@ b_r <- get_r(B_gap = 5,
 ```
 
 
-The Gap statistic and WCSS curves have noticeable knees (elbows) at $k'=5$ 
-($r=0.003$). Means (points) and 95% confidence intervals are shown for the 
-Gap statistic at each $k$ computed using `B_gap`=5 MCMC simulations.
+The Gap curve has noticeable knee (elbow) at $r \approx 0.003$ (dashed gray 
+line). Means (points) and 95% confidence intervals are shown for the Gap 
+statistic at each $r$ using `B_gap`=5 MCMC simulations.
 
-```{r}
-g0_r <- (ggplot(data = b_r$gap_stats_summary)+
-  geom_line(aes(x = k, y = gap_mean))+
-  geom_point(aes(x = k, y = gap_mean), size = 1)+
-  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ylab(label = "Gap")+
-  xlab(label = "k'")|
+```{r, fig.width=4, fig.height=3}
 ggplot(data = b_r$gap_stats_summary)+
   geom_line(aes(x = r, y = gap_mean))+
   geom_point(aes(x = r, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = r, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
   ylab(label = "Gap")+
   xlab(label = "r")+
-  scale_x_log10()+
-  annotation_logticks(base = 10, sides = "b"))/
-(ggplot(data = b_r$wcss_stats_summary)+
-  geom_line(aes(x = k, y = wcss_mean))+
-  geom_point(aes(x = k, y = wcss_mean), size = 1)+
-  ylab(label = "WCSS")+
-  xlab(label = "k'")|
-ggplot(data = b_r$wcss_stats_summary)+
-  geom_line(aes(x = r, y = wcss_mean))+
-  geom_point(aes(x = r, y = wcss_mean), size = 1)+
-  ylab(label = "WCSS")+
-  xlab(label = "r")+
-  scale_x_log10()+
-  annotation_logticks(base = 10, sides = "b"))
-```
-
-
-```{r, fig.width=6, fig.height=4, fig.align='center'}
-g0_r
-```
-
-
-A range of resolutions yields $k=5$ number of communities, i.e. among the 
-tested $r$s, we saw $k=5$ communities for $r = 0.003$ and $r = 0.1$. 
-We will use $r=0.003$ for clustering.
-
-```{r, fig.width=4, fig.height=3, fig.align='center'}
-ggplot(data = b_r$gap_stats_summary)+
-    geom_point(aes(x = r, y = k))+
-    xlab(label = "r")+
-    ylab(label = "k'")+
+  geom_vline(xintercept = 0.003, col = "gray", linetype = "dashed")+
   scale_x_log10()+
   annotation_logticks(base = 10, sides = "b")
 ```
 
+The resolutions $r$ are difficult to interpret. Lets map $r$ to the number of 
+detected communities $k'$ (analogous to clusters $k$ in k-means clustering), 
+and show the Gap curve as a function of $k'$.
 
-### 1.2 [alternative] determining the number of clusters $k$ for k-means clustering
+```{r, fig.width=4, fig.height=3}
+ggplot(data = b_r$gap_stats_summary)+
+  geom_line(aes(x = k, y = gap_mean))+
+  geom_point(aes(x = k, y = gap_mean), size = 1)+
+  geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
+  geom_vline(xintercept = 5, col = "gray", linetype = "dashed")+
+  ylab(label = "Gap")+
+  xlab(label = "k'")
+```
+A range of resolutions yield $k'$=5 number of communities, i.e. among the 
+tested $r$s, we saw $k'$=5 communities for $r$ = 0.003, 0.01, 0.03 and 0.1. 
+We can e.g. use $r$=0.1 for our clustering.
+
+```{r, fig.width=4, fig.height=3, fig.align='center'}
+ggplot(data = b_r$gap_stats_summary)+
+  geom_point(aes(x = r, y = k), size = 1)+
+  xlab(label = "r")+
+  ylab(label = "k'")+
+  scale_x_log10()+
+  annotation_logticks(base = 10, sides = "b")+
+  theme_bw()
+```
+
+Table with $r$s that match to $k'$=5:
+
+```{r}
+knitr::kable(x = b_r$gap_stats_summary[b_r$gap_stats_summary$k == 5, ],
+             digits = 4, row.names = FALSE)
+```
+
+
+## Determining the number of clusters $k$ for k-means clustering [**alternative**]
 If we want to use k-means for clustering, then we need to find a reasonable 
-value of $k$, e.g. by applying a data-driven search for $k$ using `get_k`.
+value of $k$, e.g. by applying once again a data-driven search for $k$ using 
+`get_k`.
 
-Here `get_k` will inspect the Gap and WCSS at $k$ = 1, 2, ..., 20.
+Here `get_k` will inspect the Gap and WCSS at $k$ = 1, 2, ..., 10.
 
 ```{r}
 b_k <- get_k(B_gap = 5,
-             ks = 1:20, 
+             ks = 1:10, 
              x = A,
              n_start = 50,
              iter_max = 200,
@@ -301,51 +308,55 @@ b_k <- get_k(B_gap = 5,
              cores = 1)
 ```
 
-For simple scRNA-seq datasets, such as the one that is currently analyzed, 
-we anticipate similar results from k-means and GCD methods. Hence, in the 
-Gap statistic and WCSS curves shown below we notice a knee (elbow) at $k=5$ 
-$\rightarrow$ comparable results as in 1.1. For complex scRNA-seq datasets 
-GCD methods are recommended.
+Notice the similar Gap curve with noticeable knee (elbow) at $k = 5$ (dashed 
+gray line). Means (points) and 95% confidence intervals are shown for the Gap 
+statistic at each $k$ using `B_gap`=5 MCMC simulations.
 
-```{r}
-g0_k <- ggplot(data = b_k$gap_stats_summary)+
+```{r, fig.width=4, fig.height=3}
+ggplot(data = b_k$gap_stats_summary)+
   geom_line(aes(x = k, y = gap_mean))+
   geom_point(aes(x = k, y = gap_mean), size = 1)+
   geom_errorbar(aes(x = k, y = gap_mean, ymin = L95, ymax = H95), width = 0.1)+
-  ylab(label = "Gap")|
-ggplot(data = b_k$wcss_stats_summary)+
-  geom_line(aes(x = k, y = wcss_mean))+
-  geom_point(aes(x = k, y = wcss_mean), size = 1)+
-  ylab(label = "WCSS")+
-  scale_y_log10()+
-  annotation_logticks(base = 10, sides = "l")
+  ylab(label = "Gap")+
+  geom_vline(xintercept = 5, col = "gray", linetype = "dashed")
 ```
 
 
-```{r, fig.width=7, fig.height=2.5, fig.align='center'}
-g0_k
-```
 
-## 2. clustering
 
-### 2.1 with Louvain
-Now that we found out that $r=0.003$ ($k'=5$) is a reasonable choice based on 
-the data, we will perform Louvain clustering with $r=0.003$ and $A$ as inputs. 
+
+# Clustering (**step 2**) and hierarchical grouping (**step 3**) of bubbles
+
+## Clustering with Louvain
+Now that we found out that $r=0.1$ ($k'=5$) is a reasonable choice based on 
+the data, we will perform Louvain clustering with $r=0.1$ and $A$ as inputs. 
 For this we will use the function `get_bubbletree_graph`.
 
-There are multiple variants of the Louvain algorithm (see function 
-`FindClusters`, R-package `r CRANpkg("Seurat")`). Here we will use the 
-original implementation (`algorithm` = "original"). 
+After the clustering is complete we will organize the bubbles by hierarchical 
+clustering. For this we perform $B$ bootstrap iterations. In iteration $b$ 
+the algorithm draws a random subset of $N_{\text{eff}}$ (default 
+$N_{\text{eff}}=200$) cells with replacement from each cluster and compute 
+the average inter-cluster Euclidean distances. This data is used to populate 
+the distance matrix ($D^{k'\times k'}_{b}$), which is provided as input for 
+hierarchical clustering with average linkage to generate a hierarchical 
+clustering dendrogram $H_b$.
 
-We will do clustering with $n_\textit{start}=20$ random starts and a maximum 
-number of iterations $iter_\textit{max} = 100$. For input, we construct a SNN 
-graph based on $A^{3,918\times 15}$, where each vertex (cell) was connected to 
-its $knn_{k}=50$ nearest neighbors. See the help `?get_bubbletree_graph` to 
-learn about the remaining parameters.
+The collection of distance matrices that are computed during $B$ iterations are 
+used to compute a consensus (average) distance matrix ($\hat{D}^{k' \times k'}$)
+and from this a corresponding consensus hierarchical dendrogram (bubbletree; 
+$\hat{H}$) is constructed. The collection of dendrograms are used to quantify 
+the robustness of the bubbletree topology, i.e. to count the number of times 
+each branch in the bubbletree is found among the topologies of the bootstrap 
+dendrograms. Branches can have has variable degrees of support ranging between 
+0 (no support) and $B$ (complete support). Distances between bubbles (inter-
+bubble relationships) are described quantitatively in the bubbletree as sums 
+of branch lengths.
+
+Steps 2. (clustering) and 3. (hierarchical grouping) are performed now:
 
 ```{r}
 l <- get_bubbletree_graph(x = A,
-                          r = 0.003,
+                          r = 0.1,
                           algorithm = "original",
                           n_start = 20,
                           iter_max = 100,
@@ -355,46 +366,9 @@ l <- get_bubbletree_graph(x = A,
                           N_eff = 200,
                           round_digits = 1,
                           show_simple_count = FALSE)
+
+#  See the help `?get_bubbletree_graph` to learn about the input parameters.
 ```
-
-
-## 3. hierarchical grouping
-After clustering, `r Biocpkg("scBubbletree")` organizes the bubbles as leaves 
-of a hierarchical dendrogram (=bubbletree). The distance between clusters 
-$i$ and $j$ can be computed by estimating the average Euclidean distance 
-between all pairs of cells in $C_{i}^{n_i\times f}$ and $C_{j}^{n_j\times f}$. 
-However, this operation has considerable memory and computational cost. To 
-avoid such high memory demands, `r Biocpkg("scBubbletree")` employs a 
-bootstrapping approach with $B$ iterations
-
-In iteration $b$, the algorithm draws with replacement a random subset 
-with $n'_i=\min(n_i, N_{\textit{eff}})$ and $n'_j=\min(n_j, N_{\textit{eff}})$ 
-number of cells from cluster $i$ and $j$, respectively, where $N_{\textit{eff}}$
-is a user-defined parameter that controls the maximum number of cells to be 
-drawn from each cluster. The algorithm computes the average distance between 
-cluster $i$ and $j$ based on $n'_in'_j$ inter-cell Euclidean distances, and 
-stores the result in distance matrix $D^{k\times k}_b$: 
-\begin{equation}
-	D_{b}^{ij} = \dfrac{1}{n'_in'_j}\sum\limits_{\substack{\forall 
-	\mathbf{x}\in X\\ \forall \mathbf{y}\in Y}}\sqrt{(\mathbf{x}-\mathbf{y})^2},
-\end{equation}
-where $X^{n'_i \times f}$ and $Y^{n'_j \times f}$ are subsets drawn from 
-$C_{i}^{n_i\times f}$ and $C_{j}^{n_j\times f}$, respectively, and 
-$\mathbf{x}$ and $\mathbf{y}$ are cell transcriptome features (row vectors) 
-from each matrix. At the end of bootstrap iteration $b$, the distance matrix 
-$D^{k'\times k'}_{b}$ is provided as input for hierarchical clustering with 
-average linkage to generate the dendrogram $H_b$. 
-
-From the collection of $B$ distance matrices we compute an average distance 
-matrix ($\hat{D}^{k'\times k'}$), and use $\hat{D}^{k'\times k'}$ to generate a 
-consensus hierarchical dendrogram (bubbletree; $\hat{H}$) by hierarchical 
-clustering with average linkage. The collection of bootstrap dendrograms are 
-used to assess the robustness of the bubbletree topology by quantifying the 
-number of times each branch in $\hat{H}$ was found among the topologies of 
-the bootstrap dendrograms. Branches can have variable degrees of support 
-ranging between values close to 0 (no support) and $B$ (complete support). 
-Distances between individual bubbles are visualized quantitatively as sums 
-of branch lengths in root-to-leaf direction between these bubbles.
 
 ... and plot the bubbletree
 
@@ -430,7 +404,7 @@ between bubbles (3, 4) and 0 is not as robust.
 
 
 
-### 2.2 with k-means
+## Clustering with k-means (**[alternative]**)
 To perform clustering with the k-means method we can use the function
 `get_bubbletree_kmeans`.
 
@@ -446,34 +420,34 @@ k <- get_bubbletree_kmeans(x = A,
 ```
 
 
-The two dendrograms are shown side-by-side. We see nearly identical dendrograms. 
-The bubble IDs are different but we see similar bubble sizes, topology and 
-branch robustness values.
+## Comparison of bubbletree based on Louvain and k-means clustering
+The two dendrograms are shown side-by-side.
 
-```{r, fig.width=7, fig.height=3, fig.align='center'}
+```{r, fig.width=6, fig.height=3, fig.align='center'}
 l$tree|k$tree
 ```
 
 
 
-#### Visual comparison of two bubbletrees
+## Visual comparison of two bubbletrees
 To compare a pair of bubbletrees generated based on the same data but with
 different inputs we can use the function `compare_bubbletrees`.
 
 The function generates two bubbletrees and a heatmap, where the tiles of the 
-heatmap are color coded according to the jaccard distances between the pairs 
-of bubbles from the two bubbletrees, and the tile labels show the numbers 
+heatmap are color coded according to the jaccard distances ($J_D$s) between the 
+pairs of bubbles from the two bubbletrees, and the tile labels show the numbers 
 of cells in common between the bubbles.
 
 **Reminder of the Jaccard index ($J$) and the Jaccard distance ($J_{D}$)**: 
-For clusters $A$ and $B$ $J(A,B)=\dfrac{|A \cap B|}{|A \cup B|}$ and 
-$J_{D}(A,B) = 1-J(A,B)$. If $A$ and $B$ contain the same set of cells 
-$J_{D}(A,B)$=0, and if they have no cells in common $J_{D}(A,B)$=1.
+
+For clusters $A$ and $B$ we compute the Jaccard index 
+$J(A,B)=\dfrac{|A \cap B|}{|A \cup B|}$ and distance $J_{D}(A,B) = 1-J(A,B)$. 
+If $A$ and $B$ contain the same set of cells $J_{D}(A,B)$=0, and if they have 
+no cells in common $J_{D}(A,B)$=1.
 
 The heatmap hints at nearly identical clusterings between the bubbletrees. 
 Only 3 cells (red tiles with label = 1) are classified differently by the
 two bubbletrees.
-
 
 ```{r, fig.width=7, fig.height=7}
 cp <- compare_bubbletrees(btd_1 = l, 
@@ -484,7 +458,8 @@ cp <- compare_bubbletrees(btd_1 = l,
 cp$comparison
 ```
 
-## 4. visualization
+
+# Visualization (**step 4**)
 
 To extract biologically useful information from the bubbletree (and also for 
 2D UMAP or t-SNE plots) we need to adorn it with biologically relevant cell 
@@ -615,8 +590,7 @@ performed for different values of $r$ with function `get_gini_r`, which takes
 as main input the output of `get_k` or `get_r`
 
 ```{r}
-gini_boot <- get_gini_k(labels = m$cell_line_demuxlet,
-                        obj = b_r)
+gini_boot <- get_gini_k(labels = m$cell_line_demuxlet, obj = b_r)
 ```
 
 From the figure we can conclude that WGI drops to 0 at `k=5`, and all labels 
@@ -697,40 +671,19 @@ w_gene_dist <- get_num_violins(btd = l,
 ```
 
 
-The clustering of both algorithms seems to work well, i.e. cells from specific 
-cell lines are clustered together. Two potential issues:
+# scBubbletree can incorporate results from other clustering approaches
 
-1. overplotting: points are stacked on top of each other $\rightarrow$ loss 
-   of information about cell density distribution $\rightarrow$ we are
-   unable to accurately answer two questions: 
-      * which cell line contains most cells?
-      * what are the relative frequencies of cells across cell lines?
+Numerous approaches exist for clustering of scRNA-seq data, and 
+`r Biocpkg("scBubbletree")` implements the function `get_bubbletree_dummy` 
+to allow users to incorporate results from various clustering approaches 
+together with our workflow. With this function we skip the clustering 
+portion of the workflow and proceed with computing distances between the 
+clusters and generation of the bubbletree.
 
-2. preservation of long-range cell distances: UMAP and t-SNE focus on 
-   preserving local cell distance (at the cost of global distances)
-   $\rightarrow$ are there pairs of cell lines that are more similar to each
-   other than the remaining ones in the sample?
- 
-These challenges will become more severe in real datasets (e.g. PBMC samples, 
-see case study B) which contain many clusters of cells that are not clearly 
-separable.
+Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering 
+with R-package `r CRANpkg("cluster")` and then generate the bubbletree:
 
-
-
-
-## scBubbletree can incorporate results from other clustering approaches
-
-Wide range of clustering approaches are used for clustering of scRNA-seq data. 
-`r Biocpkg("scBubbletree")` implements the function `get_bubbletree_dummy` to 
-allow users to incorporate results from various clustering approaches together
-with our workflow. With this function we skip the k-means clustering portion of 
-the workflow and proceed with computing distances between the clusters and 
-generation of the bubbletree.
-
-Lets try `get_bubbletree_dummy`. First, will perform k-medoids clustering with
-R-package `r CRANpkg("cluster")` and then generate the bubbletree:
-
-```{r, fig.width=7, fig.height=4, fig.align='center'}
+```{r, fig.width=6, fig.height=4, fig.align='center'}
 pam_k5 <- cluster::pam(x = A, k = 5, metric = "euclidean")
 
 dummy_k5_pam <- get_bubbletree_dummy(x = A,
@@ -752,26 +705,26 @@ dummy_k5_pam$tree|
 
 
 
-## Summary
+# Summary
 
 `r Biocpkg("scBubbletree")` promotes simple and transparent visual exploration 
-of scRNA-seq. It is *not a black-box* approach and the user *is encouraged* to 
+of scRNA-seq. It is **not a black-box approach** and the user is encouraged to 
 explore the data with different values of $k$ and $r$ or custom clustering 
 solutions. Attaching of cell features to the bubbletree is necessary for 
 biological interpretation of the individual bubbles and their relationships 
-which are described by the bubbletree topology.
+which are described by the bubbletree.
 
 
 
 
-[^1]: Tian, Luyi, et al. "Benchmarking single cell RNA-sequencing analysis 
-pipelines using mixture control experiments." Nature methods 16.6 (2019): 
-479-487.
+
+[^1]: https://doi.org/10.1038/s41592-019-0425-8
 [^2]: https://github.com/LuyiTian/sc_mixology/blob/master/data/
 sincell_with_class_5cl.RData
+[^3]: https://doi.org/10.1101/2023.03.09.531263
 
 
-## Session Info
+# Session Info
 
 ```{r}
 sessionInfo()
