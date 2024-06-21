@@ -11,9 +11,7 @@ vignette: >
 
 
 ```{r setup, include = FALSE, warning = FALSE}
-knitr::opts_chunk$set(comment = FALSE, 
-                      warning = FALSE, 
-                      message = FALSE)
+knitr::opts_chunk$set(comment = FALSE, warning = FALSE, message = FALSE)
 ```
 
 
@@ -36,7 +34,8 @@ determining the clustering resolution, 2. clustering, 3. hierarchical cluster
 grouping and 4. visualization. We explain each step in the following using 
 scRNA-seq dataset of five cancer cell lines.
 
-To run this vignette we need to load a few R-packages:
+
+To run this vignette we need to load a few packages:
 
 ```{r}
 library(scBubbletree)
@@ -269,6 +268,7 @@ ggplot(data = b_r$gap_stats_summary)+
   ylab(label = "Gap")+
   xlab(label = "k'")
 ```
+
 A range of resolutions yield $k'$=5 number of communities, i.e. among the 
 tested $r$s, we saw $k'$=5 communities for $r$ = 0.003, 0.01, 0.03 and 0.1. 
 We can e.g. use $r$=0.1 for our clustering.

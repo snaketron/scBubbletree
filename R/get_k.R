@@ -25,29 +25,27 @@ get_k <- function(x,
   if(verbose) {
     message("1) clustering")
   }
-  
-  future::plan(future::multisession, workers = cores)
-  kmeans_obj <- future.apply::future_lapply(X = ks,
-                                            FUN = kmeans,
-                                            x = x,
-                                            nstart = n_start,
-                                            iter.max = iter_max,
-                                            algorithm = kmeans_algorithm,
-                                            future.seed = TRUE)
+  kmeans_obj <- bplapply(X = ks,
+                         FUN = kmeans,
+                         x = x,
+                         nstart = n_start,
+                         iter.max = iter_max,
+                         algorithm = kmeans_algorithm,
+                         BPPARAM = SnowParam(workers = cores, type = "SOCK"))
   names(kmeans_obj) <- ks
   
   # gap statistics
   if(verbose) {
     message("2) gap-stat")
   }
-  gap_stats <- future.apply::future_lapply(X = kmeans_obj,
-                                           FUN = get_gap_k,
-                                           x = x,
-                                           B_gap = B_gap,
-                                           n_start = n_start,
-                                           iter_max = iter_max,
-                                           kmeans_algorithm = kmeans_algorithm,
-                                           future.seed = TRUE)
+  gap_stats <- bplapply(X = kmeans_obj,
+                        FUN = get_gap_k,
+                        x = x,
+                        B_gap = B_gap,
+                        n_start = n_start,
+                        iter_max = iter_max,
+                        kmeans_algorithm = kmeans_algorithm,
+                        BPPARAM = SnowParam(workers = cores, type = "SOCK"))
   
   # within cluster sum of squares
   if(verbose) {
@@ -99,10 +97,7 @@ get_k <- function(x,
   # compute wcss summary
   wcss_mean <- apply(X = wcss_matrix, MARGIN = 2, FUN = mean)
   wcss_stats_summary <- data.frame(wcss_mean = wcss_mean, k = ks)
-  
-  # remove unused connections
-  future::plan(future::sequential())
-  
+ 
   return(structure(class = "boot_k",
                    list(boot_obj = boot_obj,
                         wcss_stats_summary = wcss_stats_summary,

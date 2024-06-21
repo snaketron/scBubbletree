@@ -38,22 +38,22 @@ get_r <- function(x,
   if(verbose) {
     message("1) clustering")
   }
-  future::plan(future::multisession, workers = cores)
-  louvain_obj <- future_lapply(X = rs,
-                               FUN = FindClusters,
-                               object = knn$snn,
-                               n.start = n_start,
-                               n.iter = iter_max,
-                               algorithm = map_louvain_algname(algorithm),
-                               modularity.fxn = 1,
-                               initial.membership = NULL,
-                               node.sizes = NULL,
-                               verbose = FALSE,
-                               future.seed = TRUE)
-  names(louvain_obj) <- rs
+  
+  gcd_obj <- bplapply(X = rs,
+                      FUN = FindClusters,
+                      object = knn$snn,
+                      n.start = n_start,
+                      n.iter = iter_max,
+                      algorithm = map_louvain_algname(algorithm),
+                      modularity.fxn = 1,
+                      initial.membership = NULL,
+                      node.sizes = NULL,
+                      verbose = FALSE,
+                      BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+  names(gcd_obj) <- rs
   
   # convert result to vectors as opposed to data.frames
-  louvain_obj <- lapply(X = louvain_obj, FUN = df2vec <- function(x) {
+  gcd_obj <- lapply(X = gcd_obj, FUN = df2vec <- function(x) {
       res <- names(x)
       res <- gsub(pattern = "res\\.", replacement = '', x = res)
       c <- as.character(x[, 1])
@@ -64,16 +64,16 @@ get_r <- function(x,
   if(verbose) {
     message("2) gap statistic")
   }
-  q <- future.apply::future_lapply(X = seq_len(length.out=length(louvain_obj)),
-                                   FUN = get_gap_r,
-                                   l = louvain_obj,
-                                   x = x,
-                                   B_gap = B_gap,
-                                   n_start = n_start,
-                                   iter_max = iter_max,
-                                   algorithm = algorithm,
-                                   knn_k = knn_k,
-                                   future.seed = TRUE)
+  q <- bplapply(X = seq_len(length.out=length(gcd_obj)),
+                FUN = get_gap_r,
+                l = gcd_obj,
+                x = x,
+                B_gap = B_gap,
+                n_start = n_start,
+                iter_max = iter_max,
+                algorithm = algorithm,
+                knn_k = knn_k,
+                BPPARAM = SnowParam(workers = cores, type = "SOCK"))
   
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)
@@ -82,15 +82,15 @@ get_r <- function(x,
   rm(q, q0)
   
   # get k for each louvain obj
-  ks <- unlist(lapply(X = louvain_obj, FUN = get_ks))
+  ks <- unlist(lapply(X = gcd_obj, FUN = get_ks))
   
   # within cluster sum of squares
   if(verbose) {
     message("3) WCSS")
   }
-  wcss_data <- lapply(X = louvain_obj, FUN = get_wcss_get_r, x = x)
+  wcss_data <- lapply(X = gcd_obj, FUN = get_wcss_get_r, x = x)
   
-  boot_obj <- list(obj = louvain_obj, wcss = wcss_data, gap = gap_stats)
+  boot_obj <- list(obj = gcd_obj, wcss = wcss_data, gap = gap_stats)
   
   # raw gap stats
   gap_matrix <- matrix(data = 0, nrow = B_gap, ncol = length(rs))
@@ -127,10 +127,7 @@ get_r <- function(x,
   # compute wcss summary
   wcss_mean <- apply(X = wcss_matrix, MARGIN = 2, FUN = mean)
   wcss_stats_summary <- data.frame(wcss_mean = wcss_mean, r = rs, k = ks)
-  
-  # remove unused connections
-  future::plan(future::sequential())
-  
+ 
   return(structure(class = "boot_r",
                    list(boot_obj = boot_obj,
                         wcss_stats_summary = wcss_stats_summary,

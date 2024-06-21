@@ -20,15 +20,13 @@ get_dist <- function(B,
   
   if(B>0) {
     # get distances between clusters in B bootstrap iterations
-    future::plan(future::multisession, workers = cores)
-    p_dist <- future.apply::future_lapply(X = seq_len(length.out = B),
-                                          FUN = get_p_dist,
-                                          m = m,
-                                          c = c,
-                                          N_eff = N_eff,
-                                          hclust_distance = hclust_distance,
-                                          future.seed = TRUE)
-    future::plan(future::sequential())
+    p_dist <- bplapply(X = seq_len(length.out = B),
+                       FUN = get_p_dist,
+                       m = m,
+                       c = c,
+                       N_eff = N_eff,
+                       hclust_distance = hclust_distance,
+                       BPPARAM = SnowParam(workers = cores, type = "SOCK"))
     
     # collect results
     p_dist <- do.call(rbind, p_dist)
