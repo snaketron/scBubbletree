@@ -31,7 +31,7 @@ get_k <- function(x,
                          nstart = n_start,
                          iter.max = iter_max,
                          algorithm = kmeans_algorithm,
-                         BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+                         BPPARAM = MulticoreParam(workers = cores))
   names(kmeans_obj) <- ks
   
   # gap statistics
@@ -45,7 +45,7 @@ get_k <- function(x,
                         n_start = n_start,
                         iter_max = iter_max,
                         kmeans_algorithm = kmeans_algorithm,
-                        BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+                        BPPARAM = MulticoreParam(workers = cores))
   
   # within cluster sum of squares
   if(verbose) {

@@ -49,7 +49,7 @@ get_r <- function(x,
                       initial.membership = NULL,
                       node.sizes = NULL,
                       verbose = FALSE,
-                      BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+                      BPPARAM = MulticoreParam(workers = cores))
   names(gcd_obj) <- rs
   
   # convert result to vectors as opposed to data.frames
@@ -73,7 +73,7 @@ get_r <- function(x,
                 iter_max = iter_max,
                 algorithm = algorithm,
                 knn_k = knn_k,
-                BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+                BPPARAM = MulticoreParam(workers = cores))
   
   # if k = 1 not present do
   q0 <- vector(mode = "list", length = 1)

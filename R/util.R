@@ -26,7 +26,7 @@ get_dist <- function(B,
                        c = c,
                        N_eff = N_eff,
                        hclust_distance = hclust_distance,
-                       BPPARAM = SnowParam(workers = cores, type = "SOCK"))
+                       BPPARAM = MulticoreParam(workers = cores))
     
     # collect results
     p_dist <- do.call(rbind, p_dist)
