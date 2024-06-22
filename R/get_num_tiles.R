@@ -129,7 +129,8 @@ ggplot_num_tiles <- function(ws,
           legend.box.margin=margin(-10,-10,-10,-10))+
     xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
-    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
+    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7,
+                                  title.position="top", title.hjust = 0.5))
   
   if(tile_bw==FALSE) {
     w <- w+scale_fill_distiller(name = "Feature",
