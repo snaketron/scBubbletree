@@ -107,7 +107,8 @@ ggplot_cat_tiles <- function(ws,
           legend.box.margin=margin(-5,-5,-5,-5))+
     xlab(label = x_axis_name)+
     ylab(label = "Bubble")+
-    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7))
+    guides(fill = guide_colourbar(barwidth = 4, barheight = 0.7,
+                                  title.position="top", title.hjust = 0.5))
   
   if(tile_bw==FALSE) {
     w <- w+scale_fill_distiller(name = legend, palette = "Spectral", 
