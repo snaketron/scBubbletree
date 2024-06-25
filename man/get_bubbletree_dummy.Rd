@@ -29,8 +29,8 @@ clusters (bubbles).
 \usage{
 get_bubbletree_dummy(x,
                      cs,
-                     B = 0,
-                     N_eff = 200,
+                     B = 200,
+                     N_eff = 100,
                      hclust_distance = "euclidean",
                      hclust_method = "average",
                      cores = 1,
@@ -45,13 +45,9 @@ get_bubbletree_dummy(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{cs}{vector, cluster IDs}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree. \eqn{B=0} (default), cluster centroids are used to compute
-inter-cluster distances and \eqn{N_{eff}} is ignored, i.e. all cells are used
-to compute centroids.}
+generate bubbletree}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
-computing inter-cluster distances. This argument is only used if \eqn{B\neq 0}.
-Maximum available number of cells are used for clusters that contain lower
-number of cells than \eqn{N_{eff}}}
+computing inter-cluster distances}
 \item{hclust_distance}{distance measure to be used: euclidean (default) or
 manhattan, see documentation of \code{stats::dist}}
 \item{hclust_method}{agglomeration method to be used, default = average.
@@ -100,7 +96,7 @@ cs <- base::sample(x = LETTERS[1:5], size = nrow(A), replace = TRUE)
 
 db <- get_bubbletree_dummy(x = A,
                            cs = cs,
-                           B = 100,
+                           B = 200,
                            N_eff = 100,
                            hclust_distance = "euclidean",
                            hclust_method = "average",

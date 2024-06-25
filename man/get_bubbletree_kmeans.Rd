@@ -31,8 +31,8 @@ similar cells. Second, it organizes the bubbles in a hierarchical dendrogram
 \usage{
 get_bubbletree_kmeans(x,
                       k,
-                      B = 0,
-                      N_eff = 200,
+                      B = 200,
+                      N_eff = 100,
                       n_start = 1000,
                       iter_max = 300,
                       kmeans_algorithm = "MacQueen",
@@ -50,13 +50,9 @@ get_bubbletree_kmeans(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{k}{integer, number of clusters}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree. If \eqn{B=0} (default), cluster centroids are used to
-compute inter-cluster distances and \eqn{N_{eff}} is ignored, i.e. all cells
-are used to compute centroids.}
+generate bubbletree}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
-computing inter-cluster distances. This argument is only used if \eqn{B\neq 0}.
-Maximum available number of cells are used for clusters that contain lower
-number of cells than \eqn{N_{eff}}}
+computing inter-cluster distances}
 \item{n_start, iter_max, kmeans_algorithm}{parameters for k-means clustering,
 see documentation of function \code{k-means}, R-package \code{stats}}
 \item{hclust_distance}{distance measure to be used: euclidean (default) or
@@ -77,20 +73,8 @@ useful for samples that are composed of millions of cells.}
 For k-means clustering \code{get_bubble_kmeans} uses the function kmeans
 implemented in R-package \code{stats} (version 4.2.0). For additional
 information on the clustering procedure see the documentation of \code{kmeans}.
-To organize the resulting clusters in a hierarchical dendrogram, the default
-version of this algorithm (applied if \eqn{B=0}) performs the following steps:
-
-1. compute distances (e.g. euclidean) between the centroids (in space
-  \eqn{A^{n\times f}} ) of cluster \eqn{i} and cluster \eqn{j}
-
-2. perform hierarchical clustering with a specific linkage
-
-3. build hierarchical dendrogram (\eqn{H}) \eqn{\rightarrow} bubbletree
-
-However, if the argument \eqn{B} is set to a positive integer (e.g. \eqn{B=200},
-then a more computationally demanding version of the algorithm is initiated
-with the following steps. The advantage this algorithm has is that it estimates
-the robustness of the branches in the dendrogram:
+To organize the resulting clusters in a hierarchical dendrogram these steps
+are performed:
 
 1. In bootrap iteration \eqn{b} from \eqn{1:B}
 
@@ -136,9 +120,9 @@ A <- d_500$A
 
 b <- get_bubbletree_kmeans(x = A,
                            k = 8,
-                           B = 0,
-                           cores = 1,
+                           B = 200,
                            N_eff = 100,
+                           cores = 1,
                            round_digits = 1,
                            show_simple_count = FALSE,
                            kmeans_algorithm = "MacQueen",

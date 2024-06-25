@@ -34,8 +34,8 @@ similar cells; second, it organizes the bubbles in a hierarchical dendrogram
 
 get_bubbletree_graph(x,
                      r,
-                     B = 0,
-                     N_eff = 200,
+                     B = 200,
+                     N_eff = 100,
                      n_start = 20,
                      iter_max = 100,
                      algorithm = "original",
@@ -54,13 +54,11 @@ get_bubbletree_graph(x,
 low-dimensional projections of the original single cell RNA-seq dataset)}
 \item{r}{number, clustering resolution}
 \item{B}{integer, number of bootstrap iterations to perform in order to
-generate bubbletree. If \eqn{B=0} (default), cluster centroids are used to
+generate bubbletree. If \eqn{B=200} (default), cluster centroids are used to
 compute inter-cluster distances and \eqn{N_{eff}} is ignored, i.e. all cells
 are used to compute centroids.}
 \item{N_eff}{integer, number of cells to draw randomly from each cluster when
-computing inter-cluster distances. This argument is only used if \eqn{B\neq 0}.
-Maximum available number of cells are used for clusters that contain lower
-number of cells than \eqn{N_{eff}}}
+computing inter-cluster distances.}
 \item{n_start, iter_max}{parameters for Louvain clustering, see documentation
 of function \code{FindClusters}, R-package \code{Seurat}}
 \item{algorithm}{character, four clustering algorithms: 'original',
@@ -87,20 +85,7 @@ For Louvain clustering \code{get_bubbletree_graph} uses the function
 \code{FindClusters} implemented in R-package \code{Seurat}. For additional
 information on the clustering procedure see the documentation of
 \code{FindClusters}. To organize the resulting clusters in a hierarchical
-dendrogram, the default version of this algorithm (applied if \eqn{B=0})
-performs the following steps:
-
-1. compute distances (e.g. euclidean) between the centroids (in space
-  \eqn{A^{n\times f}} ) of cluster \eqn{i} and cluster \eqn{j}
-
-2. perform hierarchical clustering with a specific linkage
-
-3. build hierarchical dendrogram (\eqn{\hat{H}}) \eqn{\rightarrow} bubbletree
-
-However, if the argument \eqn{B} is set to a positive integer (e.g. \eqn{B=200},
-then a more computationally demanding version of the algorithm is initiated
-with the following steps. The advantage this algorithm has is that it estimates
-the robustness of the branches in the dendrogram:
+dendrogram, then the following steps are performed:
 
 1. In bootrap iteration \eqn{b} from \eqn{1:B}
 
@@ -145,7 +130,7 @@ A <- d_500$A
 
 b <- get_bubbletree_graph(x = A,
                           r = 1,
-                          B = 0,
+                          B = 200,
                           N_eff = 100,
                           n_start = 20,
                           iter_max = 100,

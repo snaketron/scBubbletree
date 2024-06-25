@@ -1,8 +1,8 @@
 
 get_bubbletree_kmeans <- function(x,
                                   k,
-                                  B = 0,
-                                  N_eff = 200,
+                                  B = 200,
+                                  N_eff = 100,
                                   n_start = 1000,
                                   iter_max = 300,
                                   kmeans_algorithm = "MacQueen",
