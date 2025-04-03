@@ -16,6 +16,9 @@ summaries of cluster properties and relationships. scBubbletree stacks bubble tr
 with further cluster-associated information in a visually easily accessible way, thus 
 facilitating quantitative assessment and biological interpretation of scRNA-seq data.
 
+## How to cite
+> Kitanovski, S., Cao, Y., Ttoouli, D. et al. scBubbletree: computational approach for visualization of single cell RNA-seq data. BMC Bioinformatics 25, 302 (2024). https://doi.org/10.1186/s12859-024-05927-y
+
 ## How to use scBubbletree
 
 scBubbletree is an R-package available from Bioconductor: 
